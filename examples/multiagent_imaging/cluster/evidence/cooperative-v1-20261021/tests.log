@@ -1,0 +1,40 @@
+........................................................................ [ 20%]
+........................................................................ [ 41%]
+........................................................................ [ 61%]
+........................................................................ [ 82%]
+...............................................................          [100%]
+=============================== warnings summary ===============================
+tests/integration/multiagent/test_target_recorder_option.py::test_diagnostic_recorders_are_opt_in_without_scientific_schema_change
+  /Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/src/bsk_rl/sim/dyn.py:376: [33;20mBSKDeprecationWarning: Basilisk.utilities.unitTestSupport.np2EigenMatrix3d will be removed after 2027-06-23: Use simHelpers.np2EigenMatrix3d instead.[0m
+    self.scObject.hub.IHubPntBc_B = unitTestSupport.np2EigenMatrix3d(self.I_mat)
+
+tests/integration/multiagent/test_target_recorder_option.py::test_diagnostic_recorders_are_opt_in_without_scientific_schema_change
+  /Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/src/bsk_rl/sim/dyn.py:381: [33;20mBSKDeprecationWarning: Basilisk.utilities.unitTestSupport.np2EigenVectorXd will be removed after 2027-06-23: Use simHelpers.np2EigenVectorXd instead.[0m
+    self.scObject.hub.r_CN_NInit = unitTestSupport.np2EigenVectorXd(rN)
+
+tests/integration/multiagent/test_target_recorder_option.py::test_diagnostic_recorders_are_opt_in_without_scientific_schema_change
+  /Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/src/bsk_rl/sim/dyn.py:382: [33;20mBSKDeprecationWarning: Basilisk.utilities.unitTestSupport.np2EigenVectorXd will be removed after 2027-06-23: Use simHelpers.np2EigenVectorXd instead.[0m
+    self.scObject.hub.v_CN_NInit = unitTestSupport.np2EigenVectorXd(vN)
+
+tests/integration/multiagent/test_target_recorder_option.py::test_diagnostic_recorders_are_opt_in_without_scientific_schema_change
+  /Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/src/bsk_rl/sim/dyn.py:632: [33;20mBSKDeprecationWarning: Basilisk.utilities.unitTestSupport.np2EigenVectorXd will be removed after 2027-06-23: Use simHelpers.np2EigenVectorXd instead.[0m
+    unitTestSupport.np2EigenVectorXd(nHat_B),
+
+tests/integration/multiagent/test_target_recorder_option.py::test_diagnostic_recorders_are_opt_in_without_scientific_schema_change
+  /Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/src/bsk_rl/sim/dyn.py:856: [33;20mBSKDeprecationWarning: Basilisk.utilities.unitTestSupport.np2EigenMatrix3d will be removed after 2027-06-23: Use simHelpers.np2EigenMatrix3d instead.[0m
+    self.scObject.hub.IHubPntBc_B = unitTestSupport.np2EigenMatrix3d(self.I_mat)
+
+tests/integration/multiagent/test_target_recorder_option.py::test_diagnostic_recorders_are_opt_in_without_scientific_schema_change
+  /Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/src/bsk_rl/sim/dyn.py:861: [33;20mBSKDeprecationWarning: Basilisk.utilities.unitTestSupport.np2EigenVectorXd will be removed after 2027-06-23: Use simHelpers.np2EigenVectorXd instead.[0m
+    self.scObject.hub.r_CN_NInit = unitTestSupport.np2EigenVectorXd(rN)
+
+tests/integration/multiagent/test_target_recorder_option.py::test_diagnostic_recorders_are_opt_in_without_scientific_schema_change
+  /Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/src/bsk_rl/sim/dyn.py:862: [33;20mBSKDeprecationWarning: Basilisk.utilities.unitTestSupport.np2EigenVectorXd will be removed after 2027-06-23: Use simHelpers.np2EigenVectorXd instead.[0m
+    self.scObject.hub.v_CN_NInit = unitTestSupport.np2EigenVectorXd(vN)
+
+tests/integration/multiagent/test_target_recorder_option.py::test_diagnostic_recorders_are_opt_in_without_scientific_schema_change
+  /Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/src/bsk_rl/sim/dyn.py:1090: [33;20mBSKDeprecationWarning: Basilisk.utilities.unitTestSupport.np2EigenVectorXd will be removed after 2027-06-23: Use simHelpers.np2EigenVectorXd instead.[0m
+    unitTestSupport.np2EigenVectorXd(nHat_B),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+351 passed, 8 warnings in 18.29s

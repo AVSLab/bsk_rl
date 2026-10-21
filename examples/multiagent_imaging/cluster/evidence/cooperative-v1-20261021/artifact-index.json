@@ -1,0 +1,357 @@
+{
+  "version": "cooperative-evidence-index-v1",
+  "native_artifacts": {
+    "native-final/blocked/fixture.json": {
+      "file": "native-fixtures/blocked.json.gz",
+      "uncompressed_sha256": "2030e822b70347f220544bc555145ba4afd8ea71f2b70a2883d035c3f67c0ab2",
+      "gzip_sha256": "5ae3af5215890108a51b16e6331f568d1be8783360f077b9536315251ee7f905",
+      "gzip_bytes": 66106
+    },
+    "native-final/delivered/fixture.json": {
+      "file": "native-fixtures/delivered.json.gz",
+      "uncompressed_sha256": "531e4aba1e6549ed5115287a2b7b93d7da742c8964c85be1f424617269d15153",
+      "gzip_sha256": "3ad2c84b850d7750d4e971872d4f95ee941be60bf805db1e19a66704b13c0457",
+      "gzip_bytes": 67662
+    },
+    "native-final/expired/fixture.json": {
+      "file": "native-fixtures/expired.json.gz",
+      "uncompressed_sha256": "165677dd4bf18b347d966b7e8a06efb06f4c3dbafe399b50d744a805a63d0519",
+      "gzip_sha256": "8a689d10e6ac20dac948a9b11438e0312ba245630edc979beae1a0bc30dabab1",
+      "gzip_bytes": 65975
+    },
+    "native-final/negative_blocked/fixture.json": {
+      "file": "native-fixtures/negative_blocked.json.gz",
+      "uncompressed_sha256": "463e77eb3bf3d762a0a36b30dda9ba9ac8ddd8bd82f987288f50a0cf094b4691",
+      "gzip_sha256": "e4a0abe153c430f046602e7b127a95d349b79baad308866f1068b7ad581ce3fa",
+      "gzip_bytes": 58874
+    },
+    "native-final/negative_delivered/fixture.json": {
+      "file": "native-fixtures/negative_delivered.json.gz",
+      "uncompressed_sha256": "7f5ef5ed08340cd8cef812f265dfdd88b6e6e86b85a6346f43d866c2f755ec7f",
+      "gzip_sha256": "e23d6b78396d77275d60298e8899ab60597ee01c9bdb773b04400fd6ee1d9a0e",
+      "gzip_bytes": 59525
+    },
+    "native-final/negative_no_comm_image/fixture.json": {
+      "file": "native-fixtures/negative_no_comm_image.json.gz",
+      "uncompressed_sha256": "bd38edf623b25dfa42a5296ca64add74c5e3e1ea5fd0e18d9a23befd4b027a9a",
+      "gzip_sha256": "8b753853d2d229cbf83dd2ea432bc849b7eccf7388facec175005df2130d49ae",
+      "gzip_bytes": 48499
+    },
+    "native-final/no_comm_charge/fixture.json": {
+      "file": "native-fixtures/no_comm_charge.json.gz",
+      "uncompressed_sha256": "aa9b9080917fd2720323c20b85d97aaa9d7328f728f9d4be1a545aab3b9abe5f",
+      "gzip_sha256": "c04a84d343a8fb67b84f6940d962920e61112b36cf886a43862d9592d55c2563",
+      "gzip_bytes": 53024
+    },
+    "native-final/no_comm_desat/fixture.json": {
+      "file": "native-fixtures/no_comm_desat.json.gz",
+      "uncompressed_sha256": "aeab16961003b04d6c27710178770f091269c9cc1499a0b11fb8b61f637a4da2",
+      "gzip_sha256": "5c28d7f9abd1002b31718909586284a219bb5678413a2eda03c180df80a01993",
+      "gzip_bytes": 54371
+    },
+    "native-final/no_comm_downlink/fixture.json": {
+      "file": "native-fixtures/no_comm_downlink.json.gz",
+      "uncompressed_sha256": "4603a0cafe47d81159875b18406cb33aee21875f7a5753b55e06d4f55405770e",
+      "gzip_sha256": "6d386a8fde6a81bf0d7fa364de2f4ca3cba46a182b84af9abf43333020c5b2c0",
+      "gzip_bytes": 53039
+    },
+    "native-final/no_comm_image_110/fixture.json": {
+      "file": "native-fixtures/no_comm_image_110.json.gz",
+      "uncompressed_sha256": "d73f071d496d370cd019714e4c170a85c4b977002068dda1e789cafccf78779a",
+      "gzip_sha256": "49d549b7b0ae936cfa719a232ab74f7e0b42da2fa8834dd492d31abe9d94a26a",
+      "gzip_bytes": 54973
+    },
+    "native-final/no_comm_image_116/fixture.json": {
+      "file": "native-fixtures/no_comm_image_116.json.gz",
+      "uncompressed_sha256": "024f4f3a4283642989c1267c1fff83a2937206aa2b7052676daa46ef82e1b3cc",
+      "gzip_sha256": "2a84c8121e8681403f64930b029112e5c2c2cb46a603271d405ec9360567409a",
+      "gzip_bytes": 55028
+    },
+    "native-final/no_comm_image_124/fixture.json": {
+      "file": "native-fixtures/no_comm_image_124.json.gz",
+      "uncompressed_sha256": "fed2510e04df39b434c9dc9f0734a2ede0314c872363ba00d7a2fb413e4f13e8",
+      "gzip_sha256": "9a6d204afbba6eab7ff4360c4610d1e03423da6fc21bb0fc25e00df4138df4e5",
+      "gzip_bytes": 54976
+    },
+    "native-final/no_comm_image_185/fixture.json": {
+      "file": "native-fixtures/no_comm_image_185.json.gz",
+      "uncompressed_sha256": "29a0c5759e99569ba96c93fe8a1a57a07274d6e8aec990ca4b3d28a6c6c83b0e",
+      "gzip_sha256": "ae25540833c4a875ad6f0f58ea195ab1193aa013c10d2203b674d534760a96f3",
+      "gzip_bytes": 54966
+    },
+    "native-final/no_comm_image_193/fixture.json": {
+      "file": "native-fixtures/no_comm_image_193.json.gz",
+      "uncompressed_sha256": "bb95e2825bf49dd3b8b99202e6297ffa5b6fa07ff5dcf1256273fd530047b797",
+      "gzip_sha256": "72ac4e0165627f1ac7800e17c57a5964c465cb1773d456c8862f2d74810c7698",
+      "gzip_bytes": 53814
+    },
+    "native-final/no_comm_image_24/fixture.json": {
+      "file": "native-fixtures/no_comm_image_24.json.gz",
+      "uncompressed_sha256": "022080c2d4e84494a57206a8c24be627c01c49eec2aa95265af81e40130afd6c",
+      "gzip_sha256": "2b680faffe72210ae5bbe793eff6d387cf27576a8a0e591eff9432e8ce061923",
+      "gzip_bytes": 55270
+    },
+    "native-final/no_comm_image_51/fixture.json": {
+      "file": "native-fixtures/no_comm_image_51.json.gz",
+      "uncompressed_sha256": "3dff0c500ece6bcb7fba6030ce1f357c109fca2177bf489ff8059d38d57ac892",
+      "gzip_sha256": "68f91b89a43a77a0b4f20c992fcff682e3cd05b9ec84fd6b90c1fa1c89c0fdd2",
+      "gzip_bytes": 55235
+    },
+    "native-final/no_comm_image_54/fixture.json": {
+      "file": "native-fixtures/no_comm_image_54.json.gz",
+      "uncompressed_sha256": "4b86eb9d98783b154576eba72660983d50bb04f50f7d37d3420aa8cc69701cce",
+      "gzip_sha256": "b2648edbfd74de5cdc7436b3bb1e8f6570ecebbeb70a207baa3fffe0c643a284",
+      "gzip_bytes": 54984
+    },
+    "native-final/no_comm_image_62/fixture.json": {
+      "file": "native-fixtures/no_comm_image_62.json.gz",
+      "uncompressed_sha256": "08c5c613b3c7e8ea6836fc228386e8ee567e4f131d990b84b94c1366bd20f9cb",
+      "gzip_sha256": "bef72383d35a6550c5822bfc676fb3d7c99a01e5d4e99e814ad1cc21dcb110ea",
+      "gzip_bytes": 55049
+    },
+    "native-final/no_comm_image_96/fixture.json": {
+      "file": "native-fixtures/no_comm_image_96.json.gz",
+      "uncompressed_sha256": "aeda3678364c825368624c76cbc51eb72e83eb188249ff9aa253eaaf597a9193",
+      "gzip_sha256": "2fe82b6650f5f27e18f758d06fdb0f8072dddf9a21e8774ae937cf76c197192c",
+      "gzip_bytes": 55004
+    },
+    "native-final/owned_blocked/fixture.json": {
+      "file": "native-fixtures/owned_blocked.json.gz",
+      "uncompressed_sha256": "c6c410e84bdc9cb619840c2ea17452880d52de4e1bcd252b8074aac5d006368d",
+      "gzip_sha256": "4b91e4068a29a8747c88bbc688a17c529fa17200d34d657c68088bbbf930cca7",
+      "gzip_bytes": 66041
+    },
+    "native-final/owned_delivered/fixture.json": {
+      "file": "native-fixtures/owned_delivered.json.gz",
+      "uncompressed_sha256": "73d5f6d56a01525d1467da34dfd91f64434bf5506f10873cf71f50635a4929b8",
+      "gzip_sha256": "4e6bd770284bc8d558fa5d27fbcd9353afb5f5f469a5bb0b214922ad147cc1c5",
+      "gzip_bytes": 67573
+    },
+    "native-final/replay/fixture.json": {
+      "file": "native-fixtures/replay.json.gz",
+      "uncompressed_sha256": "29516d6e14b124d8ba5293975913baae78738ae79d854e7b7daf669073e2d60c",
+      "gzip_sha256": "2e4b99f57ffb98c01550826cbce69ef05e79d7bca512e437bbbe6394307ee4b9",
+      "gzip_bytes": 67788
+    },
+    "no_comm_image-explore-v2/fixture.json": {
+      "file": "exploration-fixtures/no_comm_image-explore-v2.json.gz",
+      "uncompressed_sha256": "a0b5b5af0656ffb2c4cdb37934f8c56095ec1784dbdbf5254771bf70a59f4a12",
+      "gzip_sha256": "ed9ebb4bfba8feab9b2941299ad67965a7893539abfc5273ccf459e96efb52d9",
+      "gzip_bytes": 55175
+    },
+    "team_blocked-explore-v2/fixture.json": {
+      "file": "exploration-fixtures/team_blocked-explore-v2.json.gz",
+      "uncompressed_sha256": "b22bc0db5c1d280c01433c87178e912ba2e468968747ed680669d18e3811a38b",
+      "gzip_sha256": "f16c4d794e80a794324235753c5c55ee2d68601d3156972901e622f83c0f0b93",
+      "gzip_bytes": 66132
+    },
+    "team_delivered-explore/fixture.json": {
+      "file": "exploration-fixtures/team_delivered-explore.json.gz",
+      "uncompressed_sha256": "b092eee481d90829716afbb7f88e24975d7580af81ecd09765ffadc1987d7f8a",
+      "gzip_sha256": "369509a70de38d69cb2164d3724218879056c52affe84c4becd19671c2d45f73",
+      "gzip_bytes": 2509
+    },
+    "team_delivered-explore-v2/fixture.json": {
+      "file": "exploration-fixtures/team_delivered-explore-v2.json.gz",
+      "uncompressed_sha256": "a0bdd20b900aaa50cc4f674965570707897e41225c66193b437f2646a44d753a",
+      "gzip_sha256": "161bee55f433b1c041d4c6e65b26b7de6783cda99f1dedad1394c438fc4dd88d",
+      "gzip_bytes": 67768
+    }
+  },
+  "retained_local_training_root": "/Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/output/cooperative-v1-qualification-20261021/local-learning-v2",
+  "checkpoint_and_learner_files_retained_locally": true,
+  "files": {
+    "native-replay-2-episode.json.gz": {
+      "bytes": 516832,
+      "sha256": "ea206258b30ba07264bdac26e5b7ac3b54d82ee6009ae8519f0535e44f2b920f"
+    },
+    "experiment-spec.json": {
+      "bytes": 1997,
+      "sha256": "c19b0a52677cc3056e878bd89e6bb3028c3466cf1fc45a0e0eaaf3c3f1ed5a66"
+    },
+    "local-missions.json": {
+      "bytes": 2835,
+      "sha256": "94790cf218384277c534bfdc0ec4ccf2a6f015e5038906931a91d0b05192ea25"
+    },
+    "communication-value.png": {
+      "bytes": 91845,
+      "sha256": "bcbe54fb695d926a38c4830f58760ca20055d71a0999134d575c462a197d4a92"
+    },
+    "native-plan.json": {
+      "bytes": 2290,
+      "sha256": "177564e6f67da66765fdb9e2e509636fffb3fcc66cb3320cc51bca23d2906b79"
+    },
+    "native-replay-2-verification.json": {
+      "bytes": 1139,
+      "sha256": "efded5728ed3ea6d606642af562187276d5c8b955e2e6a50bad10d166ace73c0"
+    },
+    "allocation-readback.json": {
+      "bytes": 712,
+      "sha256": "052f3b008606499e63960daf9f796e301093072416749c3360754c7ae054ffb6"
+    },
+    "starting-provenance.json": {
+      "bytes": 5733,
+      "sha256": "c31386a82b008a0861c16fe123f8901f9df8b2ffa7232e2b8547a790e68d8b0d"
+    },
+    "native-replay-1-verification.json": {
+      "bytes": 1141,
+      "sha256": "ff014424ef0581bc8d556643568af11b05066dad4341b384cd165e15ace66e7b"
+    },
+    "horizon-comparison.json": {
+      "bytes": 451,
+      "sha256": "db9be7d51231253052a5b6c3ae4f2bb1a4b4553484e5087774778fc4c088ae2e"
+    },
+    "ruff.log": {
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "native-replay-1-episode.json.gz": {
+      "bytes": 470583,
+      "sha256": "1b771ce2b8950f9a0e81be675deea1867881efd29393a1eb6b99a5e467fe48c6"
+    },
+    "tests.log": {
+      "bytes": 4249,
+      "sha256": "1cabfe194f28ccfe9a06daebab5e2d299a77e685ff97b9208136577d4b029a71"
+    },
+    "native-qualification.json": {
+      "bytes": 24296,
+      "sha256": "234a91e40c1b03c91aea25eac2a60d462dafae3097e7eb82ab0cd8925ae20de7"
+    },
+    "retained-task-credit-verification.json": {
+      "bytes": 2736,
+      "sha256": "0c9381f6f4c0490a8daca4a59251e6892952b2126c1b851784b66c55c3d5a3ef"
+    },
+    "verification.json": {
+      "bytes": 10579,
+      "sha256": "c93087eeaac559b76f78ec59210b2021c09c61d3632f8aa46b21dccc4b01da45"
+    },
+    "local-ppo-qualification.json": {
+      "bytes": 47638,
+      "sha256": "40320a25352d69dfcd94c2e7a11a7052f4e2fdcc483804455543a0660f9c75cf"
+    },
+    "encoder-weight-changes.json": {
+      "bytes": 457,
+      "sha256": "46b90eb925214f4a21f69ca68b2661785234193dfd265a1071ef9a7bb0da44e9"
+    },
+    "native-transport-acceptance.json": {
+      "bytes": 888,
+      "sha256": "56ac0bfa902dce5ffae92e366a85ff53a7acde340def4b3342636a38ecdc62eb"
+    },
+    "native-fixtures/no_comm_image_54.json.gz": {
+      "bytes": 54984,
+      "sha256": "b2648edbfd74de5cdc7436b3bb1e8f6570ecebbeb70a207baa3fffe0c643a284"
+    },
+    "native-fixtures/no_comm_image_96.json.gz": {
+      "bytes": 55004,
+      "sha256": "2fe82b6650f5f27e18f758d06fdb0f8072dddf9a21e8774ae937cf76c197192c"
+    },
+    "native-fixtures/no_comm_image_62.json.gz": {
+      "bytes": 55049,
+      "sha256": "bef72383d35a6550c5822bfc676fb3d7c99a01e5d4e99e814ad1cc21dcb110ea"
+    },
+    "native-fixtures/expired.json.gz": {
+      "bytes": 65975,
+      "sha256": "8a689d10e6ac20dac948a9b11438e0312ba245630edc979beae1a0bc30dabab1"
+    },
+    "native-fixtures/no_comm_image_116.json.gz": {
+      "bytes": 55028,
+      "sha256": "2a84c8121e8681403f64930b029112e5c2c2cb46a603271d405ec9360567409a"
+    },
+    "native-fixtures/no_comm_image_24.json.gz": {
+      "bytes": 55270,
+      "sha256": "2b680faffe72210ae5bbe793eff6d387cf27576a8a0e591eff9432e8ce061923"
+    },
+    "native-fixtures/no_comm_image_193.json.gz": {
+      "bytes": 53814,
+      "sha256": "72ac4e0165627f1ac7800e17c57a5964c465cb1773d456c8862f2d74810c7698"
+    },
+    "native-fixtures/blocked.json.gz": {
+      "bytes": 66106,
+      "sha256": "5ae3af5215890108a51b16e6331f568d1be8783360f077b9536315251ee7f905"
+    },
+    "native-fixtures/owned_delivered.json.gz": {
+      "bytes": 67573,
+      "sha256": "4e6bd770284bc8d558fa5d27fbcd9353afb5f5f469a5bb0b214922ad147cc1c5"
+    },
+    "native-fixtures/no_comm_desat.json.gz": {
+      "bytes": 54371,
+      "sha256": "5c28d7f9abd1002b31718909586284a219bb5678413a2eda03c180df80a01993"
+    },
+    "native-fixtures/no_comm_image_110.json.gz": {
+      "bytes": 54973,
+      "sha256": "49d549b7b0ae936cfa719a232ab74f7e0b42da2fa8834dd492d31abe9d94a26a"
+    },
+    "native-fixtures/negative_no_comm_image.json.gz": {
+      "bytes": 48499,
+      "sha256": "8b753853d2d229cbf83dd2ea432bc849b7eccf7388facec175005df2130d49ae"
+    },
+    "native-fixtures/negative_blocked.json.gz": {
+      "bytes": 58874,
+      "sha256": "e4a0abe153c430f046602e7b127a95d349b79baad308866f1068b7ad581ce3fa"
+    },
+    "native-fixtures/negative_delivered.json.gz": {
+      "bytes": 59525,
+      "sha256": "e23d6b78396d77275d60298e8899ab60597ee01c9bdb773b04400fd6ee1d9a0e"
+    },
+    "native-fixtures/no_comm_image_185.json.gz": {
+      "bytes": 54966,
+      "sha256": "ae25540833c4a875ad6f0f58ea195ab1193aa013c10d2203b674d534760a96f3"
+    },
+    "native-fixtures/owned_blocked.json.gz": {
+      "bytes": 66041,
+      "sha256": "4b91e4068a29a8747c88bbc688a17c529fa17200d34d657c68088bbbf930cca7"
+    },
+    "native-fixtures/no_comm_charge.json.gz": {
+      "bytes": 53024,
+      "sha256": "c04a84d343a8fb67b84f6940d962920e61112b36cf886a43862d9592d55c2563"
+    },
+    "native-fixtures/no_comm_downlink.json.gz": {
+      "bytes": 53039,
+      "sha256": "6d386a8fde6a81bf0d7fa364de2f4ca3cba46a182b84af9abf43333020c5b2c0"
+    },
+    "native-fixtures/replay.json.gz": {
+      "bytes": 67788,
+      "sha256": "2e4b99f57ffb98c01550826cbce69ef05e79d7bca512e437bbbe6394307ee4b9"
+    },
+    "native-fixtures/no_comm_image_124.json.gz": {
+      "bytes": 54976,
+      "sha256": "9a6d204afbba6eab7ff4360c4610d1e03423da6fc21bb0fc25e00df4138df4e5"
+    },
+    "native-fixtures/delivered.json.gz": {
+      "bytes": 67662,
+      "sha256": "3ad2c84b850d7750d4e971872d4f95ee941be60bf805db1e19a66704b13c0457"
+    },
+    "native-fixtures/no_comm_image_51.json.gz": {
+      "bytes": 55235,
+      "sha256": "68f91b89a43a77a0b4f20c992fcff682e3cd05b9ec84fd6b90c1fa1c89c0fdd2"
+    },
+    "exploration-fixtures/team_delivered-explore-v2.json.gz": {
+      "bytes": 67768,
+      "sha256": "161bee55f433b1c041d4c6e65b26b7de6783cda99f1dedad1394c438fc4dd88d"
+    },
+    "exploration-fixtures/team_delivered-explore.json.gz": {
+      "bytes": 2509,
+      "sha256": "369509a70de38d69cb2164d3724218879056c52affe84c4becd19671c2d45f73"
+    },
+    "exploration-fixtures/no_comm_image-explore-v2.json.gz": {
+      "bytes": 55175,
+      "sha256": "ed9ebb4bfba8feab9b2941299ad67965a7893539abfc5273ccf459e96efb52d9"
+    },
+    "exploration-fixtures/team_blocked-explore-v2.json.gz": {
+      "bytes": 66132,
+      "sha256": "f16c4d794e80a794324235753c5c55ee2d68601d3156972901e622f83c0f0b93"
+    }
+  },
+  "native_replay_artifacts": {
+    "native-replay-1-episode.json.gz": {
+      "uncompressed_sha256": "69a4b13abb59bd50febb915af6dc1e0437e149c1ffe2c400b7a6cf6bbf2cfdb6",
+      "gzip_sha256": "1b771ce2b8950f9a0e81be675deea1867881efd29393a1eb6b99a5e467fe48c6",
+      "gzip_bytes": 470583
+    },
+    "native-replay-2-episode.json.gz": {
+      "uncompressed_sha256": "a1fca25bcdd9243f8c159671308104d53450cdc48de7e876453f7bb77a377c8e",
+      "gzip_sha256": "ea206258b30ba07264bdac26e5b7ac3b54d82ee6009ae8519f0535e44f2b920f",
+      "gzip_bytes": 516832
+    }
+  }
+}

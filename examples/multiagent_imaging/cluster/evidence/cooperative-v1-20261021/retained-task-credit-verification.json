@@ -1,0 +1,77 @@
+{
+  "passed": true,
+  "raw_agent_episodes": 4,
+  "true_decisions": 1052,
+  "bootstrap_rows": 4,
+  "target_max_abs_error": 0.0,
+  "forced_no_action_count": 0,
+  "padded_rows": 0,
+  "physical_reward_traces": [],
+  "hashes": {
+    "raw-episodes.json.gz": "7de27874f481a65a062f443ad6ecb52bad29b617c9bf56865b01fe87bb23606c",
+    "bootstrap-batch.npz": "5d80128d7308557a92a390a644fbcf22d39f65809bf32dffadfd31dcea15829a",
+    "learner-batch.npz": "6e6f586eee8bd57fe0e0df00cd77c0d6f6545ed225071a57574abdd19fade55d",
+    "bootstrap-values.npz": "e96c690a1cbe01e32ce978f15209c145ab8bb751d996bc9a6375cc0ea2d58362"
+  },
+  "matched_mission_episodes": 1,
+  "physical_product_reward_target_traces": [
+    {
+      "kind": "acquisition",
+      "product": {
+        "capture_time": 386.0,
+        "completion_time": 394.0,
+        "delivery_time": null,
+        "quality": 1.0,
+        "record_id": "sensor_0:102:386.000000000:4000000.000000000",
+        "request_epoch": 0.0,
+        "source_sensor": "sensor_0",
+        "storage_owner": "sensor_0",
+        "target_id": 102
+      },
+      "agent": "sensor_0",
+      "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+      "raw_event_index": 10,
+      "event_time_s": 394.0,
+      "owned_interval_reward": 0.225332937293065,
+      "condensed_row": 3,
+      "seconds_from_action_start": 109.0,
+      "endpoint_discount": 0.9873323180919078,
+      "condensed_reward": 0.2224784940481186,
+      "value_target": 0.7560372352600098,
+      "semantics": "Owned interval total can include other credits or costs; product timing is traced, not assigned fabricated isolated credit"
+    },
+    {
+      "kind": "physical_delivery",
+      "product": {
+        "capture_time": 1595.0,
+        "completion_time": 1603.0,
+        "delivery_time": 4172.0,
+        "quality": 1.0,
+        "record_id": "sensor_3:1:1595.000000000:4000000.000000000",
+        "request_epoch": 0.0,
+        "source_sensor": "sensor_3",
+        "storage_owner": "sensor_3",
+        "target_id": 1
+      },
+      "agent": "sensor_3",
+      "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+      "raw_event_index": 114,
+      "event_time_s": 4172.0,
+      "owned_interval_reward": 0.0167146761536563,
+      "condensed_row": 265,
+      "seconds_from_action_start": 8.0,
+      "endpoint_discount": 0.9990647604652028,
+      "condensed_reward": 0.06578502804040909,
+      "value_target": 0.18022188544273376,
+      "semantics": "Owned interval total can include other credits or costs; product timing is traced, not assigned fabricated isolated credit"
+    }
+  ],
+  "agent_decisions": {
+    "sensor_0": 231,
+    "sensor_1": 289,
+    "sensor_2": 257,
+    "sensor_3": 275
+  },
+  "learner_counter_matches": true,
+  "sampled_decisions_match": true
+}

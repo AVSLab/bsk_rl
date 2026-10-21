@@ -69,4 +69,7 @@ def test_profile_reports_memory_without_commands_or_env(tmp_path):
     rows=[json.loads(s) for s in p.path.read_text().splitlines()]
     assert [r['phase'] for r in rows]==['before-ray','before-test','shutdown']
     assert rows[1]['processes'] and not rows[1]['rss_sum_is_job_memory']
-    assert all(set(r)<= {'pid','name','rss_bytes','shared_bytes','pss_bytes','uss_bytes'} for row in rows for r in row['processes'])
+    assert all(set(r)<= {'pid','name','rss_bytes','shared_bytes','pss_bytes','uss_bytes',
+                        'cpu_user_s','cpu_system_s'} for row in rows for r in row['processes'])
+    assert all(r['cpu_user_s'] is None or r['cpu_user_s'] >= 0 for row in rows for r in row['processes'])
+    assert all(r['cpu_system_s'] is None or r['cpu_system_s'] >= 0 for row in rows for r in row['processes'])

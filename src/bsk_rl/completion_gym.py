@@ -265,6 +265,9 @@ class CompletionConstellationTasking(SensingAgentConstellationTasking):
         # is still executing its own action. Delays are quantized to simulation ticks.
         configured_max = self.simulator.max_step_duration
         next_event = self.communicator.next_event_time(now)
+        boundary = getattr(self.rewarder, "next_request_boundary", None)
+        if boundary is not None:
+            next_event = min(next_event, boundary(now))
         if math.isfinite(next_event):
             tick = float(self.simulator.sim_rate)
             wait = max(tick, math.ceil((next_event - now) / tick - 1e-10) * tick)
@@ -274,6 +277,9 @@ class CompletionConstellationTasking(SensingAgentConstellationTasking):
         finally:
             self.simulator.max_step_duration = configured_max
         end = float(self.simulator.sim_time)
+        sync = getattr(getattr(self, "rewarder", None), "sync_requests", None)
+        if sync is not None:
+            sync(end)
 
         # 3. Received completions can invalidate an active image. No peer's private
         # catalog or global reward ledger is consulted in this decision rule.
@@ -346,12 +352,17 @@ class CompletionConstellationTasking(SensingAgentConstellationTasking):
                 self.episode_reward_by_agent[sensor] += float(value)
                 self.reward_events.append(dict(sensor=sensor,time_s=float(self.simulator.sim_time),
                     reward=float(value),cumulative_reward=self.episode_reward_by_agent[sensor]))
+                if hasattr(getattr(self, "rewarder", None), "request_schedule"):
+                    self.reward_events[-1]["components"] = dict(self.rewarder.last_reward_components[sensor])
             self._reward_logged_index = self._reward_event_index
         return reward
 
     def _get_obs(self):
         # RLlib bootstraps time-limit truncations from a real final observation,
         # including agents still executing actions when the horizon is reached.
+        sync = getattr(getattr(self, "rewarder", None), "sync_requests", None)
+        if sync is not None:
+            sync(float(self.simulator.sim_time))
         original = self.generate_obs_retasking_only
         if self.simulator.sim_time >= self.time_limit:
             self.generate_obs_retasking_only = False

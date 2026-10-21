@@ -126,15 +126,17 @@ def candidate_snapshot(sensor, count):
             np.degrees(np.arcsin(np.clip(relative @ zenith / distance, -1, 1)))
         )
         eligible.append((target, elevation, distance))
+    schedule = getattr(sensor, "completion_request_schedule", None)
+    active_ids = schedule.active_ids(now) if schedule is not None else None
     visible = sorted(
         (row for row in eligible if -21 <= row[1] <= 90),
-        key=lambda row: (row[1], int(row[0].id)),
+        key=lambda row: (active_ids is not None and int(row[0].id) not in active_ids, row[1], int(row[0].id)),
     )
     selected = [row[0] for row in visible[:count]]
     ids = {t.id for t in selected}
     remaining = sorted(
         (row for row in eligible if row[0].id not in ids),
-        key=lambda row: (row[2], int(row[0].id)),
+        key=lambda row: (active_ids is not None and int(row[0].id) not in active_ids, row[2], int(row[0].id)),
     )
     selected.extend(row[0] for row in remaining[: count - len(selected)])
     selected.extend([None] * (count - len(selected)))
@@ -192,11 +194,12 @@ class CompletionTargets(Observation):
     the inherited imaging model; it is not a rotating-frame position derivative.
     """
 
-    def __init__(self, n_targets, norm_time=12000.0, study=False):
+    def __init__(self, n_targets, norm_time=12000.0, study=False, cooperative=False):
         """Configure the fixed candidate count and service-age normalization."""
         super().__init__(name="completion_targets")
         self.n_targets, self.norm_time = int(n_targets), float(norm_time)
         self.study = study
+        self.cooperative = cooperative
 
     def get_obs(self):
         """Encode the cached candidate tuple with explicit validity and knownness."""
@@ -207,7 +210,7 @@ class CompletionTargets(Observation):
         result = {}
         for index, target in enumerate(snapshot.targets):
             if target is None:
-                result[f"slot_{index}"] = np.zeros(21 if self.study else TARGET_FEATURES)
+                result[f"slot_{index}"] = np.zeros(24 if self.cooperative else 21 if self.study else TARGET_FEATURES)
                 continue
             opportunity = {"object": target}
             acquired = catalog.target(target.id).latest_acquisition_time
@@ -239,6 +242,12 @@ class CompletionTargets(Observation):
                     sum(not e.fact.qualified for e in received) / 3,
                     0 if latest is None else (now-latest)/self.norm_time,
                     float(any(now < epoch+ttl for e, epoch, ttl in entries))])
+            if self.cooperative:
+                schedule = sensor.completion_request_schedule
+                epoch = schedule.epoch(now)
+                values.extend([float(int(target.id) in schedule.active_ids(now)),
+                    (epoch + schedule.config.request_window_s - now) / self.norm_time,
+                    epoch / self.norm_time])
             result[f"slot_{index}"] = np.asarray(values, dtype=float)
         return result
 

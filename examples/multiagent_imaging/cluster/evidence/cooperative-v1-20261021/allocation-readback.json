@@ -1,0 +1,22 @@
+{
+  "verified": true,
+  "method": "Termius UI command delivery with fresh screenshot readback",
+  "host": "login-ci4",
+  "observed_utc": "2026-10-21T20:00:16Z",
+  "account": "ucb550_asc3",
+  "user": "dahu1128",
+  "cluster": "alpine",
+  "partition": "acpu",
+  "qos": "cpu-normal",
+  "max_wall_s": 86400,
+  "qos_max_cpus_per_user": 128,
+  "partition_max_memory_mib_per_cpu": 3840,
+  "planned_cpus": 56,
+  "planned_memory_mib": 204800,
+  "planned_memory_mib_per_cpu": 3657.1428571428573,
+  "canary_allocated_cpu_hours": 84,
+  "pair_cpus": 112,
+  "association_grptres_limits": "blank in readback; not interpreted as remaining allocation balance",
+  "remaining_service_units_verified": false,
+  "jobs_submitted": 0
+}

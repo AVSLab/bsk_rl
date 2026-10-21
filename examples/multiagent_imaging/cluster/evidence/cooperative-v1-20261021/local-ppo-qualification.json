@@ -1,0 +1,1303 @@
+{
+  "passed": true,
+  "new_ppo_updates": 2,
+  "completed_full_missions": 2,
+  "true_decisions": 2123,
+  "updates": [
+    {
+      "iteration": 1,
+      "losses": {
+        "policy_loss": 0.16114990413188934,
+        "total_loss": 0.14311033487319946,
+        "vf_loss": 0.043650753796100616
+      },
+      "gradient_l2": 0.3747309744358063,
+      "parameter_change": {
+        "actor_l2": 0.3800549145712785,
+        "changed_elements": 432741,
+        "critic_l2": 0.6958229843811141,
+        "l2": 0.7928501520986307,
+        "max_absolute": 0.00430565420538187
+      }
+    },
+    {
+      "iteration": 2,
+      "losses": {
+        "policy_loss": 0.07249980419874191,
+        "total_loss": 0.0806574746966362,
+        "vf_loss": 0.06970860064029694
+      },
+      "gradient_l2": 0.1037810817360878,
+      "parameter_change": {
+        "actor_l2": 0.33612235442472177,
+        "changed_elements": 432980,
+        "critic_l2": 0.846059881566449,
+        "l2": 0.9103820957928884,
+        "max_absolute": 0.005715504288673401
+      }
+    }
+  ],
+  "retained_batch": {
+    "passed": true,
+    "raw_agent_episodes": 4,
+    "true_decisions": 1052,
+    "bootstrap_rows": 4,
+    "target_max_abs_error": 0.0,
+    "forced_no_action_count": 0,
+    "padded_rows": 0,
+    "physical_reward_traces": [],
+    "hashes": {
+      "raw-episodes.json.gz": "7de27874f481a65a062f443ad6ecb52bad29b617c9bf56865b01fe87bb23606c",
+      "bootstrap-batch.npz": "5d80128d7308557a92a390a644fbcf22d39f65809bf32dffadfd31dcea15829a",
+      "learner-batch.npz": "6e6f586eee8bd57fe0e0df00cd77c0d6f6545ed225071a57574abdd19fade55d",
+      "bootstrap-values.npz": "e96c690a1cbe01e32ce978f15209c145ab8bb751d996bc9a6375cc0ea2d58362"
+    },
+    "matched_mission_episodes": 1,
+    "physical_product_reward_target_traces": [
+      {
+        "kind": "acquisition",
+        "product": {
+          "capture_time": 386.0,
+          "completion_time": 394.0,
+          "delivery_time": null,
+          "quality": 1.0,
+          "record_id": "sensor_0:102:386.000000000:4000000.000000000",
+          "request_epoch": 0.0,
+          "source_sensor": "sensor_0",
+          "storage_owner": "sensor_0",
+          "target_id": 102
+        },
+        "agent": "sensor_0",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "raw_event_index": 10,
+        "event_time_s": 394.0,
+        "owned_interval_reward": 0.225332937293065,
+        "condensed_row": 3,
+        "seconds_from_action_start": 109.0,
+        "endpoint_discount": 0.9873323180919078,
+        "condensed_reward": 0.2224784940481186,
+        "value_target": 0.7560372352600098,
+        "semantics": "Owned interval total can include other credits or costs; product timing is traced, not assigned fabricated isolated credit"
+      },
+      {
+        "kind": "physical_delivery",
+        "product": {
+          "capture_time": 1595.0,
+          "completion_time": 1603.0,
+          "delivery_time": 4172.0,
+          "quality": 1.0,
+          "record_id": "sensor_3:1:1595.000000000:4000000.000000000",
+          "request_epoch": 0.0,
+          "source_sensor": "sensor_3",
+          "storage_owner": "sensor_3",
+          "target_id": 1
+        },
+        "agent": "sensor_3",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "raw_event_index": 114,
+        "event_time_s": 4172.0,
+        "owned_interval_reward": 0.0167146761536563,
+        "condensed_row": 265,
+        "seconds_from_action_start": 8.0,
+        "endpoint_discount": 0.9990647604652028,
+        "condensed_reward": 0.06578502804040909,
+        "value_target": 0.18022188544273376,
+        "semantics": "Owned interval total can include other credits or costs; product timing is traced, not assigned fabricated isolated credit"
+      }
+    ],
+    "agent_decisions": {
+      "sensor_0": 231,
+      "sensor_1": 289,
+      "sensor_2": 257,
+      "sensor_3": 275
+    },
+    "learner_counter_matches": true,
+    "sampled_decisions_match": true
+  },
+  "sender_credit": {
+    "passed": true,
+    "independent_target_reconstruction": {
+      "passed": true,
+      "raw_agent_episodes": 4,
+      "true_decisions": 1052,
+      "bootstrap_rows": 4,
+      "target_max_abs_error": 0.0,
+      "forced_no_action_count": 0,
+      "padded_rows": 0,
+      "physical_reward_traces": [],
+      "hashes": {
+        "raw-episodes.json.gz": "7de27874f481a65a062f443ad6ecb52bad29b617c9bf56865b01fe87bb23606c",
+        "bootstrap-batch.npz": "5d80128d7308557a92a390a644fbcf22d39f65809bf32dffadfd31dcea15829a",
+        "learner-batch.npz": "6e6f586eee8bd57fe0e0df00cd77c0d6f6545ed225071a57574abdd19fade55d",
+        "bootstrap-values.npz": "e96c690a1cbe01e32ce978f15209c145ab8bb751d996bc9a6375cc0ea2d58362"
+      }
+    },
+    "sender_transmit_rows_with_later_shared_science": 40,
+    "traces": [
+      {
+        "agent": "sensor_0",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 1609.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.1447131260504195,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 1.0099224230864023,
+          "reward": 0.1447131260504195,
+          "sensor": "sensor_0",
+          "time_s": 2026.0000000000002
+        },
+        "delay_s": 417.0000000000002,
+        "discount_to_event": 0.9523980887543235,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.051348961889743805,
+        "value_target": 0.3339966833591461,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_0",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 17,
+        "action_start_s": 2476.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.22610523694777065,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 1.275354443358442,
+          "reward": 0.22610523694777065,
+          "sensor": "sensor_0",
+          "time_s": 2653.0
+        },
+        "delay_s": 177.0,
+        "discount_to_event": 0.9795109555562478,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.15201334655284882,
+        "value_target": 0.31236422061920166,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_0",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 4402.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.04915839550262766,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 1.3907651469057878,
+          "reward": 0.04915839550262766,
+          "sensor": "sensor_0",
+          "time_s": 7054.0
+        },
+        "delay_s": 2652.0,
+        "discount_to_event": 0.7333171671893816,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -1.4766765832901,
+        "value_target": 0.11207497119903564,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_0",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 17,
+        "action_start_s": 8794.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.055710658386217124,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 1.883847532345649,
+          "reward": 0.055710658386217124,
+          "sensor": "sensor_0",
+          "time_s": 8918.0
+        },
+        "delay_s": 124.0,
+        "discount_to_event": 0.9856016661270862,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 0.04963844642043114,
+        "value_target": 0.3571912348270416,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_0",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 13350.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.18391646125776703,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 2.7852674035905784,
+          "reward": 0.18391646125776703,
+          "sensor": "sensor_0",
+          "time_s": 13959.0
+        },
+        "delay_s": 609.0,
+        "discount_to_event": 0.9312491494797928,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 0.2216864377260208,
+        "value_target": 0.40281522274017334,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_0",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 22070.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.09609697631319844,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 4.53736101516448,
+          "reward": 0.09609697631319844,
+          "sensor": "sensor_0",
+          "time_s": 22275.0
+        },
+        "delay_s": 205.0,
+        "discount_to_event": 0.9763084312962774,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 0.81331866979599,
+        "value_target": 0.49964818358421326,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_0",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 27553.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.1447131260504195,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 6.136212376708972,
+          "reward": 0.1447131260504195,
+          "sensor": "sensor_0",
+          "time_s": 28184.0
+        },
+        "delay_s": 631.0,
+        "discount_to_event": 0.9288560211960251,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.41911962628364563,
+        "value_target": 0.2756985127925873,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_0",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 28103.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.1447131260504195,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 6.136212376708972,
+          "reward": 0.1447131260504195,
+          "sensor": "sensor_0",
+          "time_s": 28184.0
+        },
+        "delay_s": 81.0,
+        "discount_to_event": 0.990571003327007,
+        "condensed_reward": 0.14334861934185028,
+        "normalized_ppo_advantage": 0.15917930006980896,
+        "value_target": 0.3817940056324005,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_0",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 33750.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.048916984504314115,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 7.471959091525235,
+          "reward": 0.048916984504314115,
+          "sensor": "sensor_0",
+          "time_s": 34314.0
+        },
+        "delay_s": 564.0,
+        "discount_to_event": 0.9361634060174916,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.04471457377076149,
+        "value_target": 0.3300655484199524,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_3",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 1177.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.1447131260504195,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 0.9731324613654374,
+          "reward": 0.1447131260504195,
+          "sensor": "sensor_3",
+          "time_s": 2026.0000000000002
+        },
+        "delay_s": 849.0000000000002,
+        "discount_to_event": 0.9054721696450828,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.5540233254432678,
+        "value_target": 0.26689913868904114,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_3",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 5762.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.03232796252017861,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 1.5017851062353536,
+          "reward": 0.03232796252017861,
+          "sensor": "sensor_3",
+          "time_s": 7087.0
+        },
+        "delay_s": 1325.0,
+        "discount_to_event": 0.8564395625390301,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.8795883059501648,
+        "value_target": 0.22741718590259552,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_3",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 11231.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.1321945768156267,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 2.415014678454806,
+          "reward": 0.1321945768156267,
+          "sensor": "sensor_3",
+          "time_s": 12998.0
+        },
+        "delay_s": 1767.0,
+        "discount_to_event": 0.8132898700808769,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.57491135597229,
+        "value_target": 0.24715133011341095,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_3",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 11423.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.1321945768156267,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 2.415014678454806,
+          "reward": 0.1321945768156267,
+          "sensor": "sensor_3",
+          "time_s": 12998.0
+        },
+        "delay_s": 1575.0,
+        "discount_to_event": 0.8317599197819047,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.43009844422340393,
+        "value_target": 0.27549055218696594,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_3",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 23100.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.14825977717051386,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 4.968047274399923,
+          "reward": 0.14825977717051386,
+          "sensor": "sensor_3",
+          "time_s": 23686.0
+        },
+        "delay_s": 586.0,
+        "discount_to_event": 0.9337576490550071,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 1.2121511697769165,
+        "value_target": 0.5423963069915771,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_3",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 27920.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.1447131260504195,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 6.325538996731642,
+          "reward": 0.1447131260504195,
+          "sensor": "sensor_3",
+          "time_s": 28184.0
+        },
+        "delay_s": 264.0,
+        "discount_to_event": 0.9695944906610455,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.2811451554298401,
+        "value_target": 0.31124040484428406,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_3",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 29086.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.017745448904282073,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 6.329008206771456,
+          "reward": 0.017745448904282073,
+          "sensor": "sensor_3",
+          "time_s": 30102.000000000004
+        },
+        "delay_s": 1016.0000000000036,
+        "discount_to_event": 0.8879578553495866,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 0.16529002785682678,
+        "value_target": 0.37189239263534546,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_3",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 32300.000000000004,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.21091299619371992,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 7.466367713031405,
+          "reward": 0.21091299619371992,
+          "sensor": "sensor_3",
+          "time_s": 32859.0
+        },
+        "delay_s": 558.9999999999964,
+        "discount_to_event": 0.9367110328163525,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.0924023911356926,
+        "value_target": 0.3447425067424774,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_3",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 37860.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.05877898130683861,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 8.44509772587875,
+          "reward": 0.05877898130683861,
+          "sensor": "sensor_3",
+          "time_s": 38001.0
+        },
+        "delay_s": 141.0,
+        "discount_to_event": 0.9836439275479977,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.6468239426612854,
+        "value_target": 0.22859397530555725,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_3",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 38429.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.028285213994645616,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 8.571984540446994,
+          "reward": 0.028285213994645616,
+          "sensor": "sensor_3",
+          "time_s": 39081.0
+        },
+        "delay_s": 652.0,
+        "discount_to_event": 0.9265774086097677,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -1.548071265220642,
+        "value_target": 0.09039300680160522,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_2",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 5652.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.04915839550262766,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 1.327542611862526,
+          "reward": 0.04915839550262766,
+          "sensor": "sensor_2",
+          "time_s": 7054.0
+        },
+        "delay_s": 1402.0,
+        "discount_to_event": 0.8487611871041008,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.7558133006095886,
+        "value_target": 0.21360190212726593,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_2",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 5880.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.04915839550262766,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 1.327542611862526,
+          "reward": 0.04915839550262766,
+          "sensor": "sensor_2",
+          "time_s": 7054.0
+        },
+        "delay_s": 1174.0,
+        "discount_to_event": 0.8716994160129136,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.5384599566459656,
+        "value_target": 0.2426733374595642,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_2",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 12000.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.1321945768156267,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 2.2797098352078606,
+          "reward": 0.1321945768156267,
+          "sensor": "sensor_2",
+          "time_s": 12998.0
+        },
+        "delay_s": 998.0,
+        "discount_to_event": 0.8898292187323515,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 0.15644119679927826,
+        "value_target": 0.390105277299881,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_2",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 17700.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.05119171714000394,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 3.4436550729037423,
+          "reward": 0.05119171714000394,
+          "sensor": "sensor_2",
+          "time_s": 18262.0
+        },
+        "delay_s": 562.0,
+        "discount_to_event": 0.9363824183076442,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.9650918841362,
+        "value_target": 0.19813434779644012,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_2",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 19200.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.028510884988771492,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 3.4778539264636255,
+          "reward": 0.028510884988771492,
+          "sensor": "sensor_2",
+          "time_s": 20113.0
+        },
+        "delay_s": 913.0,
+        "discount_to_event": 0.8987196370258598,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 0.1989440768957138,
+        "value_target": 0.35182011127471924,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_2",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 24548.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.21913883689431712,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 5.4561035555337565,
+          "reward": 0.21913883689431712,
+          "sensor": "sensor_2",
+          "time_s": 24673.0
+        },
+        "delay_s": 125.0,
+        "discount_to_event": 0.985486397249091,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 1.0059175491333008,
+        "value_target": 0.5095838308334351,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_2",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 33578.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.048916984504314115,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 7.334957168140815,
+          "reward": 0.048916984504314115,
+          "sensor": "sensor_2",
+          "time_s": 34314.0
+        },
+        "delay_s": 736.0,
+        "discount_to_event": 0.9175187188340248,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.44271722435951233,
+        "value_target": 0.26271408796310425,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_2",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 34225.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.048916984504314115,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 7.334957168140815,
+          "reward": 0.048916984504314115,
+          "sensor": "sensor_2",
+          "time_s": 34314.0
+        },
+        "delay_s": 89.0,
+        "discount_to_event": 0.9896445821626718,
+        "condensed_reward": 0.048410430550575256,
+        "normalized_ppo_advantage": 0.33675891160964966,
+        "value_target": 0.4196012616157532,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_2",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 15,
+        "action_start_s": 39881.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.02916138449578026,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 8.399317646691678,
+          "reward": 0.02916138449578026,
+          "sensor": "sensor_2",
+          "time_s": 42249.0
+        },
+        "delay_s": 2368.0,
+        "discount_to_event": 0.7580844903794672,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -1.0914859771728516,
+        "value_target": 0.1623692512512207,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 116.00000000000001,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.14395451088856653,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 0.17861400663623936,
+          "reward": 0.14395451088856653,
+          "sensor": "sensor_1",
+          "time_s": 267.0
+        },
+        "delay_s": 151.0,
+        "discount_to_event": 0.9824941336502427,
+        "condensed_reward": 0.3595585823059082,
+        "normalized_ppo_advantage": 2.6742513179779053,
+        "value_target": 0.806999146938324,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 17,
+        "action_start_s": 7544.000000000001,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.12180154834650593,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 1.701088442645644,
+          "reward": 0.12180154834650593,
+          "sensor": "sensor_1",
+          "time_s": 7714.000000000001
+        },
+        "delay_s": 170.0,
+        "discount_to_event": 0.9803132266900143,
+        "condensed_reward": 0.1194036677479744,
+        "normalized_ppo_advantage": 0.4519517123699188,
+        "value_target": 0.43442076444625854,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 8688.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.08287349942381442,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 2.0338505541065066,
+          "reward": 0.08287349942381442,
+          "sensor": "sensor_1",
+          "time_s": 8989.0
+        },
+        "delay_s": 301.0,
+        "discount_to_event": 0.965407629785972,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.08649881929159164,
+        "value_target": 0.33655494451522827,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 17,
+        "action_start_s": 16463.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.1351007682642793,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 4.153033042070756,
+          "reward": 0.1351007682642793,
+          "sensor": "sensor_1",
+          "time_s": 21167.0
+        },
+        "delay_s": 4704.0,
+        "discount_to_event": 0.5768470297167623,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -1.2983723878860474,
+        "value_target": 0.11202100664377213,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 17,
+        "action_start_s": 21788.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.1105007771457151,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 4.263533819216471,
+          "reward": 0.1105007771457151,
+          "sensor": "sensor_1",
+          "time_s": 21968.0
+        },
+        "delay_s": 180.0,
+        "discount_to_event": 0.9791673260908551,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 2.093744993209839,
+        "value_target": 0.7230046391487122,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 23182.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.18717721909608417,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 5.125715979374763,
+          "reward": 0.18717721909608417,
+          "sensor": "sensor_1",
+          "time_s": 24256.0
+        },
+        "delay_s": 1074.0,
+        "discount_to_event": 0.881954636706759,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 1.1597399711608887,
+        "value_target": 0.5479711890220642,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 23686.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.18717721909608417,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 5.125715979374763,
+          "reward": 0.18717721909608417,
+          "sensor": "sensor_1",
+          "time_s": 24256.0
+        },
+        "delay_s": 570.0,
+        "discount_to_event": 0.9355066764503539,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 1.479120135307312,
+        "value_target": 0.604254424571991,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 26664.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.06506823952147754,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 6.100325852701604,
+          "reward": 0.06506823952147754,
+          "sensor": "sensor_1",
+          "time_s": 27439.0
+        },
+        "delay_s": 775.0,
+        "discount_to_event": 0.9133430557524392,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": -0.9496047496795654,
+        "value_target": 0.1901436150074005,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 17,
+        "action_start_s": 28242.0,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.016205466362674174,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 6.261244445114698,
+          "reward": 0.016205466362674174,
+          "sensor": "sensor_1",
+          "time_s": 28250.0
+        },
+        "delay_s": 8.0,
+        "discount_to_event": 0.9990647604652028,
+        "condensed_reward": 0.016190310940146446,
+        "normalized_ppo_advantage": -0.7989503741264343,
+        "value_target": 0.19946683943271637,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 16,
+        "action_start_s": 29337.000000000004,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.017745448904282073,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 6.196417431435913,
+          "reward": 0.017745448904282073,
+          "sensor": "sensor_1",
+          "time_s": 30102.000000000004
+        },
+        "delay_s": 765.0,
+        "discount_to_event": 0.9144119234800859,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 0.42986568808555603,
+        "value_target": 0.4159717857837677,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 17,
+        "action_start_s": 30768.000000000004,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.1447131260504195,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 6.663082684228186,
+          "reward": 0.1447131260504195,
+          "sensor": "sensor_1",
+          "time_s": 30882.000000000004
+        },
+        "delay_s": 114.0,
+        "discount_to_event": 0.9867550967100452,
+        "condensed_reward": 0.14279641211032867,
+        "normalized_ppo_advantage": 1.6559139490127563,
+        "value_target": 0.6190056800842285,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      },
+      {
+        "agent": "sensor_1",
+        "episode_id": "a97071a4543046308e71e3c7f01c0a8e",
+        "selected_transmit_action": 17,
+        "action_start_s": 30953.000000000004,
+        "downstream_shared_event": {
+          "components": {
+            "credited_science": 0.13402692786049245,
+            "owned_science": 0.0,
+            "redundant_capture_cost": 0.0
+          },
+          "cumulative_reward": 6.879983111512494,
+          "reward": 0.13402692786049245,
+          "sensor": "sensor_1",
+          "time_s": 31091.000000000004
+        },
+        "delay_s": 138.0,
+        "discount_to_event": 0.9839891280341184,
+        "condensed_reward": 0.0,
+        "normalized_ppo_advantage": 0.7688108682632446,
+        "value_target": 0.449609637260437,
+        "semantics": "Actual PPO row and later shared science reward; temporal association is not counterfactual causal attribution"
+      }
+    ],
+    "causal_credit_claim": false
+  },
+  "restore": {
+    "passed": true,
+    "optimizer_exact": true,
+    "weights_exact": true,
+    "logits_exact": true,
+    "rng_seed_index_accounting_exact": true,
+    "zero_environment_steps": true,
+    "dropout": {
+      "pi_head.base.model_f.2": 0.1,
+      "pi_head.base.model_f.5": 0.1,
+      "pi_head.base.models_g.0.2": 0.1,
+      "pi_head.base.models_g.0.5": 0.1,
+      "pi_head.base.models_g.0.8": 0.1,
+      "pi_head.base.models_g.0.11": 0.1,
+      "vf.base.model_f.2": 0.1,
+      "vf.base.model_f.5": 0.1,
+      "vf.base.model_g.2": 0.1,
+      "vf.base.model_g.5": 0.1,
+      "vf.base.model_g.8": 0.1
+    },
+    "lifetime_metrics_matches_checkpoint": true,
+    "lifetime_metrics_sha256": "318885e2763cd3a448675f8ffc0ea743818c1a04438b53875a9795b41caefeeb",
+    "training_accounting_matches_checkpoint": true,
+    "training_accounting_sha256": "fcf98d6b1ba4ab97f840fe5a521488a654d45374a268421ccf7cdfa37e0c4b08"
+  },
+  "unchanged_checkpoint_files": 68,
+  "native_build": {
+    "schemaVersion": 4,
+    "artifact": {
+      "basiliskVersion": "2.13.0b0",
+      "sourceRevision": "c1bf0d7d67df7ae5bb74cd008d4c79cc3d106063",
+      "sourceDirty": true,
+      "extensionAbiVersion": 3
+    },
+    "features": {
+      "vizInterface": true,
+      "opNav": false,
+      "mujoco": false,
+      "rustModules": false
+    },
+    "diagnostics": {
+      "target": {
+        "system": "Darwin",
+        "processor": "arm64",
+        "pointerSizeBytes": 8,
+        "osxArchitectures": "arm64",
+        "osxDeploymentTarget": ""
+      },
+      "build": {
+        "configuration": "Release",
+        "multiConfig": false,
+        "availableConfigurations": [],
+        "generator": "Ninja",
+        "generatorPlatform": "",
+        "generatorToolset": "",
+        "pythonLimitedApi": "0x03090000"
+      },
+      "compilers": {
+        "c": {
+          "id": "AppleClang",
+          "version": "21.0.0.21000101",
+          "executable": "cc",
+          "launcher": "",
+          "frontendVariant": "GNU",
+          "simulatedId": "",
+          "simulatedVersion": "",
+          "target": "",
+          "standard": "",
+          "extensions": ""
+        },
+        "cxx": {
+          "id": "AppleClang",
+          "version": "21.0.0.21000101",
+          "executable": "c++",
+          "launcher": "",
+          "frontendVariant": "GNU",
+          "simulatedId": "",
+          "simulatedVersion": "",
+          "target": "",
+          "standard": "17",
+          "extensions": "OFF"
+        },
+        "rust": {
+          "id": "",
+          "version": "",
+          "executable": "",
+          "launcher": "",
+          "target": ""
+        }
+      },
+      "conanSettings": {
+        "buildType": "Release",
+        "cxxStandard": "17",
+        "cxxStandardLibrary": "libc++",
+        "compilerRuntime": "",
+        "compilerRuntimeType": ""
+      },
+      "tools": {
+        "cmake": "3.31.6",
+        "conan": "2.15.1",
+        "swig": "4.4.1",
+        "python": "3.11.9",
+        "cargo": "",
+        "corrosion": ""
+      }
+    },
+    "abi": {
+      "capture": "compiled",
+      "contractHeader": "architecture/utilities/bskAbiDescriptor.h",
+      "build": {
+        "configuration": "Release",
+        "debugRuntime": false,
+        "assertionsDisabled": true
+      },
+      "target": {
+        "system": "Darwin",
+        "architecture": "arm64",
+        "pointerSizeBytes": 8,
+        "endianness": "little",
+        "instructionSet": "NEON"
+      },
+      "c": {
+        "compiler": {
+          "id": "AppleClang",
+          "version": "21.0.0 (clang-2100.1.1.101)",
+          "majorVersion": 21,
+          "minorVersion": 0,
+          "patchVersion": 0,
+          "languageStandard": 201710,
+          "msvcVersion": 0
+        },
+        "runtime": {
+          "family": "libSystem",
+          "majorVersion": 0,
+          "minorVersion": 0
+        },
+        "fundamentalTypes": {
+          "charIsSigned": true,
+          "shortSize": 2,
+          "intSize": 4,
+          "longSize": 8,
+          "longLongSize": 8,
+          "sizeTSize": 8,
+          "pointerSize": 8
+        },
+        "layoutCanaries": {
+          "packingCanarySize": 12,
+          "packingCanaryAlignment": 4,
+          "packingCanaryUint32Offset": 4,
+          "packingCanaryUint16Offset": 8,
+          "msgHeaderSize": 32,
+          "msgHeaderAlignment": 8,
+          "msgHeaderIsWrittenOffset": 8,
+          "msgHeaderTimeWrittenOffset": 16,
+          "msgHeaderModuleIdOffset": 24
+        }
+      },
+      "cxx": {
+        "compiler": {
+          "id": "AppleClang",
+          "version": "21.0.0 (clang-2100.1.1.101)",
+          "majorVersion": 21,
+          "minorVersion": 0,
+          "patchVersion": 0,
+          "frontend": "GNU",
+          "languageStandard": 201703,
+          "abiFamily": "itanium",
+          "abiVersion": 1002,
+          "msvcFullVersion": 0
+        },
+        "standardLibrary": {
+          "family": "libc++",
+          "version": 210106,
+          "abiVersion": 1,
+          "libstdcxxRelease": 0,
+          "msvcStlUpdate": 0,
+          "useCxx11Abi": null,
+          "iteratorDebugLevel": null,
+          "debugMode": false,
+          "assertionsEnabled": false
+        },
+        "runtime": {
+          "linkage": "system",
+          "debug": false,
+          "exceptions": true,
+          "rtti": true
+        },
+        "layoutCanaries": {
+          "stdStringSize": 24,
+          "stdStringAlignment": 8,
+          "stdVectorIntSize": 24,
+          "stdVectorIntAlignment": 8,
+          "sysModelSize": 56,
+          "sysModelAlignment": 8,
+          "bskLoggerSize": 40,
+          "bskLoggerAlignment": 8,
+          "msgHeaderSize": 32,
+          "msgHeaderAlignment": 8,
+          "readFunctorSize": 160,
+          "readFunctorAlignment": 8,
+          "messageSize": 304,
+          "messageAlignment": 8
+        }
+      },
+      "dependencies": {
+        "eigen": {
+          "version": "3.4.0",
+          "maxAlignBytes": 16,
+          "maxStaticAlignBytes": 16,
+          "vectorization": "NEON",
+          "indexSize": 8,
+          "vector3dSize": 24,
+          "vector3dAlignment": 8,
+          "vectorXdSize": 16,
+          "vectorXdAlignment": 8,
+          "matrix3dSize": 72,
+          "matrix3dAlignment": 8
+        },
+        "swig": {
+          "runtimeVersion": "5"
+        },
+        "python": {
+          "implementation": "CPython",
+          "versionMajor": 3,
+          "versionMinor": 11,
+          "versionMicro": 9,
+          "versionHex": 51055088,
+          "limitedApi": 50921472,
+          "soabi": "cpython-311-darwin",
+          "debug": false,
+          "freeThreaded": false
+        }
+      }
+    }
+  },
+  "causal_evidence_sha256": "234a91e40c1b03c91aea25eac2a60d462dafae3097e7eb82ab0cd8925ae20de7",
+  "config_sha256": "72584bb7de636580e2a3f96e60caf09de6bb4bcb0b69b90e314f74102552be91",
+  "wall_s": 870.906919416997,
+  "full_alpine_topology_tested": false,
+  "wandb_online_tested": false,
+  "fixed_batch_fitting_tested": false,
+  "policy_improvement_proven": false,
+  "cluster_jobs": 0
+}

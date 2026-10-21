@@ -103,6 +103,11 @@ class MemoryProfile:
                 row = dict(pid=process.pid, name=process.name(), rss_bytes=memory.rss,
                            shared_bytes=getattr(memory, "shared", None))
                 try:
+                    cpu = process.cpu_times()
+                    row.update(cpu_user_s=cpu.user, cpu_system_s=cpu.system)
+                except (psutil.AccessDenied, psutil.NoSuchProcess):
+                    row.update(cpu_user_s=None, cpu_system_s=None)
+                try:
                     full = process.memory_full_info()
                     row.update(pss_bytes=getattr(full, "pss", None), uss_bytes=getattr(full, "uss", None))
                 except (psutil.AccessDenied, psutil.NoSuchProcess):

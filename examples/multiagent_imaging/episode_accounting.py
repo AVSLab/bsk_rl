@@ -85,6 +85,12 @@ def verify_retained_learner_batch(directory, config, episodes, learner_rows):
         starts = [i for i, a in enumerate(row['actions']) if a != NO_ACTION]
         times = np.cumsum([i['d_ts'] for i in row.get('infos', [])])
         events = [('acquisition', p, p['completion_time']) for p in episode.get('capture_products', []) if p['quality'] >= .5]
+        if getattr(config, 'is_cooperative', False):
+            from bsk_rl.data.multiagent_rso_data import ImageProductRecord
+            from examples.multiagent_imaging.cooperative import RequestSchedule
+            schedule = RequestSchedule(config, episode['episode_seed'])
+            events = [(kind, p, when) for kind, p, when in events
+                      if schedule.qualifies(ImageProductRecord(**p), 'acquisition')]
         events += [('physical_delivery', e['product'], e['product']['delivery_time']) for e in episode.get('delivered_products', []) if e['credited_value'] > 0]
         for kind, product, time_s in events:
             if kind in traces or product['source_sensor'] != row['agent_id']:
@@ -96,6 +102,8 @@ def verify_retained_learner_batch(directory, config, episodes, learner_rows):
             owned = [e for e in episode['reward_events'] if e['sensor'] == row['agent_id'] and np.isclose(e['time_s'], time_s, rtol=0, atol=1e-5)]
             if len(owned) != 1 or not np.isclose(owned[0]['reward'], row['rewards'][i], rtol=2e-5, atol=1e-5):
                 raise ValueError('Physical event and raw owned reward disagree')
+            if getattr(config, 'is_cooperative', False) and owned[0].get('components', {}).get('owned_science', 0) <= 0:
+                continue
             j = max(j for j, start in enumerate(starts) if start <= i)
             index = offset + j
             traces[kind] = dict(kind=kind, product=product, agent=row['agent_id'], episode_id=row['multi_agent_episode_id'],
@@ -105,8 +113,18 @@ def verify_retained_learner_batch(directory, config, episodes, learner_rows):
                                 condensed_reward=float(batch['rewards'][index]), value_target=float(batch['value_targets'][index]),
                                 semantics='Owned interval total can include other credits or costs; product timing is traced, not assigned fabricated isolated credit')
         offset += len(starts)
-    if any('capture_products' in e for e in episodes) and set(traces) != {'acquisition', 'physical_delivery'}:
+    if not getattr(config, 'is_cooperative', False) and any('capture_products' in e for e in episodes) and set(traces) != {'acquisition', 'physical_delivery'}:
         raise ValueError('Missing acquisition or physical delivery reward-to-target trace')
+    if getattr(config, 'is_cooperative', False):
+        # Request-gated acquisitions/deliveries can legitimately be absent in a
+        # sampled batch. Never fabricate a delivery trace to satisfy a gate.
+        expected_kinds = set()
+        if any((e.get('cooperative_tasking') or {}).get('acquisition_value', 0)>0 for e in episodes):
+            expected_kinds.add('acquisition')
+        if any((e.get('cooperative_tasking') or {}).get('verified_delivery_value', 0)>0 for e in episodes):
+            expected_kinds.add('physical_delivery')
+        if not expected_kinds.issubset(traces):
+            raise ValueError('Missing observed request science reward-to-target trace')
     return dict(audit, matched_mission_episodes=len(episodes),
                 physical_product_reward_target_traces=list(traces.values()),
                 agent_decisions={sensor: sum(n for (_, s), n in observed.items() if s == sensor) for sensor in sorted({s for _, s in observed})},

@@ -22,6 +22,7 @@ from bsk_rl.obs.completion_observations import (
     CompletionTargets,
     CompletionPeers,
 )
+from bsk_rl.obs.cooperative_observations import OutgoingInventory
 from bsk_rl.sim import dyn, fsw, world
 from bsk_rl.sats.roles import SpacecraftRole
 from bsk_rl.utils.orbital import walker_delta
@@ -149,8 +150,15 @@ def build_environment(
                 n_ahead_observe=2,
             ),
             CompletionContext(),
-            CompletionTargets(config.n_candidates, study=config.is_study),
-        ] + ([CompletionPeers()] if config.n_peers else [])
+            CompletionTargets(
+                config.n_candidates,
+                study=config.is_study,
+                cooperative=config.is_cooperative,
+            ),
+        ] + ([CompletionPeers()] if config.n_peers else []) + (
+            [OutgoingInventory(config.outgoing_record_slots)]
+            if config.is_cooperative else []
+        )
         action_spec = [
             act.Charge(duration=config.charge_duration_s),
             act.Downlink(
@@ -268,11 +276,15 @@ def build_environment(
         hio_count=0,
         shio_count=0,
     )
-    rewarder = CompletionImageReward(
+    reward_type = CompletionImageReward
+    if config.is_cooperative:
+        from examples.multiagent_imaging.cooperative import CooperativeImageReward
+        reward_type = partial(CooperativeImageReward, config)
+    rewarder = reward_type(
         alpha=config.alpha,
         reward_credit_mode=config.reward_credit_mode,
         reimage_cooldown_orbits=config.reimage_cooldown_orbits,
-        quality_threshold=0.5,
+        quality_threshold=config.request_quality_threshold if config.is_cooperative else 0.5,
         hide_pending_targets=True,
     )
     communicator = CompletionCommunication(
@@ -303,6 +315,8 @@ def build_environment(
         vizard_settings=vizard_settings,
     )
     orbit_randomizer.environment = environment
+    if config.is_cooperative:
+        environment.rewarder.environment = environment
     return environment
 
 

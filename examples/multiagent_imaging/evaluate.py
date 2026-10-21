@@ -515,6 +515,8 @@ def run_rollout(
         },
     }
     if config.is_study:
+        if config.is_cooperative:
+            result["cooperative_tasking"] = env.rewarder.task_summary()
         from examples.multiagent_imaging.study_metrics import mission_metrics
         evidence=dict(simulated_seconds=result["sim_time_s"],policy_decisions=dict(env.decision_counts),
             radio_power_intervals=env.communicator.radio_audit(result["sim_time_s"]),

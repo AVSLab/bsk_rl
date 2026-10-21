@@ -46,7 +46,7 @@ def net_value_gate(communicated, blocked, no_comm_alternatives):
                 scope='Only the declared controllers, state and finite window; not an optimal-policy bound')
 
 
-def credit_trace(raw, gamma, lambda_):
+def credit_trace(raw, gamma, lambda_, lambda_time="step"):
     """Production condensation/targets checked against a separate scalar oracle.
 
     Zero value predictions isolate the reward contribution. These are diagnostic
@@ -86,10 +86,11 @@ def credit_trace(raw, gamma, lambda_):
     truncated[-1] = 1
     targets = compute_value_targets_time_discounted(
         np.zeros(len(rewards)), rewards, np.zeros(len(rewards)), truncated,
-        np.r_[0., durations], gamma, lambda_, reward_time="step_start", lambda_time="step")
+        np.r_[0., durations], gamma, lambda_, reward_time="step_start", lambda_time=lambda_time)
     scalar = np.zeros(len(rewards))
     for j in reversed(range(len(starts))):
-        scalar[j] = expected[j] + gamma**durations[j]*lambda_*scalar[j+1]
+        factor = lambda_ ** durations[j] if lambda_time == "second" else lambda_
+        scalar[j] = expected[j] + gamma**durations[j]*factor*scalar[j+1]
     np.testing.assert_allclose(targets, scalar, rtol=2e-6, atol=1e-9)
     rows = []
     for j, begin in enumerate(starts):
@@ -103,6 +104,7 @@ def credit_trace(raw, gamma, lambda_):
                          diagnostic_value_prediction=0., diagnostic_advantage=float(targets[j]),
                          diagnostic_value_target=float(targets[j]), reward_events=events))
     return dict(passed=True, rows=rows, gamma_per_s=gamma, lambda_per_decision=lambda_,
+                lambda_time=lambda_time,
                 forced_rows_removed=len(actions)-len(starts),
                 oracle_max_abs_target_error=float(np.max(np.abs(targets-scalar))),
                 value_scope="Zero-baseline finite-window reward contribution, not a trained critic or policy improvement")
@@ -125,7 +127,7 @@ def _private_snapshot(sensor, now):
                 own_products=[asdict(p) for p in sensor.data_store.products])
 
 
-def run_case(case, output, wall_seconds=240):
+def run_case(case, output, wall_seconds=240, *, experiment=None, alternative_target_id=None, receiver_priority_controller=False):
     import Basilisk
     from bsk_rl import NO_ACTION
     from bsk_rl.act.completion_actions import TransmitCompletions
@@ -137,11 +139,11 @@ def run_case(case, output, wall_seconds=240):
     output.mkdir(parents=True,exist_ok=False)
     config_path = Path(__file__).with_name("configs")/"walker4_t200_cd1_catalog_tx.json"
     baseline = MultiAgentImagingConfig.from_json(config_path)
-    config = replace(baseline,
+    config = replace(experiment or baseline,
         information_case="geometry_only" if case.startswith("no_comm") else "catalog_tx",
         packet_loss_probability=1. if case in ("blocked","team_blocked") else 0.,
         message_delay_s=600. if case == "expired" else 0.,
-        reward_credit_mode="team_mean" if case.startswith("team_") else "owned")
+        reward_credit_mode="team_mean" if case.startswith("team_") else experiment.reward_credit_mode if experiment is not None else "owned")
     native = Basilisk.getBuildInfo()
     started = time.monotonic()
     env = None
@@ -207,14 +209,17 @@ def run_case(case, output, wall_seconds=240):
                             if case=='no_comm_image':
                                 # A real private alternative, rather than assuming
                                 # the first shortlist entry is an optimal opportunity.
-                                chunks=np.asarray(snap['observation'][26:236]).reshape(10,21)
+                                chunks=np.asarray(snap['observation'][26:26+10*config.target_features]).reshape(10,config.target_features)
                                 legal=[i for i in range(10) if snap['mask'][5+i]]
                                 lit=[i for i in legal if chunks[i,9]>=.5]
                                 slot=min(lit or legal,key=lambda i:chunks[i,7])
+                                if alternative_target_id is not None:
+                                    slot=ids.index(alternative_target_id)
+                                    assert slot in legal
                                 action=5+slot
                                 result['alternative_controller']='Minimum current pointing angle among illuminated private candidates; no optimality claim'
                             else:
-                                action=1
+                                action={"no_comm_charge":0,"no_comm_desat":2}.get(case,1)
                             opportunity=True
                             result['counterfactual_opportunity_start_s']=now
                         else:
@@ -229,6 +234,11 @@ def run_case(case, output, wall_seconds=240):
                 elif sensor is receiver and now>=600:
                     if not receiver_imaged:
                         action=receiver_action(ids,snap['mask'])
+                        if receiver_priority_controller:
+                            chunks=np.asarray(snap['observation'][26:26+10*config.target_features]).reshape(10,config.target_features)
+                            legal=[i for i in range(10) if ids[i] is not None and snap['mask'][5+i]]
+                            lit=[i for i in legal if chunks[i,9]>=.5]
+                            action=5+max(lit or legal,key=lambda i:chunks[i,0]) if legal else 0
                         receiver_imaged=action>=5
                         result['receiver_first_image_decision']=dict(time_s=now,action=action,
                             target_id=ids[action-5] if action>=5 else None,private=snap)
@@ -245,7 +255,8 @@ def run_case(case, output, wall_seconds=240):
             dt=end-now
             owned=dict(env.rewarder.last_owned_science_reward)
             result['steps'].append(dict(start_s=now,end_s=end,actions=actions,rewards=rewards,
-                owned_science_reward=owned))
+                owned_science_reward=owned,
+                components=getattr(env.rewarder, 'last_reward_components', {})))
             for sensor in sensors:
                 raw[sensor.name]['actions'].append(int(actions[sensor.name]))
                 raw[sensor.name]['rewards'].append(float(rewards[sensor.name]))

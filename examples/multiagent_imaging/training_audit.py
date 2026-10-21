@@ -117,7 +117,8 @@ def initial_policy_gate(module, observations, config):
     with_products_and_peers = with_products.copy()
     if config.n_peers:
         peer_start = GLOBAL_FEATURES + config.n_candidates * config.target_features
-        peers = with_products_and_peers[:, peer_start:].reshape(
+        peer_end = peer_start + config.n_peers * config.peer_features
+        peers = with_products_and_peers[:, peer_start:peer_end].reshape(
             len(with_products_and_peers), config.n_peers, config.peer_features
         )
         peers[:, :, -1] = 1.0
@@ -339,6 +340,7 @@ class CompletionAuditCallbacks(DefaultCallbacks):
             capture_products=[asdict(product) for product in captures],
             delivered_products=[asdict(entry) for entry in services],
             constellation_reward=total_reward,
+            cooperative_tasking=(env.rewarder.task_summary() if hasattr(env.rewarder, "task_summary") else None),
             reward_decomposition=dict(
                 acquisition_90_percent_component=acquisition,
                 ground_delivery_10_percent_component=delivery,

@@ -99,6 +99,7 @@ def compare(config, checkpoints, seeds, output, workers=1, modes=(True, False)):
                     ],
                     useful_revisits=result["useful_post_cooldown_revisits"]["count"],
                     actions=result["action_counts"],
+                    cooperative_tasking=result.get("cooperative_tasking"),
                 )
                 rows.append(row)
                 expected = len(checkpoints) * len(seeds) * len(modes)

@@ -1,0 +1,73 @@
+{
+  "alternative_scope": "every legal imaging action plus charge, downlink and desat at sender's t=424 decision; fixed declared subsequent controller; not an optimal-policy bound",
+  "cluster_jobs": 0,
+  "experiment": {
+    "active_request_count": 200,
+    "alpha": 0.1,
+    "broadcast_duration_s": 30.0,
+    "charge_duration_s": 300.0,
+    "communication_cost_per_s": 0.0,
+    "communication_mode": "directed",
+    "desat_duration_s": 150.0,
+    "discount_per_s": 0.9998830471964926,
+    "downlink_duration_s": 300.0,
+    "empty_storage_mask_fraction": 1e-06,
+    "episode_duration_s": 45000.0,
+    "experiment_profile": "cooperative-v1",
+    "gae_trace_half_life_s": 1200.0,
+    "imaging_duration_s": 300.0,
+    "information_case": "catalog_tx",
+    "inventory_chunk_records": 256,
+    "link_mode": "los",
+    "max_step_duration_s": 300.0,
+    "message_delay_s": 0.0,
+    "message_ttl_s": 600.0,
+    "metadata_bitrate_bps": 64000.0,
+    "min_pointing_hold_s": 10.0,
+    "minimum_task_battery_fraction": 0.05,
+    "n_candidates": 10,
+    "n_sensors": 4,
+    "n_targets": 200,
+    "outgoing_record_slots": 16,
+    "packet_loss_probability": 0.0,
+    "policy_model_profile": "amos_attention",
+    "redundant_capture_cost": 0.05,
+    "reimage_cooldown_orbits": 1.0,
+    "request_priority_overrides": [
+      [
+        55,
+        12.0
+      ],
+      [
+        80,
+        10.0
+      ]
+    ],
+    "request_quality_threshold": 0.5,
+    "request_target_ids": [],
+    "request_window_s": 900.0,
+    "retasking_mode": "conflict",
+    "reward_credit_mode": "team_mean",
+    "seed": 3105,
+    "sensor_constellation": "walker_delta",
+    "sim_rate_s": 1.0,
+    "target_population": "mixed_50_30_20",
+    "transmit_duration_s": 300.0,
+    "transmit_hold_s": 10.0,
+    "walker_altitude_km": 700.0,
+    "walker_inclination_deg": 97.0,
+    "walker_phasing": 1,
+    "walker_planes": 2
+  },
+  "horizon_s": 45000,
+  "hypotheses": [
+    "received completion prevents duplicate target 55",
+    "receiver can instead image urgent target 80",
+    "benefit exceeds every tested immediate sender alternative"
+  ],
+  "kind": "constructed native causal fixture",
+  "ppo_updates": 0,
+  "receiver_controller": "highest public priority among locally eligible illuminated candidates",
+  "seed": 401,
+  "stop_s": 2400
+}

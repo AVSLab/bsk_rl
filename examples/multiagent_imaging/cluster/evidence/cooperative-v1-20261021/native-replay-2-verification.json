@@ -1,0 +1,37 @@
+{
+  "all_primitive_rewards_exact": true,
+  "all_private_masks_candidates_peers_exact": true,
+  "captures_exact": true,
+  "driver_cpu_s": 290.573299,
+  "iteration": 2,
+  "kind": "Saved-action native replay; not a new training or policy-evaluation episode",
+  "new_ppo_updates": 0,
+  "passed": true,
+  "physical_remaining_products": {
+    "sensor_0": 6,
+    "sensor_1": 50,
+    "sensor_2": 11,
+    "sensor_3": 50
+  },
+  "physically_delivered_products": 468,
+  "seed": 693179946,
+  "simulated_seconds": 45000.0,
+  "task_summary": {
+    "acquisition_value": 51.582392190139316,
+    "active_request_count": 16,
+    "quality_threshold": 0.5,
+    "redundant_capture_cost": 1.6529930952367662,
+    "rejected_acquisitions": 424,
+    "rejected_deliveries": 401,
+    "unique_acquisition_requests": 99,
+    "unshaped_weighted_science": 49.21105650737588,
+    "useful_delivered_requests": 56,
+    "verified_delivery_value": 27.86903536250493,
+    "version": "public-request-utility-v1",
+    "window_s": 6000.0
+  },
+  "true_decisions": 1071,
+  "uncredited_physical_deliveries": 412,
+  "useful_delivered_requests": 56.0,
+  "wall_s": 291.66041454199876
+}

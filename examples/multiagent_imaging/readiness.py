@@ -93,6 +93,18 @@ def schema(config):
         o["target_feature_order"] += ["received_onboard_qualified_fraction", "received_onboard_low_quality_fraction", "inventory_snapshot_age", "inventory_status_known"]
         o["peer_feature_order"] = list(PEER_FEATURE_ORDER[:-1])+["received_qualified_inventory_fraction", "received_low_quality_inventory_fraction", "snapshot_age", "snapshot_fresh", "snapshot_known", "navigation_observation_valid", "transmit_eligible"]
         contract["masks"].update(peer_valid_feature=16, peer_transmit_eligible_feature=17)
+    if config.is_cooperative:
+        from bsk_rl.obs.cooperative_observations import OUTGOING_FEATURE_ORDER
+        contract["policy"] = "private-target-outgoing-peer-set-v1"
+        o = contract["observation"]
+        o.update(target_features=config.target_features,
+                 outgoing_features=config.outgoing_features,
+                 outgoing_record_slots_per_peer=config.outgoing_record_slots,
+                 outgoing_feature_order=list(OUTGOING_FEATURE_ORDER),
+                 outgoing_order="after all peers; peer-major actual-packet-prefix; no payload truncation",
+                 size=26 + config.target_features * config.n_candidates + config.peer_features * config.n_peers + config.outgoing_features)
+        o["target_feature_order"] += ["public_request_active", "public_request_deadline_remaining", "public_request_epoch"]
+        contract["tasking"] = "public seeded requests; window deadline; private completions; acquisition and full delivery must meet deadline separately"
     return contract
 
 

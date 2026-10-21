@@ -1,0 +1,138 @@
+{
+  "version": "cooperative-v1-local-qualification-20261021",
+  "created_utc": "2026-10-21T20:50:08.387953+00:00",
+  "base_commit": "34c5fd9d11c6d9ff2565dce62063b20d60e27fc5",
+  "canonical_branch": "multi-agent-space-imaging-2026",
+  "tests": {
+    "passed": 351,
+    "warnings": 8,
+    "command": "PYTHONPATH=.:src /Users/dahu1128/Repositories/bsk_rl/.venv/bin/python -m pytest tests/unittest/multiagent tests/integration/multiagent/test_target_recorder_option.py -q",
+    "log_sha256": "1cabfe194f28ccfe9a06daebab5e2d299a77e685ff97b9208136577d4b029a71"
+  },
+  "native": {
+    "constructed_final_fixtures": 22,
+    "transport_fixtures": 7,
+    "positive_net_unshaped_science": 6.760083452418124,
+    "negative_baseline_net_science": -0.609011227230477,
+    "baseline_native_build_unchanged": true,
+    "ground_delivery_benefit_demonstrated": false
+  },
+  "local_PPO": {
+    "updates": 2,
+    "full_missions": 2,
+    "true_decisions": 2123,
+    "sender_transmit_rows_with_later_shared_science": 40,
+    "all_retained_targets_reconstructed": true,
+    "target_max_abs_error": 0.0,
+    "exact_local_zero_update_restore": true,
+    "unchanged_checkpoint_files": 68,
+    "wall_s": 870.906919416997,
+    "actual_PPO_CPU_time_available": false,
+    "CPU_telemetry_now_instrumented_and_smoke_tested": true,
+    "physical_delivery_audit_repaired_without_additional_PPO": true
+  },
+  "memory": {
+    "peak_sampled_process_RSS_sum_bytes": 1417707520,
+    "periodic_RSS_sum_peak_bytes": 1337786368,
+    "periodic_driver_RSS_peak_bytes": 1045053440,
+    "periodic_driver_USS_peak_bytes": 568770560,
+    "rss_sum_is_job_memory": false,
+    "local_job_cgroup_available": false,
+    "Alpine_29_worker_memory_qualified": false
+  },
+  "official_config_sha256_unchanged": {
+    "examples/multiagent_imaging/configs/walker4_mixed_preflight_conflict.json": "3f2a7fc9f6a70361ea835a59b07c8cfebce0cdd911da663a7e33ee65693b546b",
+    "examples/multiagent_imaging/configs/walker4_mixed_preflight_continuous.json": "91b102d0c5938a0c41f0e1a642463813d68180cf2d2ae3b327c11415ee246130",
+    "examples/multiagent_imaging/configs/walker4_mixed_recovery_1200_continuous.json": "740402a1da9d9805d70f63f5f6a820db0bcde5b5b2600ee75c923344aeccd652",
+    "examples/multiagent_imaging/configs/walker4_t200_cd1_catalog_tx.json": "47bb0507a7b4e9b2ac5043d83f3165f8bb3fbf2ad2e7964576d38eef64ad777d",
+    "examples/multiagent_imaging/configs/walker4_t200_cd1_geometry_only.json": "b40766e25d002e70c46159b72d768822f9cfce033b69cbd0070c99f348836fd8",
+    "examples/multiagent_imaging/configs/walker4_mixed_recovery_1200_conflict.json": "b95e2bf08ecb970ed048544c3cf78e929fb072f791221bd90593ce1322c9f575",
+    "examples/multiagent_imaging/configs/walker4_mixed_amos_best_conflict.json": "06f4b06a9be2c483db50cb109c52b2f53aac3e4fbcbaf67479a8d88949e4e478"
+  },
+  "source_sha256": {
+    "examples/multiagent_imaging/cluster/cooperative.slurm": "5a652cb6506ece6d3dba7d1c93163328b85047f7ee228da42f73611f3a2bfb86",
+    "examples/multiagent_imaging/cluster/cooperative_accept.py": "7209f7bf7f90d4ab1af053f024d3340e76a2029c207daac82c62628eea57269f",
+    "examples/multiagent_imaging/cluster/cooperative_launch.py": "e7e689ad0196964ddf871f22cad2e337d381b183d7cd696fc9e67e1ebe80d18e",
+    "examples/multiagent_imaging/cluster/study_gate.py": "7ed8d64cc31b5b61d57412de962ce6fbc11cd97bc265d8728aad376bd1672413",
+    "examples/multiagent_imaging/communication_qualification.py": "004cda6859721084cadafbb2528c5c55ab236093c49b55fbb3febea427bd4db0",
+    "examples/multiagent_imaging/compare_learned_checkpoints.py": "f1b71a5cb55072138d77cf561ae6453cea925bc04bd8507592acff41413eeeb8",
+    "examples/multiagent_imaging/config.py": "10033e73284bd433a002a602e8139a70ac5ee8a18136aed8f45e78cf564b57c9",
+    "examples/multiagent_imaging/configs/cooperative_v1_delivery_catalog_tx.json": "e99d7731c503c3c635cff5d01c7950454ecee744148b67a870bed63aa6702907",
+    "examples/multiagent_imaging/configs/cooperative_v1_delivery_geometry_only.json": "c64988ef03e6c9047f5a600b387408fd12c64b9def557a0473fe73a5620e3e32",
+    "examples/multiagent_imaging/configs/cooperative_v1_owned_catalog_tx.json": "aa15d6772c9ed3d5024647b905eb51aee178387e349c5e8071ba0d1d35c58ec3",
+    "examples/multiagent_imaging/configs/cooperative_v1_owned_geometry_only.json": "8ef02ec90de355e1cecd5d4fe44f63ade13ee4ddd51147c07068d45beba51fa2",
+    "examples/multiagent_imaging/configs/cooperative_v1_shared_catalog_tx.json": "72584bb7de636580e2a3f96e60caf09de6bb4bcb0b69b90e314f74102552be91",
+    "examples/multiagent_imaging/configs/cooperative_v1_shared_geometry_only.json": "abe250934e6c4e8a226e5948bbfb92485d4a02bd8c4499c71cfe3285fbfdf30c",
+    "examples/multiagent_imaging/cooperative.py": "ae7611c0dea4dbca956cb3eb57fa2d80e36a9a26f33f4aa2f1078d197ca0d4d0",
+    "examples/multiagent_imaging/cooperative_eval_logging.py": "8a5633a2c6de57a398a057d7cb8506be5f30767f9234b5c1e634616f5132cf23",
+    "examples/multiagent_imaging/cooperative_learning_evidence.py": "8f462b9bbc34714c8cd3d5a62ede3a70e103c1c7db78f59e06fa0e2eeacc45e8",
+    "examples/multiagent_imaging/environment.py": "e9301d75c602e36fb73db8e440e1f08eedf41ca8501fb93b1ea2b8fe3775ec43",
+    "examples/multiagent_imaging/episode_accounting.py": "cc9e924dac88f9d8d75485c59fb0b1efc9e3fe293b470893b2b5f211cfddc809",
+    "examples/multiagent_imaging/evaluate.py": "1d572275b289976d8ed825caa8860ea1ff1b882ad02d7c9a0b0c2267ce2e3128",
+    "examples/multiagent_imaging/memory_profile.py": "7e0f7c83b176a3a448ad4db6f9ea8b4650dd904d22a251b3b6751ae34fe5830e",
+    "examples/multiagent_imaging/plot_cooperative_qualification.py": "869bd02950bd54ecb937c270851c92134ab6f658488201962d8e7b4f28a435e1",
+    "examples/multiagent_imaging/qualify_cooperative.py": "434dc17dcab60fca3793c830b9eb39d94f35b3048dcba767e4d9c761ec235939",
+    "examples/multiagent_imaging/qualify_cooperative_learning.py": "78b9df4ed330c4edd9f6d82913456416dd2e67f5b6ac04e8a26fffba6037e56e",
+    "examples/multiagent_imaging/readiness.py": "6b2b0b4da8755781499a54506e38da580b5efd7ea210049dc76e85bfc5155fed",
+    "examples/multiagent_imaging/replay_cooperative_audit.py": "ba25aa5fb5d7334bd34e1e4dbdf4ee432e96ec3fc623b69eab12e82dbdce2e73",
+    "examples/multiagent_imaging/train.py": "c91f9a38328dc7d0b14d84129f90e53a4e8aa7cdff59deba06fb7daa2911a176",
+    "examples/multiagent_imaging/training_audit.py": "2b7dad76cb4262e509c3d852ac8dd05e5ef7174c71b494775a3e8847ae917324",
+    "examples/multiagent_imaging/wandb_logging.py": "09dc82fe198de2507e7ca5aa3cbc818368c131ccbac098118429422b9a75ac06",
+    "src/bsk_rl/completion_gym.py": "62cc5cd9ee2407ecae3a2a0914950ec8b22b1d02f841bdcc62d7428182881f87",
+    "src/bsk_rl/data/multiagent_rso_reward.py": "73f20042b744106267ab8fc7fb1541cc31e29bac1ac07aa718131adbe13a87f7",
+    "src/bsk_rl/obs/completion_observations.py": "ea86e6fc612b21ffe58f5832e3aa96e5bbfbc4d4ad1ed1bf5ada879841618556",
+    "src/bsk_rl/obs/cooperative_observations.py": "ceca16780d62e08a685fb27f34f07859735813f7f25c6941775d412e43914987",
+    "src/bsk_rl/utils/rllib/target_gnn_module.py": "41eee5de26a221cad3729fa36706cfd788fca50bd5f77f32df4c28be05c8b623",
+    "tests/unittest/multiagent/test_cooperative_acceptance.py": "424d442689d5878b384f64fe4cdf4387bb236522b56a3973d5348b861ca20396",
+    "tests/unittest/multiagent/test_cooperative_launch.py": "b77357ca26bc9aab91d114b85cc39851efdb17299fedb2c7099ff191c0dbda33",
+    "tests/unittest/multiagent/test_cooperative_profile.py": "6207dc2a45c69ae92cecf9e08354ee0262069434a6463063aa2796f01b6e26ac",
+    "tests/unittest/multiagent/test_memory_retention.py": "dc99921c5dec908d79300a39e4a585e0ffeed395ad45e3b625d63595ebfa689b"
+  },
+  "validation_layers": {
+    "native_causal_transport": true,
+    "local_PPO_wiring": true,
+    "local_exact_restore": true,
+    "fixed_batch_fitting": false,
+    "representative_policy_improvement": false,
+    "cluster_runtime": false,
+    "online_WandB": false,
+    "heldout_policy_comparison": false
+  },
+  "preserved_failure": {
+    "path": "/Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/output/cooperative-v1-qualification-20261021/local-learning/training/training-failed.json",
+    "training_iteration": 0,
+    "reason": "JSON tuple/list schema round-trip mismatch fixed before any PPO update; explicit regression added"
+  },
+  "central_critic": {
+    "adopted": false,
+    "reason": "Shared credit and transmit encoder updates are demonstrated. Two PPO updates do not establish a remaining learning failure that justifies introducing a separately unqualified critic/credit algorithm.",
+    "shared_reward_is_not_counterfactual_credit": true
+  },
+  "cluster_jobs_submitted": 0,
+  "remote_runtime_changes": 0,
+  "allocation_account": "ucb550_asc3",
+  "limitations": [
+    "Constructed native fixtures use declared urgent priorities and a 900-second deadline with all 200 requests active; this differs from the 16-active-request, 6000-second training profile.",
+    "Native counterfactual frontier covers 13 immediate sender alternatives with fixed subsequent controllers; it is not an optimal-policy bound.",
+    "Native causal fixtures establish acquisition benefit; no ground-delivery advantage is claimed.",
+    "Two local updates establish wiring, not convergence, cooperation benefit or Alpine memory acceptance.",
+    "The completed PPO run recorded wall time and memory; exact consumed CPU time was not captured. Process CPU counters are now instrumented for subsequent runs.",
+    "Local Basilisk 2.13.0b0 and pinned Alpine 2.12.0b0 remain distinct; unchanged native hashes and full worker runtime gates are mandatory on Alpine.",
+    "Original local training physical-history metrics were corrected by exact saved-action native replays. Only corrected replay episodes should be used for physical-delivery/coverage/overlap/latency analysis."
+  ],
+  "post_training_physical_audit_replay": {
+    "passed": true,
+    "new_PPO_updates": 0,
+    "full_native_replay_instances": 2,
+    "unique_training_missions": 2,
+    "all_primitive_rewards_captures_and_private_choices_exact": true,
+    "physically_delivered_products": 859,
+    "useful_delivered_requests": 82.0,
+    "driver_cpu_s": 571.658762,
+    "replay_verification_files": [
+      "native-replay-1-verification.json",
+      "native-replay-2-verification.json"
+    ],
+    "superseded_original_fields": "The original training journal is immutable. Its delivery history omitted uncredited physical receipts; derived physical delivery/coverage/overlap/latency metrics are superseded by the corrected native replay episodes. Rewards, learner targets, actions, captures and checkpoints are unchanged."
+  }
+}

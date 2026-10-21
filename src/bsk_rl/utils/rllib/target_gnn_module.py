@@ -564,6 +564,55 @@ class PeerSetHead(nn.Module):
         return torch.cat([result, peer_logits], dim=-1)
 
 
+class CommunicationAwarePeerHead(PeerSetHead):
+    """Private target context and per-recipient outgoing records inform TX scores.
+
+    Target and record pooling are invariant; peer permutation permutes TX scores.
+    No centralized state or recipient catalog enters this actor or local critic.
+    """
+
+    def __init__(self, *args, n_targets, target_features, n_peers, record_slots, **kwargs):
+        """Add bounded target and outgoing-record encoders to the private head."""
+        super().__init__(*args, **kwargs)
+        self.n_targets, self.target_features = n_targets, target_features
+        self.n_peers, self.record_slots = n_peers, record_slots
+        self.target_context = nn.Sequential(nn.Linear(target_features, 64), nn.ReLU(), nn.Linear(64, 64), nn.ReLU())
+        self.record_context = nn.Sequential(nn.Linear(12, 64), nn.ReLU(), nn.Linear(64, 64), nn.ReLU())
+        self.score = nn.Sequential(nn.Linear(64 * 3 + self.own_features, 64), nn.ReLU(), nn.Linear(64, 1))
+        gain = kwargs.get("action_head_init_gain")
+        if not self.critic and gain is not None:
+            nn.init.orthogonal_(self.score[-1].weight, gain=gain)
+            nn.init.zeros_(self.score[-1].bias)
+
+    def forward(self, batch):
+        """Pool valid local content and score each geometrically observed peer."""
+        x = batch["obs"] if isinstance(batch, dict) else batch
+        base = x[:, :self.base_inputs]
+        end = self.base_inputs + self.n_peers * self.peer_features
+        peers = x[:, self.base_inputs:end].reshape(x.shape[0], self.n_peers, self.peer_features)
+        valid = peers[:, :, self.observation_valid_feature] > .5
+        encoded = self.encode(peers.masked_fill(~valid.unsqueeze(-1), 0.0))
+        pooled, _, _ = masked_pool(encoded, valid)
+        targets = base[:, self.own_features:].reshape(x.shape[0], self.n_targets, self.target_features)
+        target_valid = targets[:, :, 16] > .5
+        target_context, _, _ = masked_pool(self.target_context(targets.masked_fill(~target_valid.unsqueeze(-1), 0.0)), target_valid)
+        records = x[:, end:].reshape(x.shape[0] * self.n_peers, self.record_slots, 12)
+        record_valid = records[:, :, -1] > .5
+        record_context, _, _ = masked_pool(self.record_context(records.masked_fill(~record_valid.unsqueeze(-1), 0.0)), record_valid)
+        record_context = record_context.reshape(x.shape[0], self.n_peers, 64)
+        record_context = record_context.masked_fill(~valid.unsqueeze(-1), 0.0)
+        own = base[:, :self.own_features]
+        record_pool, _, _ = masked_pool(record_context, valid)
+        conditioned = torch.cat([own + self.context(pooled + target_context + record_pool), base[:, self.own_features:]], dim=-1)
+        result = self.base(conditioned)
+        if self.critic:
+            return result
+        context = own.unsqueeze(1).expand(-1, self.n_peers, -1)
+        target_context = target_context.unsqueeze(1).expand(-1, self.n_peers, -1)
+        scores = self.score(torch.cat([encoded, context, target_context, record_context], dim=-1)).squeeze(-1)
+        return torch.cat([result, scores], dim=-1)
+
+
 class GNNModule(PPOTorchRLModule, nn.Module):
     def setup(self):
         # __sphinx_doc_begin__
@@ -591,7 +640,8 @@ class GNNModule(PPOTorchRLModule, nn.Module):
 
         n_peers = model_config.get("n_peers", 0)
         peer_features = model_config.get("peer_features", 12)
-        base_inputs = self.config.observation_space.shape[0] - n_peers * peer_features
+        outgoing_features = model_config.get("outgoing_features", 0)
+        base_inputs = self.config.observation_space.shape[0] - n_peers * peer_features - outgoing_features
         valid_feature = 16 if model_config.get("completion_mask", False) else None
         self.pi_head = GNNActor(
             inputs=base_inputs,
@@ -640,22 +690,26 @@ class GNNModule(PPOTorchRLModule, nn.Module):
             self._inference_only_state_dict_keys = {}
 
         if n_peers:
-            self.pi_head = PeerSetHead(
+            head_type = CommunicationAwarePeerHead if outgoing_features else PeerSetHead
+            extra = dict(n_targets=model_config["n_targets"], target_features=model_config["target_features"], n_peers=n_peers, record_slots=model_config["outgoing_record_slots"]) if outgoing_features else {}
+            self.pi_head = head_type(
                 self.pi_head,
                 base_inputs,
                 model_config["obs_sat"],
                 peer_features,
                 action_head_init_gain=model_config.get("action_head_init_gain"),
                 observation_valid_feature=model_config.get("peer_observation_valid_feature", -1),
+                **extra,
             )
             if hasattr(self, "vf"):
-                self.vf = PeerSetHead(
+                self.vf = head_type(
                     self.vf,
                     base_inputs,
                     model_config["obs_sat"],
                     peer_features,
                     critic=True,
                     observation_valid_feature=model_config.get("peer_observation_valid_feature", -1),
+                    **extra,
                 )
         self.action_dist_cls = catalog.get_action_dist_cls(framework=self.framework)
 
@@ -681,7 +735,7 @@ class GNNModule(PPOTorchRLModule, nn.Module):
 
             if (
                 self.config.model_config_dict.get("observation_version")
-                not in {OBSERVATION_VERSION, "walker-inventory-navigation-v1"}
+                not in {OBSERVATION_VERSION, "walker-inventory-navigation-v1", "cooperative-requests-outgoing-v1"}
             ):
                 raise ValueError("Completion observation/checkpoint version mismatch.")
             features = batch[Columns.OBS]
@@ -712,7 +766,8 @@ class GNNModule(PPOTorchRLModule, nn.Module):
                 targets[:, :, VALID_TARGET_FEATURE] > 0.5
             ) & battery_ok.unsqueeze(1)
             if self.config.model_config_dict.get("n_peers", 0):
-                peers = features[:, target_end:].reshape(features.shape[0], -1, self.config.model_config_dict.get("peer_features", 12))
+                peer_end = target_end + self.config.model_config_dict["n_peers"] * self.config.model_config_dict.get("peer_features", 12)
+                peers = features[:, target_end:peer_end].reshape(features.shape[0], -1, self.config.model_config_dict.get("peer_features", 12))
                 mask[:, NON_IMAGING_ACTIONS + count :] = (
                     peers[:, :, -1] > 0.5
                 ) & battery_ok.unsqueeze(1)

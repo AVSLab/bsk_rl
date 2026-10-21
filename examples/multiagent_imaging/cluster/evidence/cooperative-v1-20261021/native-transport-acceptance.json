@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "fixtures": [
+    {
+      "fixture": "nominal",
+      "passed": true,
+      "simulated_seconds": 108.0
+    },
+    {
+      "fixture": "delay_loss_retry",
+      "passed": true,
+      "simulated_seconds": 193.0
+    },
+    {
+      "fixture": "ttl_boundary",
+      "passed": true,
+      "simulated_seconds": 300.0
+    },
+    {
+      "fixture": "broken_hold",
+      "passed": true,
+      "simulated_seconds": 236.00000000000003
+    },
+    {
+      "fixture": "cancel_deadline",
+      "passed": true,
+      "simulated_seconds": 301.0
+    },
+    {
+      "fixture": "frozen_revisions",
+      "passed": true,
+      "simulated_seconds": 119.00000000000001
+    },
+    {
+      "fixture": "control",
+      "passed": true,
+      "simulated_seconds": 10.0
+    }
+  ],
+  "new_ppo_updates": 0,
+  "full_mission_episodes": 0,
+  "native_fixture_instances": 7,
+  "ideal_ack_return": true
+}

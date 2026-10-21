@@ -1,0 +1,56 @@
+{
+  "profile": "cooperative-v1",
+  "baseline_defaults_unchanged": true,
+  "physical_population": "4 Walker-Delta sensors, 200 mixed targets, 10 candidates, 45000 seconds; current Basilisk unchanged",
+  "tasking": {
+    "active_requests_per_window": 16,
+    "window_s": 6000,
+    "public_tasking": true,
+    "private_completion_information": true,
+    "quality_threshold": 0.5,
+    "candidate_change": "Active requests sort before inactive requests within the existing visible and nearest-fill shortlist. Off-request imaging stays physically possible but earns zero task science."
+  },
+  "rewards": {
+    "default_new_profile": "team_mean",
+    "historical_default": "owned",
+    "alpha": 0.1,
+    "redundant_capture_cost_fraction": 0.05,
+    "cost_sign": "Positive magnitude subtracted locally, once; simultaneous excess successes split symmetrically",
+    "delivery_heavy_diagnostic_alpha": 0.8,
+    "packet_bonus": 0
+  },
+  "credit": {
+    "discount_half_life_s": 5926.379071133484,
+    "discount_per_second": 0.9998830471964926,
+    "gae_half_life_s": 1200,
+    "lambda_time": "second",
+    "centralized_critic": false
+  },
+  "model": {
+    "version": "cooperative-requests-outgoing-v1",
+    "outgoing_slots_per_peer": 16,
+    "outgoing_features_per_record": 12,
+    "privacy": "Own packet prefix and ACK history only; received catalogs require physical successful delivery",
+    "record_prefix": "Actual payload order/chunk; bounded observed prefix does not truncate the physical payload",
+    "dropout": 0.1
+  },
+  "canary": {
+    "account": "ucb550_asc3",
+    "partition": "acpu",
+    "qos": "cpu-normal",
+    "wall_minutes": 90,
+    "allocated_cpu_hours": 84,
+    "cpus": 56,
+    "memory_gib": 200,
+    "peak_memory_acceptance_gib": 160,
+    "remote_env_runners": 28,
+    "local_runner": true,
+    "remote_learners": 0,
+    "torch_threads": 1,
+    "max_updates": 2,
+    "max_missions": 56,
+    "max_true_decisions": 120000,
+    "automatic_continuation": false,
+    "submitted": false
+  }
+}

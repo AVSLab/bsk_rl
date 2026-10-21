@@ -33,12 +33,12 @@ def source_gate(root=ROOT):
     return dict(passed=True,source_hashes=len(manifest['source_sha256']),configs=configs,
         release=manifest['release_id'])
 
-def preflight(output):
+def preflight(output, source_validator=source_gate):
     from examples.multiagent_imaging.cluster.audit_runtime import audit
     from examples.multiagent_imaging.cluster.effective_imports import require_effective_imports
     from examples.multiagent_imaging.cluster.prepare_support_data import prepare
     from examples.multiagent_imaging.readiness import write_json
-    source=source_gate();write_json(output/'source-gate.json',source)
+    source=source_validator();write_json(output/'source-gate.json',source)
     runtime=audit(allocation=True);write_json(output/'runtime.json',runtime)
     assert runtime['passed'],runtime['errors']
     assert sys.version_info[:3]==(3,11,13)

@@ -1,0 +1,98 @@
+[
+  {
+    "iteration": 1,
+    "episode_seed": 693179945,
+    "horizon_s": 45000.0,
+    "true_decisions": 1052,
+    "tasking": {
+      "acquisition_value": 42.55670051787906,
+      "active_request_count": 16,
+      "quality_threshold": 0.5,
+      "redundant_capture_cost": 1.1644954747960727,
+      "rejected_acquisitions": 426,
+      "rejected_deliveries": 363,
+      "unique_acquisition_requests": 91,
+      "unshaped_weighted_science": 39.482125777264834,
+      "useful_delivered_requests": 26,
+      "verified_delivery_value": 11.810953111736808,
+      "version": "public-request-utility-v1",
+      "window_s": 6000.0
+    },
+    "communication": {
+      "packet_outcome_counts": {
+        "accepted": 35
+      },
+      "payload_bytes_attempted": 869708,
+      "payload_records_attempted": 2889,
+      "peer_slot_selection_counts": {
+        "0": 12,
+        "1": 18,
+        "2": 5
+      },
+      "radio_occupancy_s": 5792.0,
+      "recipient_selection_counts": {
+        "sensor_0": 12,
+        "sensor_1": 5,
+        "sensor_2": 13,
+        "sensor_3": 5
+      }
+    },
+    "measurement": {
+      "peak_rss_bytes": 1417707520,
+      "sim_seconds_per_wall_second": 106.7450365426398,
+      "simulated_seconds": 45000.0,
+      "wall_time_s": 421.5652685829991
+    },
+    "physically_delivered_products": 391,
+    "uncredited_physical_deliveries": 365,
+    "physical_audit_replayed_with_zero_PPO_updates": true
+  },
+  {
+    "iteration": 2,
+    "episode_seed": 693179946,
+    "horizon_s": 45000.0,
+    "true_decisions": 1071,
+    "tasking": {
+      "acquisition_value": 51.582392190139316,
+      "active_request_count": 16,
+      "quality_threshold": 0.5,
+      "redundant_capture_cost": 1.6529930952367662,
+      "rejected_acquisitions": 424,
+      "rejected_deliveries": 401,
+      "unique_acquisition_requests": 99,
+      "unshaped_weighted_science": 49.21105650737588,
+      "useful_delivered_requests": 56,
+      "verified_delivery_value": 27.86903536250493,
+      "version": "public-request-utility-v1",
+      "window_s": 6000.0
+    },
+    "communication": {
+      "packet_outcome_counts": {
+        "accepted": 38
+      },
+      "payload_bytes_attempted": 952077,
+      "payload_records_attempted": 3128,
+      "peer_slot_selection_counts": {
+        "0": 10,
+        "1": 19,
+        "2": 9
+      },
+      "radio_occupancy_s": 5010.0,
+      "recipient_selection_counts": {
+        "sensor_0": 10,
+        "sensor_1": 9,
+        "sensor_2": 10,
+        "sensor_3": 9
+      }
+    },
+    "measurement": {
+      "peak_rss_bytes": 1280049152,
+      "sim_seconds_per_wall_second": 105.55378658385524,
+      "simulated_seconds": 45000.0,
+      "wall_time_s": 426.3229340830003
+    },
+    "physically_delivered_products": 468,
+    "uncredited_physical_deliveries": 412,
+    "physical_audit_replayed_with_zero_PPO_updates": true
+  }
+]

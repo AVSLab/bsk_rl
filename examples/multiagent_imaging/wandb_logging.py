@@ -128,6 +128,9 @@ class TrainingLogger:
                 "mission/excess_inventory_target_sensor_s":metrics["pending_duplicates"]["excess_inventory_target_sensor_s"]}
             for key,value in metrics["latency"].items():
                 if not isinstance(value,list): row[f"mission/latency/{key}"]=value
+            for key,value in (episode.get("cooperative_tasking") or {}).items():
+                if isinstance(value,(int,float)):
+                    row[f"mission/requests/{key}"] = value
             denom=state["available_live_sensor_s"]
             row["lifetime/redundant_execution_fraction"]=state["redundant_sensor_s"]/denom if denom else None
             row["lifetime/useful_delivered_visits"]=state["useful_delivered_visits"]
@@ -157,7 +160,32 @@ class TrainingLogger:
 
     def heartbeat(self, status="collecting_or_optimizing"):
         with self.lock:
+            if os.getpid() != self.driver_pid:
+                raise RuntimeError("Only the driver may log W&B metrics")
             progress={}
+            import psutil
+            from examples.multiagent_imaging.memory_profile import read_cgroup_memory
+            process=psutil.Process(self.driver_pid)
+            progress["memory/driver_rss_bytes"]=process.memory_info().rss
+            try:
+                progress["memory/driver_uss_bytes"]=getattr(process.memory_full_info(),"uss",None)
+            except (psutil.AccessDenied,psutil.NoSuchProcess):
+                pass
+            if Path("/proc/self/cgroup").is_file():
+                groups=read_cgroup_memory()
+                bounded=[]
+                for group in groups:
+                    values=group["values"]
+                    limit=values.get("memory.max",values.get("memory.limit_in_bytes","max"))
+                    if limit.isdigit() and 0<int(limit)<2**60:
+                        bounded.append((int(limit),values))
+                if bounded:
+                    limit,values=min(bounded,key=lambda item:item[0])
+                    progress.update({"memory/job_cgroup_limit_bytes":limit,
+                        "memory/job_cgroup_current_bytes":int(values.get("memory.current",values.get("memory.usage_in_bytes",0))),
+                        "memory/job_cgroup_peak_bytes":int(values.get("memory.peak",values.get("memory.max_usage_in_bytes",0))),
+                        "memory/job_cgroup_failcnt":int(values.get("memory.failcnt",0))})
+            progress={k:v for k,v in progress.items() if v is not None}
             spool=os.environ.get("BSK_STUDY_EPISODE_SPOOL")
             if spool:
                 for path in sorted((Path(spool)/"progress").glob("*.json")):

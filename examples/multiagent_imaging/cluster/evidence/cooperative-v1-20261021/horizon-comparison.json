@@ -1,0 +1,11 @@
+{
+  "scope": "Identical native primitive shared science rewards; zero critic baseline; objective ablation, not policy improvement",
+  "sender_transmit_target_increment": {
+    "cooperative": 1.6757804155349731,
+    "amos": 0.14586365222930908
+  },
+  "cooperative_discount_half_life_s": 5926.379071133484,
+  "amos_discount_half_life_s": 81.24326697796923,
+  "cooperative_gae_half_life_s": 1200.0,
+  "amos_gae_lambda_per_decision": 0.8713548569911232
+}

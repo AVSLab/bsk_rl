@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "new_ppo_updates": 0,
+  "changes": {
+    "pi_head.target_context.": {
+      "l2": 0.09612932114849863,
+      "parameters": 5760
+    },
+    "pi_head.record_context.": {
+      "l2": 0.09450760235829157,
+      "parameters": 4992
+    },
+    "pi_head.score.": {
+      "l2": 0.12555513652900932,
+      "parameters": 14081
+    }
+  },
+  "scope": "Read-only comparison of the initial and second-update policy exports; no additional learning"
+}

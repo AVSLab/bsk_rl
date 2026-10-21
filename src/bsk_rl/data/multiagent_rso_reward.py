@@ -55,6 +55,27 @@ class _TeamServiceAccounting:
         self._acquisition_team_value = 0.0
         self._latest_unique_capture_by_target: dict[tuple[int, float], float] = {}
         self._latest_credited_acquisition_by_target: dict[tuple[int, float], float] = {}
+        self._costed_capture_ids: set[str] = set()
+
+    def redundant_capture_costs(self, products, priorities, coefficient):
+        """Charge k-1 excess simultaneous successes symmetrically, once only.
+
+        Call before registering acquisitions. Failed exposures, new requests and
+        post-cooldown revisits are not redundant. Costs are positive magnitudes.
+        """
+        costs = {}
+        for first, group in self._groups(products):
+            qualified = [p for p in group if p.quality >= self.quality_threshold
+                         and p.record_id not in self._costed_capture_ids]
+            if not qualified:
+                continue
+            latest = self._latest_credited_acquisition_by_target.get((first.target_id, first.request_epoch))
+            excess = len(qualified) if latest is not None and first.capture_time < latest + self.cooldown_s else len(qualified) - 1
+            share = coefficient * float(priorities[first.target_id]) * excess / len(qualified)
+            for product in qualified:
+                costs[product.source_sensor] = costs.get(product.source_sensor, 0.0) + share
+                self._costed_capture_ids.add(product.record_id)
+        return costs
 
     def register_capture_attempt(self, product: ImageProductRecord) -> bool:
         latest = self._latest_credited_acquisition_by_target.get((product.target_id, product.request_epoch))
@@ -176,6 +197,14 @@ class _TeamServiceAccounting:
                     credit.get(product.source_sensor, 0.0) + value
                 )
         return credit
+
+    def register_uncredited_deliveries(self, products) -> None:
+        """Retain physical ground receipts that did not satisfy task requirements."""
+        seen = {entry.product.record_id for entry in self.entries}
+        for product in products:
+            if product.record_id not in seen:
+                self.entries.append(_ServiceEntry(product, False, False, 0.0))
+                seen.add(product.record_id)
 
     @property
     def team_value(self) -> float:
@@ -309,6 +338,7 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
         duplicate_penalty: float = 0.0,
         communication_penalty: float = 0.0,
         reward_credit_mode: str = "owned",
+        redundant_capture_cost: float = 0.0,
     ) -> None:
         """Configure the AMOS reward mixture and separate optional penalties."""
         super().__init__()
@@ -325,6 +355,9 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
         if reward_credit_mode not in {"owned", "team_mean"}:
             raise ValueError("reward_credit_mode must be owned or team_mean")
         self.reward_credit_mode = reward_credit_mode
+        if not np.isfinite(redundant_capture_cost) or redundant_capture_cost < 0:
+            raise ValueError("Redundant capture cost must be finite and nonnegative")
+        self.redundant_capture_cost = float(redundant_capture_cost)
 
     @property
     def sensing_satellites(self):
@@ -595,6 +628,10 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
             for target in self.scenario.target_spacecrafts
         }
         captures = self._capture_products(new_data_dict)
+        captures = self._science_products(captures, phase="acquisition")
+        capture_costs = (self._team_accounting.redundant_capture_costs(
+            captures, priorities, self.redundant_capture_cost
+        ) if self.redundant_capture_cost else {})
         acquisition_credit = self._team_accounting.register_acquisitions(
             captures, priorities
         )
@@ -602,11 +639,17 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
             self.per_sensor_metrics[sensor_id]["acquisition_credit"] += float(value)
             reward[sensor_id] += self.reward_fn((1.0 - self.alpha) * value)
 
-        deliveries = self._downlinked_products()
+        physical_deliveries = self._downlinked_products()
+        deliveries = self._science_products(physical_deliveries, phase="delivery")
         prior_successful_duplicates = self._team_accounting.successful_duplicate_count
         delivery_credit = self._team_accounting.register_deliveries(
             deliveries, priorities
         )
+        if len(deliveries) != len(physical_deliveries):
+            credited_ids = {p.record_id for p in deliveries}
+            self._team_accounting.register_uncredited_deliveries(
+                p for p in physical_deliveries if p.record_id not in credited_ids
+            )
         for sensor_id, value in delivery_credit.items():
             self.per_sensor_metrics[sensor_id]["delivery_credit"] += float(value)
             reward[sensor_id] += self.reward_fn(self.alpha * value)
@@ -617,6 +660,16 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
         if self.reward_credit_mode == "team_mean" and reward:
             mean_science_reward = sum(reward.values()) / len(reward)
             reward = {sensor_id: mean_science_reward for sensor_id in reward}
+        self.last_reward_components = {
+            sensor: dict(owned_science=self.last_owned_science_reward[sensor],
+                         credited_science=reward[sensor],
+                         redundant_capture_cost=capture_costs.get(sensor, 0.0))
+            for sensor in reward
+        }
+        for sensor, cost in capture_costs.items():
+            reward[sensor] -= cost
+            metrics = self.per_sensor_metrics[sensor]
+            metrics["redundant_capture_cost"] = metrics.get("redundant_capture_cost", 0.0) + cost
         for entry in self._team_accounting.entries:
             if entry.product in deliveries and entry.successful_duplicate:
                 self.per_sensor_metrics[entry.product.source_sensor][
@@ -646,6 +699,10 @@ class MultiSensorRSOTargetImageReward(GlobalReward):
             ),
         }
         return reward
+
+    def _science_products(self, products, *, phase):
+        """Baseline values every physical product; experiments may gate task credit."""
+        return products
 
 
 __all__ = [

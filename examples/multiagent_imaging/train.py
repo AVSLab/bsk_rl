@@ -245,6 +245,9 @@ def target_attention_config(config: MultiAgentImagingConfig) -> dict:
         "action_head_init_gain": ACTION_HEAD_INIT_GAIN,
         "initial_imaging_logit_bias": INITIAL_IMAGING_LOGIT_BIAS,
     }
+    if config.is_cooperative:
+        model.update(outgoing_features=config.outgoing_features,
+                     outgoing_record_slots=config.outgoing_record_slots)
     if config.policy_model_profile == "amos_attention":
         # Match the common target-attention/critic capacity of AMOS run 4osb53df.
         # Private peer inputs and the completion action/mask contract remain

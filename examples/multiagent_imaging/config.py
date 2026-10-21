@@ -72,8 +72,39 @@ class MultiAgentImagingConfig:
     walker_phasing: int = 1
     seed: int = 0
     inventory_chunk_records: int = 256
+    # Explicit experimental contract. Defaults are omitted from old manifests.
+    experiment_profile: str = "baseline"
+    active_request_count: int = 16
+    request_window_s: float = 6000.0
+    request_quality_threshold: float = 0.5
+    redundant_capture_cost: float = 0.0
+    outgoing_record_slots: int = 16
+    # Public tasking overrides for declared constructed fixtures only.
+    request_target_ids: tuple[int, ...] = ()
+    request_priority_overrides: tuple[tuple[int, float], ...] = ()
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "request_target_ids", tuple(self.request_target_ids))
+        object.__setattr__(self, "request_priority_overrides", tuple(tuple(p) for p in self.request_priority_overrides))
+        if self.experiment_profile not in {"baseline", "cooperative-v1"}:
+            raise ValueError("Unknown experiment profile")
+        if self.is_cooperative:
+            if not self.is_study or self.policy_model_profile != "amos_attention":
+                raise ValueError("cooperative-v1 requires directed study and AMOS attention")
+            if not 1 <= self.active_request_count <= self.n_targets or self.outgoing_record_slots < 1:
+                raise ValueError("Invalid cooperative request/record count")
+            if not math.isfinite(self.request_window_s) or self.request_window_s <= 0:
+                raise ValueError("Positive finite request window required")
+            if not math.isclose(self.request_window_s / self.sim_rate_s, round(self.request_window_s / self.sim_rate_s)):
+                raise ValueError("Request boundaries must lie on simulation ticks")
+            if not 0 <= self.request_quality_threshold <= 1 or not math.isfinite(self.redundant_capture_cost) or self.redundant_capture_cost < 0:
+                raise ValueError("Invalid request quality or redundant capture cost")
+            if self.request_target_ids and (len(set(self.request_target_ids)) != self.active_request_count or any(not 0 <= i < self.n_targets for i in self.request_target_ids)):
+                raise ValueError("Fixture request IDs must match active count and population")
+            if len({p[0] for p in self.request_priority_overrides}) != len(self.request_priority_overrides) or any(not 0 <= i < self.n_targets or not math.isfinite(v) or v <= 0 for i,v in self.request_priority_overrides):
+                raise ValueError("Invalid public request priority overrides")
+            if self.gae_lambda_per_decision is not None:
+                raise ValueError("cooperative-v1 requires a physical-time GAE trace")
         if self.reward_credit_mode not in {"owned", "team_mean"}:
             raise ValueError("Unknown reward credit mode")
         if self.gae_lambda_per_decision is not None and (
@@ -169,13 +200,19 @@ class MultiAgentImagingConfig:
     def is_study(self): return self.information_case in {"catalog_tx", "geometry_only"}
 
     @property
+    def is_cooperative(self): return self.experiment_profile == "cooperative-v1"
+
+    @property
+    def outgoing_features(self): return self.n_peers * self.outgoing_record_slots * 12 if self.is_cooperative else 0
+
+    @property
     def peer_features(self): return 18 if self.is_study else 12
 
     @property
-    def target_features(self): return 21 if self.is_study else TARGET_FEATURES
+    def target_features(self): return 24 if self.is_cooperative else 21 if self.is_study else TARGET_FEATURES
 
     @property
-    def observation_version(self): return "walker-inventory-navigation-v1" if self.is_study else OBSERVATION_VERSION
+    def observation_version(self): return "cooperative-requests-outgoing-v1" if self.is_cooperative else "walker-inventory-navigation-v1" if self.is_study else OBSERVATION_VERSION
 
     @property
     def n_peers(self):
@@ -195,6 +232,13 @@ class MultiAgentImagingConfig:
 
     def to_dict(self) -> dict:
         values = asdict(self)
+        if not self.is_cooperative:
+            for field in ("experiment_profile", "active_request_count", "request_window_s", "request_quality_threshold", "redundant_capture_cost", "outgoing_record_slots", "request_target_ids", "request_priority_overrides"):
+                values.pop(field)
+        else:
+            # The checkpoint contract is compared after a JSON round trip.
+            values["request_target_ids"] = list(self.request_target_ids)
+            values["request_priority_overrides"] = [list(pair) for pair in self.request_priority_overrides]
         if self.reward_credit_mode == "owned":
             values.pop("reward_credit_mode")
         if not self.is_study: values.pop("inventory_chunk_records")
