@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "must run locally",
+    "final sacct receipt",
+    "Require terminal canary",
+    "Only the demonstrated reader-schema defect"
+  ],
+  "script_sha256": "619ecca963841117c28a6b117a929b1b0845141691445669b0d11f0a6477eef3",
+  "source": "Operator audit routing only; no numerical batches loaded and no Ray/native initialization",
+  "new_PPO_updates": 0,
+  "active_job_changes": 0
+}
