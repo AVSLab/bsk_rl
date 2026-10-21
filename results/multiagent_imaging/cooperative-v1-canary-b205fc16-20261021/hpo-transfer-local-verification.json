@@ -1,0 +1,39 @@
+{
+  "passed": true,
+  "qualification": "Configuration construction and mocked entry-point forwarding only",
+  "new_PPO_updates": 0,
+  "source_commit": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+  "effective_ppo": {
+    "lr": [
+      [
+        0,
+        5.5086251013380465e-05
+      ],
+      [
+        40000,
+        3.288833613882778e-06
+      ]
+    ],
+    "entropy_coeff": 1.290350868902825e-05,
+    "grad_clip": 3.5469819242980924,
+    "num_sgd_iter": 10,
+    "sgd_minibatch_size": 128,
+    "vf_clip_param": 10.0,
+    "vf_loss_coeff": 1.0,
+    "clip_param": 0.28561625869311813,
+    "use_kl_loss": false,
+    "train_batch_size": 4200,
+    "gamma": 0.9998830471964926,
+    "lambda_": 0.9994225441413808,
+    "learner_config_dict": {
+      "reward_time": "step_start",
+      "lambda_time": "second"
+    },
+    "grad_clip_by": "global_norm",
+    "count_steps_by": "env_steps"
+  },
+  "retained_discount_half_life_s": 5926.379071133484,
+  "retained_gae_half_life_s": 1200.0,
+  "training_and_restore_arguments_forwarded": true,
+  "cluster_runtime_verified": false
+}
