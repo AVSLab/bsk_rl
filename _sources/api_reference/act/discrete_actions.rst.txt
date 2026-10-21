@@ -1,0 +1,13 @@
+.. _bsk_rl.act.discrete_actions:
+.. currentmodule:: bsk_rl.act.discrete_actions
+
+Discrete Backend
+================
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.act.discrete_actions
+   :members:
+   :show-inheritance:
+

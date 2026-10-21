@@ -1,0 +1,455 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mixed Ground and Space Imaging &mdash; BSK-RL v1.3.8 1.3.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=c3d4a9a6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=3cbadadc"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Fault Environment Example" href="fault_environment.html" />
+    <link rel="prev" title="Multi-Agent Environments" href="multiagent_envs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #CFB87C" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            BSK-RL v1.3.8
+              <img src="../_static/bsk_rl-logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#environments">Environments</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="simple_environment.html">Getting Started</a></li>
+<li class="toctree-l3"><a class="reference internal" href="satellite_configuration.html">Satellite Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="multiagent_envs.html">Multi-Agent Environments</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Mixed Ground and Space Imaging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Define-the-spacecraft">Define the spacecraft</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Define-the-targets">Define the targets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Bind-scenarios-and-reward-channels">Bind scenarios and reward channels</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Run-the-environment">Run the environment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html">Fault Environment Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fault_environment.html#Configure-Satellite-Pareameters">Configure Satellite Pareameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="communication_action.html">Broadcast Communication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cloud_environment.html">Cloud Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#earth-observation">Earth Observation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#rso-missions">RSO Missions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#benchmarks">Benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/AVSLab/bsk_rl/">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #CFB87C" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BSK-RL v1.3.8</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active">Mixed Ground and Space Imaging</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/mixed_environment.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Mixed-Ground-and-Space-Imaging">
+<h1>Mixed Ground and Space Imaging<a class="headerlink" href="#Mixed-Ground-and-Space-Imaging" title="Link to this heading"></a></h1>
+<p>This minimal example uses three spacecraft: a ground imager, a space-to-space imager, and one passive RSO target. Each observer has its own scenario and reward channel. <code class="docutils literal notranslate"><span class="pre">MixedReward</span></code> keeps the different data types separate while <code class="docutils literal notranslate"><span class="pre">FreeCommunication</span></code> shares knowledge between spacecraft.</p>
+<p>BSK-RL and its dependencies must be installed. The fixed geometry and permissive imaging tolerances keep this a short configuration demonstration; they are not mission settings.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">Basilisk.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">orbitalMotion</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConstellationTasking</span><span class="p">,</span> <span class="n">act</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">sats</span><span class="p">,</span> <span class="n">scene</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.comm</span><span class="w"> </span><span class="kn">import</span> <span class="n">FreeCommunication</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.scene.targets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Target</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bsk_rl.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">dyn</span><span class="p">,</span> <span class="n">fsw</span>
+
+<span class="n">EPOCH</span> <span class="o">=</span> <span class="s2">"2026 OCT 01 00:00:00.000 (UTC)"</span>
+</pre></div>
+</div>
+</div>
+<section id="Define-the-spacecraft">
+<h2>Define the spacecraft<a class="headerlink" href="#Define-the-spacecraft" title="Link to this heading"></a></h2>
+<p>The observers use different dynamics, flight software, observations, and imaging actions. The passive spacecraft is a participant in the RSO scenario but produces no reward data.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GroundObserver</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">ImagingSatellite</span><span class="p">):</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">GroundStationDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">ImagingFSWModel</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">()]</span>
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_duration</span><span class="o">=</span><span class="mi">30</span><span class="p">),</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+    <span class="p">]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">RSOObserver</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="p">(</span><span class="n">dyn</span><span class="o">.</span><span class="n">SpaceToSpaceImagingDynModel</span><span class="p">,</span> <span class="n">dyn</span><span class="o">.</span><span class="n">GroundStationDynModel</span><span class="p">)</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">SpaceToSpaceImagingFSWModel</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">(),</span>
+        <span class="n">obs</span><span class="o">.</span><span class="n">RSOTargetProperties</span><span class="p">(</span><span class="n">n_ahead_observe</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">ImageRSO</span><span class="p">(</span>
+            <span class="mi">1</span><span class="p">,</span>
+            <span class="n">max_duration</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+            <span class="n">min_pointing_hold_s</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">require_illumination_during_hold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">act</span><span class="o">.</span><span class="n">Charge</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Define-the-targets">
+<h2>Define the targets<a class="headerlink" href="#Define-the-targets" title="Link to this heading"></a></h2>
+<p>Both ground (<code class="docutils literal notranslate"><span class="pre">FixedGroundTargets</span></code>) and space (<code class="docutils literal notranslate"><span class="pre">PassiveTarget</span></code>) targets are defined. <code class="docutils literal notranslate"><span class="pre">FixedGroundTargets</span></code> places one ground target below the ground observer after the Earth’s orientation is initialized.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">FixedGroundTargets</span><span class="p">(</span><span class="n">scene</span><span class="o">.</span><span class="n">UniformTargets</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Put a ground target directly below the initial imaging satellite."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">regenerate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">Target</span><span class="p">(</span><span class="s2">"city"</span><span class="p">,</span> <span class="p">[</span><span class="n">orbitalMotion</span><span class="o">.</span><span class="n">REQ_EARTH</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">priority</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_post_sim_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">satellite</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">satellites</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">position_P</span> <span class="o">=</span> <span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">PN</span> <span class="o">@</span> <span class="n">satellite</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">r_BN_N</span>
+        <span class="c1"># Access registration retains this array; update it before windows are</span>
+        <span class="c1"># generated, accounting for the realized Earth orientation at the epoch.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">r_LP_P</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">*</span> <span class="n">position_P</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">position_P</span><span class="p">)</span>
+        <span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PassiveTarget</span><span class="p">(</span><span class="n">sats</span><span class="o">.</span><span class="n">Satellite</span><span class="p">):</span>
+    <span class="n">dyn_type</span> <span class="o">=</span> <span class="n">dyn</span><span class="o">.</span><span class="n">RSOTargetDynModel</span>
+    <span class="n">fsw_type</span> <span class="o">=</span> <span class="n">fsw</span><span class="o">.</span><span class="n">FSWModel</span>
+    <span class="n">observation_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Observation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">Time</span><span class="p">()]</span>
+    <span class="n">action_spec</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Action</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="n">act</span><span class="o">.</span><span class="n">Drift</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">1e9</span><span class="p">)]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Bind-scenarios-and-reward-channels">
+<h2>Bind scenarios and reward channels<a class="headerlink" href="#Bind-scenarios-and-reward-channels" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">MixedScenario.satellite_mapping</span></code> lists all participants, including the passive RSO. <code class="docutils literal notranslate"><span class="pre">MixedReward.satellite_mapping</span></code> lists only the satellites producing each reward channel, and <code class="docutils literal notranslate"><span class="pre">scenario_mapping</span></code> binds each channel to its scenario ID. Channel IDs are explicit names, independent of data classes.</p>
+<p>The ground target has priority 3 and the RSO has priority 2. The RSO reward callback awards its priority at acquisition for this example; the default RSO reward instead requires complete downlink.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use a nearby RSO and a ground target below the ground observer so that</span>
+<span class="c1"># this short demonstration can acquire both images.</span>
+<span class="n">satellite_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">rN</span><span class="o">=</span><span class="p">[</span><span class="mf">7e6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="n">vN</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7500</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="n">oe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sigma_init</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="n">omega_init</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="n">wheelSpeeds</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+    <span class="n">imageAttErrorRequirement</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>  <span class="c1"># Permissive pointing tolerance for this demo.</span>
+    <span class="n">instrumentBaudRate</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">batteryStorageCapacity</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>
+    <span class="n">storedCharge_Init</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>
+    <span class="n">dataStorageCapacity</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span>
+    <span class="n">storageInit</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">satellites</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">GroundObserver</span><span class="p">(</span><span class="s2">"ground"</span><span class="p">,</span> <span class="n">sat_args</span><span class="o">=</span><span class="n">satellite_args</span><span class="p">),</span>
+    <span class="n">RSOObserver</span><span class="p">(</span><span class="s2">"observer"</span><span class="p">,</span> <span class="n">sat_args</span><span class="o">=</span><span class="n">satellite_args</span><span class="p">),</span>
+    <span class="n">PassiveTarget</span><span class="p">(</span><span class="s2">"debris"</span><span class="p">),</span>
+<span class="p">]</span>
+<span class="n">catalog</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">RSOTargetCatalog</span><span class="p">(</span>
+    <span class="p">(</span>
+        <span class="n">scene</span><span class="o">.</span><span class="n">RSOTarget</span><span class="p">(</span>
+            <span class="s2">"object"</span><span class="p">,</span> <span class="s2">"debris"</span><span class="p">,</span> <span class="p">(</span><span class="mf">7e6</span> <span class="o">+</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7500</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">priority</span><span class="o">=</span><span class="mi">2</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">EPOCH</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">mixed_scene</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">MixedScenario</span><span class="p">(</span>
+    <span class="n">scenarios</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"ground_scene"</span><span class="p">:</span> <span class="n">FixedGroundTargets</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+        <span class="s2">"rso_scene"</span><span class="p">:</span> <span class="n">scene</span><span class="o">.</span><span class="n">RSOTargets</span><span class="p">(</span><span class="n">catalog</span><span class="p">,</span> <span class="p">[</span><span class="s2">"observer"</span><span class="p">]),</span>
+    <span class="p">},</span>
+    <span class="n">satellite_mapping</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"ground_scene"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ground"</span><span class="p">],</span>
+        <span class="s2">"rso_scene"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"observer"</span><span class="p">,</span> <span class="s2">"debris"</span><span class="p">],</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+<span class="n">mixed_reward</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">MixedReward</span><span class="p">(</span>
+    <span class="n">rewarders</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"ground_images"</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">UniqueImageReward</span><span class="p">(),</span>
+        <span class="s2">"rso_images"</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">RSOImageReward</span><span class="p">(</span>
+            <span class="n">quality_threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">acquisition_reward_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">record</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">target</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">satellite_mapping</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"ground_images"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ground"</span><span class="p">],</span>
+        <span class="s2">"rso_images"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"observer"</span><span class="p">],</span>
+    <span class="p">},</span>
+    <span class="n">scenario_mapping</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"ground_images"</span><span class="p">:</span> <span class="s2">"ground_scene"</span><span class="p">,</span>
+        <span class="s2">"rso_images"</span><span class="p">:</span> <span class="s2">"rso_scene"</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">ConstellationTasking</span><span class="p">(</span>
+    <span class="n">satellites</span><span class="o">=</span><span class="n">satellites</span><span class="p">,</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">mixed_scene</span><span class="p">,</span>
+    <span class="n">rewarder</span><span class="o">=</span><span class="n">mixed_reward</span><span class="p">,</span>
+    <span class="n">communicator</span><span class="o">=</span><span class="n">FreeCommunication</span><span class="p">(),</span>
+    <span class="n">world_args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">utc_init</span><span class="o">=</span><span class="n">EPOCH</span><span class="p">),</span>
+    <span class="n">time_limit</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+    <span class="n">max_step_duration</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">sim_rate</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">log_level</span><span class="o">=</span><span class="s2">"INFO"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Run-the-environment">
+<h2>Run the environment<a class="headerlink" href="#Run-the-environment" title="Link to this heading"></a></h2>
+<p>Both observers image their first candidate. This fixed geometry ensures that the RSO candidate slot is populated; general policies must avoid selecting empty RSO slots.</p>
+<p>Expected cumulative rewards are <code class="docutils literal notranslate"><span class="pre">ground:</span> <span class="pre">3</span></code>, <code class="docutils literal notranslate"><span class="pre">observer:</span> <span class="pre">2</span></code>, and <code class="docutils literal notranslate"><span class="pre">debris:</span> <span class="pre">0</span></code>. Every spacecraft learns both channels through communication, but each observer generates data only for its assigned channel. Access heterogeneous data explicitly through <code class="docutils literal notranslate"><span class="pre">data.data[channel_id]</span></code>.</p>
+<p>Mappings can overlap to assign several reward channels and scenarios to one satellite, provided that satellite implements the corresponding models and actions. Combining ground and RSO imaging on the same physical satellite requires additional model integration.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="n">observations</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># Action 0 images a target on each observer, and drifts on the passive RSO.</span>
+    <span class="c1"># None continues the current action on subsequent steps.</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">{</span><span class="n">sat</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">}</span>
+        <span class="n">observations</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Cumulative rewards:"</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">cum_reward</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Ground images:"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">"ground_images"</span><span class="p">]</span><span class="o">.</span><span class="n">imaged</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"RSO captures:"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">rewarder</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">"rso_images"</span><span class="p">]</span><span class="o">.</span><span class="n">captures</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">satellites</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="n">sat</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">"produces"</span><span class="p">,</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">sat</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data_stores</span><span class="p">),</span>
+            <span class="s2">"knows"</span><span class="p">,</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">sat</span><span class="o">.</span><span class="n">data_store</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">),</span>
+        <span class="p">)</span>
+<span class="k">finally</span><span class="p">:</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,197 </span>gym                            INFO       Resetting environment with seed=0
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,199 </span>scene.targets                  INFO       Generating 1 targets
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,268 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ground: </span>Finding opportunity windows from 0.00 to 600.00 seconds
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,275 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span>Environment reset
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,276 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,276 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ground: </span>target index 0 tasked
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,277 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ground: </span>Target(city) tasked for imaging
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,278 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ground: </span>Target(city) window enabled: 0.0 to 85.4
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,279 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-cyan-fg">ground: </span>setting timed terminal event at 30.0
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,281 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-green-intense-fg">observer: </span>setting timed terminal event at 30.0
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,282 </span><span class="ansi-blue-fg">sats.satellite.debris          </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">debris: </span>action_drift tasked for 1000000000.0 seconds
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,282 </span><span class="ansi-blue-fg">sats.satellite.debris          </span>INFO       <span class="ansi-yellow-fg">&lt;0.00&gt; </span><span class="ansi-blue-fg">debris: </span>setting timed terminal event at 1000000000.0
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,285 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span>Max step duration reached
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,286 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span>Total reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,286 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span>Communicating data in 6 directions.
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,287 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,291 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span>Step reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,292 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;1.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,295 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-cyan-fg">ground: </span>imaged Target(city)
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,296 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span>Max step duration reached
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,299 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span>Total reward: {&#39;ground&#39;: 3.0, &#39;observer&#39;: 2.0}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,299 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span>Communicating data in 6 directions.
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,300 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,300 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-cyan-fg">ground: </span>Satellite ground requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,301 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span>INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-green-intense-fg">observer: </span>Satellite observer requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,305 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span>Step reward: {&#39;ground&#39;: 3.0, &#39;observer&#39;: 2.0}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,306 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,307 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-cyan-fg">ground: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,308 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;2.00&gt; </span><span class="ansi-green-intense-fg">observer: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,310 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span>Max step duration reached
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,311 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span>Total reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,311 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span>Communicating data in 6 directions.
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,312 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,312 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-cyan-fg">ground: </span>Satellite ground requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,313 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span>INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-green-intense-fg">observer: </span>Satellite observer requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,317 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span>Step reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,318 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,319 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-cyan-fg">ground: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,320 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;3.00&gt; </span><span class="ansi-green-intense-fg">observer: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,321 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span>Max step duration reached
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,322 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span>Total reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,323 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span>Communicating data in 6 directions.
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,323 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,324 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-cyan-fg">ground: </span>Satellite ground requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,325 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span>INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-green-intense-fg">observer: </span>Satellite observer requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,328 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span>Step reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,329 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,330 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-cyan-fg">ground: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,331 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;4.00&gt; </span><span class="ansi-green-intense-fg">observer: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,332 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;5.00&gt; </span>Max step duration reached
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,333 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;5.00&gt; </span>Total reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,334 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;5.00&gt; </span>Communicating data in 6 directions.
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,334 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;5.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,335 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;5.00&gt; </span><span class="ansi-cyan-fg">ground: </span>Satellite ground requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,336 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span>INFO       <span class="ansi-yellow-fg">&lt;5.00&gt; </span><span class="ansi-green-intense-fg">observer: </span>Satellite observer requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,339 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5.00&gt; </span>Step reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,340 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;5.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,341 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;5.00&gt; </span><span class="ansi-cyan-fg">ground: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,342 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;5.00&gt; </span><span class="ansi-green-intense-fg">observer: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,344 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;6.00&gt; </span>Max step duration reached
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,345 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;6.00&gt; </span>Total reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,345 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;6.00&gt; </span>Communicating data in 6 directions.
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,346 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;6.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,346 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;6.00&gt; </span><span class="ansi-cyan-fg">ground: </span>Satellite ground requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,347 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span>INFO       <span class="ansi-yellow-fg">&lt;6.00&gt; </span><span class="ansi-green-intense-fg">observer: </span>Satellite observer requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,351 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6.00&gt; </span>Step reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,351 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;6.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,352 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6.00&gt; </span><span class="ansi-cyan-fg">ground: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,353 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;6.00&gt; </span><span class="ansi-green-intense-fg">observer: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,355 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;7.00&gt; </span>Max step duration reached
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,356 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;7.00&gt; </span>Total reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,357 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;7.00&gt; </span>Communicating data in 6 directions.
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,357 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;7.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,358 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;7.00&gt; </span><span class="ansi-cyan-fg">ground: </span>Satellite ground requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,359 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span>INFO       <span class="ansi-yellow-fg">&lt;7.00&gt; </span><span class="ansi-green-intense-fg">observer: </span>Satellite observer requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,362 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7.00&gt; </span>Step reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,362 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;7.00&gt; </span><span class="ansi-yellow-intense-fg ansi-bold">=== STARTING STEP ===</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,364 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;7.00&gt; </span><span class="ansi-cyan-fg">ground: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,365 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span><span class="ansi-yellow-intense-fg">WARNING    </span><span class="ansi-yellow-fg">&lt;7.00&gt; </span><span class="ansi-green-intense-fg">observer: </span><span class="ansi-yellow-intense-fg">Requires retasking but received no task.</span>
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,366 </span>sim.simulator                  INFO       <span class="ansi-yellow-fg">&lt;8.00&gt; </span>Max step duration reached
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,367 </span>data.base                      INFO       <span class="ansi-yellow-fg">&lt;8.00&gt; </span>Total reward: {}
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,367 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;8.00&gt; </span>Communicating data in 6 directions.
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,368 </span>comm.communication             INFO       <span class="ansi-yellow-fg">&lt;8.00&gt; </span>Optimizing data communication between all pairs of satellites
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,369 </span><span class="ansi-cyan-fg">sats.satellite.ground          </span>INFO       <span class="ansi-yellow-fg">&lt;8.00&gt; </span><span class="ansi-cyan-fg">ground: </span>Satellite ground requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,369 </span><span class="ansi-green-intense-fg">sats.satellite.observer        </span>INFO       <span class="ansi-yellow-fg">&lt;8.00&gt; </span><span class="ansi-green-intense-fg">observer: </span>Satellite observer requires retasking
+<span class="ansi-black-intense-fg">2026-10-21 00:25:25,373 </span>gym                            INFO       <span class="ansi-yellow-fg">&lt;8.00&gt; </span>Step reward: {}
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Cumulative rewards: {&#39;ground&#39;: 3.0, &#39;observer&#39;: 2.0, &#39;debris&#39;: 0.0}
+Ground images: 1
+RSO captures: 1
+ground produces [&#39;ground_images&#39;] knows [&#39;ground_images&#39;, &#39;rso_images&#39;]
+observer produces [&#39;rso_images&#39;] knows [&#39;ground_images&#39;, &#39;rso_images&#39;]
+debris produces [] knows [&#39;ground_images&#39;, &#39;rso_images&#39;]
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="multiagent_envs.html" class="btn btn-neutral float-left" title="Multi-Agent Environments" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fault_environment.html" class="btn btn-neutral float-right" title="Fault Environment Example" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Autonomous Vehicle Systems (AVS) Laboratory.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
