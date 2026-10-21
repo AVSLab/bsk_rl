@@ -1,0 +1,23 @@
+{
+  "job_id": "34752183",
+  "observed_utc": "2026-10-21T21:50:14Z",
+  "method": "Fresh timestamped Termius screenshot readback of hash-verified read-only monitor",
+  "state": "RUNNING",
+  "node": "c3cpu-a5-u5-1",
+  "allocation_gate": true,
+  "source_gate": true,
+  "runtime_audit": true,
+  "effective_driver_import_gate": true,
+  "preflight_passed": true,
+  "preflight_includes_support_and_online_WandB_authentication": true,
+  "phase": "native transport fixtures",
+  "training_run_id_verified": false,
+  "training_memory_measured": false,
+  "learning_acceptance": false,
+  "restore_acceptance": false,
+  "communication_benefit_demonstrated_by_this_job": false,
+  "remote_monitor": "/projects/dahu1128/cooperative-v1-canary-b205fc16-evidence-20261021/monitor-20261021T215014840695Z.json",
+  "monitor_sha256": "69d2155bbfdd3ea6e6712209b5d07403653fd392c0a1f0621da5a2e572b89a11",
+  "automation_active": true,
+  "check_interval_minutes": 5
+}
