@@ -3,15 +3,16 @@ import concurrent.futures
 import json
 from pathlib import Path
 import pytest
+from types import SimpleNamespace
 from examples.multiagent_imaging import compare_learned_checkpoints as module
 from examples.multiagent_imaging.config import MultiAgentImagingConfig
 
 
 @pytest.fixture
 def fake_rollouts(monkeypatch):
-    monkeypatch.setattr(module, 'load_policy', lambda checkpoint, config: (checkpoint, {'passed': True}))
-    monkeypatch.setattr(module, 'policy_callable', lambda model, deterministic, seed: (model, deterministic))
-    def rollout(config, policy):
+    monkeypatch.setattr(module, 'load_policy', lambda checkpoint, config: (SimpleNamespace(label=checkpoint,training=False), {'passed': True}))
+    monkeypatch.setattr(module, 'policy_callable', lambda model, deterministic, seed: (model.label, deterministic))
+    def rollout(config, policy, metadata_intervention='normal', audit_information_flow=False):
         return dict(sim_time_s=45000, initial_conditions_sha256=f'seed-{config.seed}',
                     cumulative_reward={'sensor_0': 1.},
                     coverage={'capture_coverage_fraction': .5, 'ground_delivery_coverage_fraction': .25},
@@ -39,7 +40,7 @@ def test_all_eight_unique_cases_and_flat_hashed_evidence(tmp_path, fake_rollouts
 
 
 def test_hash_mismatch_is_retained_failure(tmp_path, fake_rollouts, monkeypatch):
-    def changed(config, policy):
+    def changed(config, policy, metadata_intervention='normal', audit_information_flow=False):
         record = fake_rollouts(config, policy)
         if policy == ('b', False): record['initial_conditions_sha256'] += '-changed'
         return record
@@ -51,7 +52,7 @@ def test_hash_mismatch_is_retained_failure(tmp_path, fake_rollouts, monkeypatch)
 
 
 def test_false_horizon_and_repeated_seed_rejected(tmp_path, fake_rollouts, monkeypatch):
-    def partial(config, policy):
+    def partial(config, policy, metadata_intervention='normal', audit_information_flow=False):
         record = fake_rollouts(config, policy);record['sim_time_s'] = 44999;return record
     monkeypatch.setattr(module, 'run_rollout', partial)
     with pytest.raises(AssertionError, match='horizon'):

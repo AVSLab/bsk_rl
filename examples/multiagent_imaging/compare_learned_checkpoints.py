@@ -16,7 +16,29 @@ from examples.multiagent_imaging.evaluate import run_rollout
 from examples.multiagent_imaging.readiness import write_json
 
 
-def compare(config, checkpoints, seeds, output, workers=1, modes=(True, False)):
+def annotate_frozen_trace(module, result, config):
+    """Private critic readback and temporal rewards, explicitly not PPO advantages."""
+    import torch
+    for row in result.get('information_flow_trace', {}).get('rows', []):
+        with torch.no_grad():
+            row['frozen_private_critic_value'] = float(module.vf({'obs': torch.tensor(
+                [row['private_observation']], dtype=torch.float32)}).reshape(-1)[0])
+        events = [e for e in result['reward_event_audit']
+                  if e['sensor']==row['sensor'] and e['time_s']>row['time_s']]
+        row['discounted_observed_reward_tail_without_bootstrap'] = sum(
+            config.discount_per_s**(e['time_s']-row['time_s'])*e['reward'] for e in events)
+        shared = [e for e in events if e.get('components',{}).get('credited_science',0)>0
+                  and e['components'].get('owned_science',0)==0]
+        if shared:
+            event=shared[0];delay=event['time_s']-row['time_s']
+            row['later_shared_science'] = dict(event=event, delay_s=delay,
+                reward_discount=config.discount_per_s**delay,
+                GAE_trace_attenuation=config.effective_gae_lambda**delay)
+        row['PPO_advantage'] = None
+        row['credit_interpretation'] = 'Temporal association and frozen critic only. Evaluation has no PPO update; actual learner advantages require the retained training-batch audit.'
+
+
+def compare(config, checkpoints, seeds, output, workers=1, modes=(True, False), metadata_intervention="normal", audit_information_flow=False):
     if workers < 1 or len(set(seeds)) != len(seeds):
         raise ValueError("Positive worker count and unique seeds required")
     output = Path(output)
@@ -24,10 +46,12 @@ def compare(config, checkpoints, seeds, output, workers=1, modes=(True, False)):
         raise FileExistsError("Use a fresh validation directory.")
     output.mkdir(parents=True, exist_ok=True)
     if workers > 1:
-        return parallel_compare(config, checkpoints, seeds, output, workers, modes)
+        return parallel_compare(config, checkpoints, seeds, output, workers, modes, metadata_intervention, audit_information_flow)
     references, rows = {}, []
     for label, checkpoint in checkpoints.items():
         module, restore = load_policy(checkpoint, config)
+        if module.training:
+            raise ValueError("Frozen policy inference must use eval mode")
         for seed in seeds:
             for deterministic in modes:
                 mode = "deterministic" if deterministic else "stochastic"
@@ -37,8 +61,12 @@ def compare(config, checkpoints, seeds, output, workers=1, modes=(True, False)):
                     policy=policy_callable(
                         module, deterministic=deterministic, seed=seed + 1701
                     ),
+                    metadata_intervention=metadata_intervention,
+                    audit_information_flow=audit_information_flow,
                 )
                 result["rollout_wall_s"]=time.monotonic()-rollout_start
+                if audit_information_flow:
+                    annotate_frozen_trace(module, result, config)
                 result["selection_mode"]=mode
                 initial_hash = result["initial_conditions_sha256"]
                 if seed in references and references[seed] != initial_hash:
@@ -76,7 +104,9 @@ def compare(config, checkpoints, seeds, output, workers=1, modes=(True, False)):
                     )
                 row = dict(
                     policy=label,
+                    metadata_intervention=metadata_intervention,
                     mode=mode,
+                    module_eval_mode=True,
                     seed=seed,
                     episode_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                     episode=str(path.resolve()),
@@ -139,7 +169,7 @@ def _evaluation_worker_init():
     torch.set_num_threads(1)
 
 
-def parallel_compare(config, checkpoints, seeds, output, workers, modes):
+def parallel_compare(config, checkpoints, seeds, output, workers, modes, metadata_intervention="normal", audit_information_flow=False):
     """Fresh spawned processes, one frozen mission per case; no Ray or PPO.
 
     Children retain their raw case evidence. Parent copies verified bytes into
@@ -164,7 +194,7 @@ def parallel_compare(config, checkpoints, seeds, output, workers, modes):
             futures = {}
             for index, (label, checkpoint, seed, mode) in enumerate(cases):
                 child = output / "cases" / f"case_{index:02d}"
-                futures[executor.submit(compare, config, {label: checkpoint}, [seed], child, 1, (mode,))] = child
+                futures[executor.submit(compare, config, {label: checkpoint}, [seed], child, 1, (mode,), metadata_intervention, audit_information_flow)] = child
             for future in concurrent.futures.as_completed(futures):
                 case_rows = future.result()
                 if len(case_rows) != 1:

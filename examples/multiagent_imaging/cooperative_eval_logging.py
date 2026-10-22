@@ -13,7 +13,7 @@ from examples.multiagent_imaging.config import MultiAgentImagingConfig
 from examples.multiagent_imaging.wandb_logging import TrainingLogger
 
 
-def publish(root, config):
+def publish(root, config, logger=None, finish=True):
     root = Path(root)
     summary = json.loads((root / "heldout/summary.json").read_text())
     if (
@@ -23,14 +23,17 @@ def publish(root, config):
     ):
         raise ValueError("Only complete matched held-out evaluations can be published")
     output = root / "evaluation-wandb"
-    output.mkdir(exist_ok=False)
+    if logger is None:
+        output.mkdir(exist_ok=False)
     source = json.loads((root / "preflight/source-gate.json").read_text())
-    logger = TrainingLogger(
+    logger = logger or TrainingLogger(
         output,
         dict(
             mission=config.to_dict(),
             evidence_kind="frozen heldout; zero PPO updates; no added training experience",
             source=source,
+            frozen_plan=(json.loads((root / 'heldout/plan.json').read_text())
+                         if (root / 'heldout/plan.json').exists() else None),
         ),
         mode="online",
         required=True,
@@ -38,10 +41,11 @@ def publish(root, config):
     failed = True
     try:
         for row in summary["rows"]:
-            prefix = f"heldout/{row['policy']}/{row['mode']}"
+            mode = row.get('selection_mode', row['mode'])
+            prefix = f"heldout/{row.get('condition', row['policy'])}/{mode}"
             metrics = {
                 "heldout/seed": row["seed"],
-                "heldout/selection_mode": row["mode"],
+                "heldout/selection_mode": mode,
             }
             for key in (
                 "capture_coverage",
@@ -55,10 +59,17 @@ def publish(root, config):
             for key, value in (row.get("cooperative_tasking") or {}).items():
                 if isinstance(value, (int, float)):
                     metrics[f"{prefix}/requests/{key}"] = value
+            for key, value in row.get('physical', {}).items():
+                if isinstance(value, (int,float)):
+                    metrics[f'{prefix}/physical/{key}'] = value
+            for resource in ('minimum_battery_fraction','maximum_storage_fraction'):
+                for agent,value in row.get('physical',{}).get(resource,{}).items():
+                    metrics[f'{prefix}/agent/{agent}/{resource}'] = value
             logger._log(metrics)
         failed = False
     finally:
-        logger.finish(failed=failed)
+        if finish:
+            logger.finish(failed=failed)
 
 
 def main():

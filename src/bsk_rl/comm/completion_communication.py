@@ -391,14 +391,19 @@ class CompletionCommunication(CommunicationMethod):
             ):
                 outcome = "lost"
             changed = 0
+            # Frozen-policy evaluation intervention only. Transport, payload,
+            # loss draws, timing and ideal ACK bookkeeping remain unchanged.
+            # No mission configuration or training default enables this flag.
+            suppress_catalog = getattr(self, "_frozen_eval_suppress_catalog_updates", False)
             if outcome == "accepted":
                 if packet.inventory_snapshot is not None:
-                    changed += self.catalogs[packet.receiver].receive_inventory(packet.inventory_snapshot, now, self.ttl_s)
+                    if not suppress_catalog:
+                        changed += self.catalogs[packet.receiver].receive_inventory(packet.inventory_snapshot, now, self.ttl_s)
                     self.inventory_refresh[(packet.sender, packet.receiver)] = packet.inventory_snapshot.epoch
                     for entry in packet.inventory_snapshot.entries:
                         self.inventory_record_refresh[(packet.sender, packet.receiver,entry.record_id)] = packet.inventory_snapshot.epoch
                 for record in packet.records:
-                    if packet.inventory_snapshot is None:
+                    if packet.inventory_snapshot is None and not suppress_catalog:
                         changed += self.catalogs[packet.receiver].merge_record(record, now)
                     ack = self.acknowledged.setdefault(
                         (packet.sender, packet.receiver), {}
@@ -420,6 +425,8 @@ class CompletionCommunication(CommunicationMethod):
                 self.peer_exchange[(packet.receiver, packet.sender)] = now
             self.delivery_history.append(
                 dict(
+                    **({"evaluation_intervention": "suppress_receiver_catalog_v1"}
+                       if suppress_catalog else {}),
                     sender=packet.sender,
                     receiver=packet.receiver,
                     sequence=packet.sequence,

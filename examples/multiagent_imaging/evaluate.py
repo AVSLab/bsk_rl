@@ -83,6 +83,8 @@ def run_rollout(
     policy=None,
     vizard_dir: str | None = None,
     vizard_settings: dict | None = None,
+    metadata_intervention: str = "normal",
+    audit_information_flow: bool = False,
 ) -> dict:
     """Run one matched deterministic shared-policy rollout with diagnostics."""
     reference_case = {
@@ -91,12 +93,22 @@ def run_rollout(
     }.get(controller)
     if reference_case is not None and policy is not None:
         raise ValueError("A heuristic reference cannot also execute policy weights.")
+    if metadata_intervention not in {"normal", "suppress_receiver_catalog_v1"} or (
+        metadata_intervention != "normal" and config.information_case != "catalog_tx"
+    ):
+        raise ValueError("Unknown or incompatible frozen evaluation intervention")
     env = build_environment(
         config,
         vizard_dir=vizard_dir,
         vizard_settings=vizard_settings,
     )
+    if metadata_intervention != "normal":
+        env.communicator._frozen_eval_suppress_catalog_updates = True
     observations, infos = env.reset(seed=config.seed)
+    flow = None
+    if audit_information_flow:
+        from examples.multiagent_imaging.frozen_flow_trace import FrozenFlowTrace
+        flow = FrozenFlowTrace(env, config)
     initial_conditions = {
         "sensors": {
             sensor.name: {
@@ -230,6 +242,8 @@ def run_rollout(
                         observations[sensor.name], config, controller=controller
                     )
             actions[sensor.name] = action
+            if flow is not None and action != NO_ACTION:
+                flow.capture(sensor, env.simulator.sim_time, observations[sensor.name], action)
             if action != NO_ACTION:
                 decision_count[sensor.name] += 1
             label = (
@@ -515,6 +529,9 @@ def run_rollout(
         },
     }
     if config.is_study:
+        result["metadata_intervention"] = metadata_intervention
+        if flow is not None:
+            result['information_flow_trace'] = flow.result()
         if config.is_cooperative:
             result["cooperative_tasking"] = env.rewarder.task_summary()
         from examples.multiagent_imaging.study_metrics import mission_metrics

@@ -214,10 +214,10 @@ class TrainingLogger:
         return {"driver_wall_s":self.accounting_base["driver_wall_s"]+elapsed,
             "driver_allocated_cpu_h":self.accounting_base["driver_allocated_cpu_h"]+float(os.environ.get("BSK_ALLOCATED_CPUS","0"))*elapsed/3600}
 
-    def start_heartbeat(self, interval_s=30):
+    def start_heartbeat(self, interval_s=30, status="collecting_or_optimizing"):
         def work():
             while not self.stop_event.wait(interval_s):
-                try: self.drain_spool(); self.heartbeat()
+                try: self.drain_spool(); self.heartbeat(status)
                 except BaseException as exc: self.background_error=exc; return
         self.heartbeat_thread=threading.Thread(target=work,daemon=True);self.heartbeat_thread.start()
 
