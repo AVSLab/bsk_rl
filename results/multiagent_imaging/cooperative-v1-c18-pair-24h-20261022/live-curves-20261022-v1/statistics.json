@@ -1,0 +1,2874 @@
+{
+  "snapshot_utc": "2026-10-22T13:37:58.155016+00:00",
+  "archive_sha256": "fb75a9cae496e01245750d50a0155b9d826c5479c96aa1bcba14b59838cf0e09",
+  "source": "Completed immutable update journals; active training, not held-out",
+  "x_axis": "Cumulative actual agent decisions in completed PPO batches; no epoch multiplication",
+  "smoothing": "Bold curves pool trailing three full 28-mission batches; pale curves are individual batches",
+  "arms": {
+    "with_communication": {
+      "updates": 26,
+      "steps": 799657,
+      "missions": 728,
+      "first_3": {
+        "science": 39.683753139610566,
+        "acquisition_value": 42.12365840526964,
+        "delivery_value": 17.724605748678968,
+        "acquisitions": 83.85714285714286,
+        "deliveries": 35.464285714285715,
+        "completed_duplicates": 67.6547619047619,
+        "qualified_captures": 151.51190476190476,
+        "duplicate_attempts": 69.85714285714286,
+        "tx": 35.38095238095238,
+        "tx_seconds": 4733.833333333333,
+        "radio_on_seconds": 308.04761904761904,
+        "payload_bytes": 768207.369047619,
+        "payload_records": 2545.7619047619046,
+        "missions": 84,
+        "decisions": 88530,
+        "tx_total": 2972,
+        "tx_percent": 3.3570541059527845,
+        "duplicate_percent": 44.65309970927949,
+        "tx_occupancy_percent": 2.6299074074074076,
+        "radio_on_percent": 0.17113756613756614,
+        "packets_per_mission": {
+          "accepted": 30.571428571428573
+        },
+        "tx_percent_by_agent": {
+          "sensor_0": 3.237490497697089,
+          "sensor_1": 3.503530689842477,
+          "sensor_2": 3.4081084770441827,
+          "sensor_3": 3.2808398950131235
+        }
+      },
+      "latest_3": {
+        "science": 56.80569831528693,
+        "acquisition_value": 58.204824600495854,
+        "delivery_value": 44.21356174840652,
+        "acquisitions": 114.85714285714286,
+        "deliveries": 87.20238095238095,
+        "completed_duplicates": 108.0,
+        "qualified_captures": 222.85714285714286,
+        "duplicate_attempts": 112.3452380952381,
+        "tx": 31.178571428571427,
+        "tx_seconds": 4077.059523809524,
+        "radio_on_seconds": 277.74999999999994,
+        "payload_bytes": 484601.3214285714,
+        "payload_records": 1586.6785714285713,
+        "missions": 84,
+        "decisions": 87794,
+        "tx_total": 2619,
+        "tx_percent": 2.9831195753696154,
+        "duplicate_percent": 48.46153846153846,
+        "tx_occupancy_percent": 2.265033068783069,
+        "radio_on_percent": 0.15430555555555553,
+        "packets_per_mission": {
+          "accepted": 27.571428571428573
+        },
+        "tx_percent_by_agent": {
+          "sensor_0": 2.912002912002912,
+          "sensor_1": 2.964959568733154,
+          "sensor_2": 3.0652739132418008,
+          "sensor_3": 2.9903653881112526
+        }
+      },
+      "latest_5": {
+        "science": 56.213635417859834,
+        "acquisition_value": 57.642094301461725,
+        "delivery_value": 43.35750546544276,
+        "acquisitions": 114.61428571428571,
+        "deliveries": 86.12857142857143,
+        "completed_duplicates": 108.8,
+        "qualified_captures": 223.4142857142857,
+        "duplicate_attempts": 113.32857142857142,
+        "tx": 32.52857142857143,
+        "tx_seconds": 4290.071428571428,
+        "radio_on_seconds": 288.25714285714287,
+        "payload_bytes": 517187.97142857144,
+        "payload_records": 1694.4857142857143,
+        "missions": 140,
+        "decisions": 147225,
+        "tx_total": 4554,
+        "tx_percent": 3.0932246561385632,
+        "duplicate_percent": 48.69876590574845,
+        "tx_occupancy_percent": 2.383373015873016,
+        "radio_on_percent": 0.16014285714285714,
+        "packets_per_mission": {
+          "accepted": 28.59285714285714
+        },
+        "tx_percent_by_agent": {
+          "sensor_0": 2.9983704508419335,
+          "sensor_1": 3.1103142911471493,
+          "sensor_2": 3.173092609712328,
+          "sensor_3": 3.091215298527734
+        }
+      },
+      "all": {
+        "science": 52.314692185429784,
+        "acquisition_value": 54.12799149460533,
+        "delivery_value": 35.9949984028497,
+        "acquisitions": 107.84615384615384,
+        "deliveries": 71.79120879120879,
+        "completed_duplicates": 108.85164835164835,
+        "qualified_captures": 216.6978021978022,
+        "duplicate_attempts": 113.26510989010988,
+        "tx": 36.502747252747255,
+        "tx_seconds": 4824.0920329670325,
+        "radio_on_seconds": 321.4835164835165,
+        "payload_bytes": 739849.3708791209,
+        "payload_records": 2435.173076923077,
+        "missions": 728,
+        "decisions": 799657,
+        "tx_total": 26574,
+        "tx_percent": 3.3231748112003023,
+        "duplicate_percent": 50.2320038540531,
+        "tx_occupancy_percent": 2.6800511294261296,
+        "radio_on_percent": 0.1786019536019536,
+        "packets_per_mission": {
+          "accepted": 31.907967032967033
+        },
+        "tx_percent_by_agent": {
+          "sensor_0": 3.2846587526700985,
+          "sensor_1": 3.3639464445343363,
+          "sensor_2": 3.3693187789973122,
+          "sensor_3": 3.2746827963988503
+        }
+      },
+      "curves": [
+        {
+          "update": 1,
+          "steps": 28534,
+          "published": 1792644051.6759992,
+          "metrics": {
+            "science": 35.507414178892624,
+            "acquisition_value": 37.97064862333773,
+            "delivery_value": 13.338304178886707,
+            "acquisitions": 75.0,
+            "deliveries": 26.714285714285715,
+            "completed_duplicates": 51.57142857142857,
+            "qualified_captures": 126.57142857142857,
+            "duplicate_attempts": 53.214285714285715,
+            "tx": 37.464285714285715,
+            "tx_seconds": 5054.821428571428,
+            "radio_on_seconds": 323.0,
+            "payload_bytes": 745308.0,
+            "payload_records": 2475.1428571428573,
+            "missions": 28,
+            "decisions": 28534,
+            "tx_total": 1049,
+            "tx_percent": 3.676315973925843,
+            "duplicate_percent": 40.74492099322799,
+            "tx_occupancy_percent": 2.808234126984127,
+            "radio_on_percent": 0.17944444444444443,
+            "packets_per_mission": {
+              "accepted": 32.0
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.6193404136389042,
+              "sensor_1": 3.876725700739088,
+              "sensor_2": 3.7031900138696257,
+              "sensor_3": 3.501500643132771
+            }
+          },
+          "losses": {
+            "policy_loss": 0.16779249906539917,
+            "total_loss": 0.21643808484077454,
+            "vf_loss": 0.04867899790406227
+          },
+          "gradient_l2": 0.4661273658275604
+        },
+        {
+          "update": 2,
+          "steps": 58509,
+          "published": 1792645086.9017458,
+          "metrics": {
+            "science": 40.28477122697775,
+            "acquisition_value": 42.664165173388554,
+            "delivery_value": 18.87022570928062,
+            "acquisitions": 85.96428571428571,
+            "deliveries": 37.964285714285715,
+            "completed_duplicates": 71.85714285714286,
+            "qualified_captures": 157.82142857142858,
+            "duplicate_attempts": 74.0,
+            "tx": 38.17857142857143,
+            "tx_seconds": 5096.75,
+            "radio_on_seconds": 332.67857142857144,
+            "payload_bytes": 846632.5,
+            "payload_records": 2802.535714285714,
+            "missions": 28,
+            "decisions": 29975,
+            "tx_total": 1069,
+            "tx_percent": 3.566305254378649,
+            "duplicate_percent": 45.53066304593799,
+            "tx_occupancy_percent": 2.8315277777777776,
+            "radio_on_percent": 0.18482142857142858,
+            "packets_per_mission": {
+              "accepted": 33.07142857142857
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.2637420718816066,
+              "sensor_1": 3.7538544040756134,
+              "sensor_2": 3.677588828978294,
+              "sensor_3": 3.5774465327284513
+            }
+          },
+          "losses": {
+            "policy_loss": 0.1075500026345253,
+            "total_loss": 0.1376848816871643,
+            "vf_loss": 0.03016791306436062
+          },
+          "gradient_l2": 0.4105191230773926
+        },
+        {
+          "update": 3,
+          "steps": 88530,
+          "published": 1792646138.7171977,
+          "metrics": {
+            "science": 43.259074012961335,
+            "acquisition_value": 45.73616141908263,
+            "delivery_value": 20.965287357869595,
+            "acquisitions": 90.60714285714286,
+            "deliveries": 41.714285714285715,
+            "completed_duplicates": 79.53571428571429,
+            "qualified_captures": 170.14285714285714,
+            "duplicate_attempts": 82.35714285714286,
+            "tx": 30.5,
+            "tx_seconds": 4049.9285714285716,
+            "radio_on_seconds": 268.4642857142857,
+            "payload_bytes": 712681.6071428572,
+            "payload_records": 2359.6071428571427,
+            "missions": 28,
+            "decisions": 30021,
+            "tx_total": 854,
+            "tx_percent": 2.844675393890943,
+            "duplicate_percent": 46.74643157010915,
+            "tx_occupancy_percent": 2.2499603174603173,
+            "radio_on_percent": 0.14914682539682542,
+            "packets_per_mission": {
+              "accepted": 26.642857142857142
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 2.8537766723393116,
+              "sensor_1": 2.8946663093004554,
+              "sensor_2": 2.8670029200955667,
+              "sensor_3": 2.761982128350934
+            }
+          },
+          "losses": {
+            "policy_loss": 0.05887771025300026,
+            "total_loss": 0.11888538300991058,
+            "vf_loss": 0.0600404366850853
+          },
+          "gradient_l2": 0.5311501622200012
+        },
+        {
+          "update": 4,
+          "steps": 119436,
+          "published": 1792647235.7992,
+          "metrics": {
+            "science": 44.72352626867332,
+            "acquisition_value": 46.94885811344336,
+            "delivery_value": 24.69553966574305,
+            "acquisitions": 94.78571428571429,
+            "deliveries": 50.07142857142857,
+            "completed_duplicates": 90.0,
+            "qualified_captures": 184.78571428571428,
+            "duplicate_attempts": 93.5,
+            "tx": 33.035714285714285,
+            "tx_seconds": 4359.714285714285,
+            "radio_on_seconds": 289.4642857142857,
+            "payload_bytes": 743216.4642857143,
+            "payload_records": 2462.8928571428573,
+            "missions": 28,
+            "decisions": 30906,
+            "tx_total": 925,
+            "tx_percent": 2.9929463534588754,
+            "duplicate_percent": 48.70506378044067,
+            "tx_occupancy_percent": 2.4220634920634923,
+            "radio_on_percent": 0.16081349206349208,
+            "packets_per_mission": {
+              "accepted": 28.785714285714285
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.1611812150383765,
+              "sensor_1": 2.8950388980997324,
+              "sensor_2": 3.0275702138624068,
+              "sensor_3": 2.888655462184874
+            }
+          },
+          "losses": {
+            "policy_loss": -0.34113460779190063,
+            "total_loss": -0.25853264331817627,
+            "vf_loss": 0.08263486623764038
+          },
+          "gradient_l2": 1.3812843561172485
+        },
+        {
+          "update": 5,
+          "steps": 150348,
+          "published": 1792648300.666206,
+          "metrics": {
+            "science": 47.67816230643688,
+            "acquisition_value": 50.28347158021253,
+            "delivery_value": 24.230378842456066,
+            "acquisitions": 99.82142857142857,
+            "deliveries": 48.607142857142854,
+            "completed_duplicates": 94.5,
+            "qualified_captures": 194.32142857142858,
+            "duplicate_attempts": 98.39285714285714,
+            "tx": 34.0,
+            "tx_seconds": 4508.5,
+            "radio_on_seconds": 299.7142857142858,
+            "payload_bytes": 767108.8571428572,
+            "payload_records": 2535.8571428571427,
+            "missions": 28,
+            "decisions": 30912,
+            "tx_total": 952,
+            "tx_percent": 3.079710144927536,
+            "duplicate_percent": 48.6307664032347,
+            "tx_occupancy_percent": 2.504722222222222,
+            "radio_on_percent": 0.16650793650793655,
+            "packets_per_mission": {
+              "accepted": 29.75
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.179500939093104,
+              "sensor_1": 3.0882720680170044,
+              "sensor_2": 3.0935808197989174,
+              "sensor_3": 2.960270059724747
+            }
+          },
+          "losses": {
+            "policy_loss": -0.04432855173945427,
+            "total_loss": 0.05930118262767792,
+            "vf_loss": 0.1036624014377594
+          },
+          "gradient_l2": 0.745590329170227
+        },
+        {
+          "update": 6,
+          "steps": 181810,
+          "published": 1792649568.5980022,
+          "metrics": {
+            "science": 47.0036023653896,
+            "acquisition_value": 49.18962099609467,
+            "delivery_value": 27.3294346890439,
+            "acquisitions": 97.78571428571429,
+            "deliveries": 53.714285714285715,
+            "completed_duplicates": 97.39285714285714,
+            "qualified_captures": 195.17857142857142,
+            "duplicate_attempts": 102.0,
+            "tx": 36.57142857142857,
+            "tx_seconds": 4813.821428571428,
+            "radio_on_seconds": 321.42857142857144,
+            "payload_bytes": 878493.4642857143,
+            "payload_records": 2901.25,
+            "missions": 28,
+            "decisions": 31462,
+            "tx_total": 1024,
+            "tx_percent": 3.254719979658,
+            "duplicate_percent": 49.89935956084172,
+            "tx_occupancy_percent": 2.674345238095238,
+            "radio_on_percent": 0.17857142857142858,
+            "packets_per_mission": {
+              "accepted": 31.928571428571427
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 2.9570229294574615,
+              "sensor_1": 3.338391502276176,
+              "sensor_2": 3.5443995963673056,
+              "sensor_3": 3.1785480706344016
+            }
+          },
+          "losses": {
+            "policy_loss": -0.10073864459991455,
+            "total_loss": -0.012331437319517136,
+            "vf_loss": 0.08843952417373657
+          },
+          "gradient_l2": 1.4425023794174194
+        },
+        {
+          "update": 7,
+          "steps": 214041,
+          "published": 1792650728.8221967,
+          "metrics": {
+            "science": 51.4664745345093,
+            "acquisition_value": 53.669614992860296,
+            "delivery_value": 31.638210409350513,
+            "acquisitions": 106.64285714285714,
+            "deliveries": 63.107142857142854,
+            "completed_duplicates": 118.5,
+            "qualified_captures": 225.14285714285714,
+            "duplicate_attempts": 123.5,
+            "tx": 36.57142857142857,
+            "tx_seconds": 4733.607142857143,
+            "radio_on_seconds": 326.28571428571416,
+            "payload_bytes": 923110.0,
+            "payload_records": 3050.035714285714,
+            "missions": 28,
+            "decisions": 32231,
+            "tx_total": 1024,
+            "tx_percent": 3.177065558003165,
+            "duplicate_percent": 52.63324873096447,
+            "tx_occupancy_percent": 2.629781746031746,
+            "radio_on_percent": 0.1812698412698412,
+            "packets_per_mission": {
+              "accepted": 32.464285714285715
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.1753907219052344,
+              "sensor_1": 3.0499755022048016,
+              "sensor_2": 3.2522343594836145,
+              "sensor_3": 3.233111083155114
+            }
+          },
+          "losses": {
+            "policy_loss": 0.13943977653980255,
+            "total_loss": 0.21922531723976135,
+            "vf_loss": 0.07981757819652557
+          },
+          "gradient_l2": 0.6952925324440002
+        },
+        {
+          "update": 8,
+          "steps": 246823,
+          "published": 1792651969.7185056,
+          "metrics": {
+            "science": 53.28655815965385,
+            "acquisition_value": 55.3977352489104,
+            "delivery_value": 34.28596435634479,
+            "acquisitions": 109.5,
+            "deliveries": 68.78571428571429,
+            "completed_duplicates": 121.89285714285714,
+            "qualified_captures": 231.39285714285714,
+            "duplicate_attempts": 127.10714285714286,
+            "tx": 39.92857142857143,
+            "tx_seconds": 5271.428571428572,
+            "radio_on_seconds": 351.82142857142856,
+            "payload_bytes": 977201.6071428572,
+            "payload_records": 3216.1428571428573,
+            "missions": 28,
+            "decisions": 32782,
+            "tx_total": 1118,
+            "tx_percent": 3.4104081508144715,
+            "duplicate_percent": 52.677882389257604,
+            "tx_occupancy_percent": 2.9285714285714284,
+            "radio_on_percent": 0.19545634920634922,
+            "packets_per_mission": {
+              "accepted": 34.857142857142854
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.253041966724609,
+              "sensor_1": 3.5279951836243226,
+              "sensor_2": 3.4588120263994133,
+              "sensor_3": 3.397645916757675
+            }
+          },
+          "losses": {
+            "policy_loss": 0.40183210372924805,
+            "total_loss": 0.4977125823497772,
+            "vf_loss": 0.09591206163167953
+          },
+          "gradient_l2": 1.981268048286438
+        },
+        {
+          "update": 9,
+          "steps": 279485,
+          "published": 1792653188.0054867,
+          "metrics": {
+            "science": 53.44530762172557,
+            "acquisition_value": 55.35301897655844,
+            "delivery_value": 36.275905428229635,
+            "acquisitions": 111.28571428571429,
+            "deliveries": 73.32142857142857,
+            "completed_duplicates": 131.21428571428572,
+            "qualified_captures": 242.5,
+            "duplicate_attempts": 136.5,
+            "tx": 40.857142857142854,
+            "tx_seconds": 5281.214285714287,
+            "radio_on_seconds": 364.2142857142857,
+            "payload_bytes": 981673.5357142857,
+            "payload_records": 3232.214285714286,
+            "missions": 28,
+            "decisions": 32662,
+            "tx_total": 1144,
+            "tx_percent": 3.502541179352152,
+            "duplicate_percent": 54.10898379970545,
+            "tx_occupancy_percent": 2.9340079365079372,
+            "radio_on_percent": 0.20234126984126985,
+            "packets_per_mission": {
+              "accepted": 36.25
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.5417419588001446,
+              "sensor_1": 3.52536543422184,
+              "sensor_2": 3.4380042199329774,
+              "sensor_3": 3.5036138674506923
+            }
+          },
+          "losses": {
+            "policy_loss": -0.09903467446565628,
+            "total_loss": -0.01012706570327282,
+            "vf_loss": 0.08893945813179016
+          },
+          "gradient_l2": 1.4751856327056885
+        },
+        {
+          "update": 10,
+          "steps": 312066,
+          "published": 1792654455.5680726,
+          "metrics": {
+            "science": 53.79356765217324,
+            "acquisition_value": 55.800989318118404,
+            "delivery_value": 35.7267726586668,
+            "acquisitions": 111.71428571428571,
+            "deliveries": 72.82142857142857,
+            "completed_duplicates": 125.14285714285714,
+            "qualified_captures": 236.85714285714286,
+            "duplicate_attempts": 129.71428571428572,
+            "tx": 43.607142857142854,
+            "tx_seconds": 5751.285714285715,
+            "radio_on_seconds": 384.10714285714295,
+            "payload_bytes": 981596.7857142857,
+            "payload_records": 3230.1785714285716,
+            "missions": 28,
+            "decisions": 32581,
+            "tx_total": 1221,
+            "tx_percent": 3.7475829471164177,
+            "duplicate_percent": 52.834740651387214,
+            "tx_occupancy_percent": 3.19515873015873,
+            "radio_on_percent": 0.2133928571428572,
+            "packets_per_mission": {
+              "accepted": 38.142857142857146
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.549112721819545,
+              "sensor_1": 3.6377043136291016,
+              "sensor_2": 3.688625709351098,
+              "sensor_3": 4.1026871401151634
+            }
+          },
+          "losses": {
+            "policy_loss": -0.02333124727010727,
+            "total_loss": 0.05379325896501541,
+            "vf_loss": 0.07715585827827454
+          },
+          "gradient_l2": 0.8975803852081299
+        },
+        {
+          "update": 11,
+          "steps": 344231,
+          "published": 1792655714.5191817,
+          "metrics": {
+            "science": 54.14989772704161,
+            "acquisition_value": 55.96604337856068,
+            "delivery_value": 37.80458686337004,
+            "acquisitions": 113.42857142857143,
+            "deliveries": 76.57142857142857,
+            "completed_duplicates": 130.39285714285714,
+            "qualified_captures": 243.82142857142858,
+            "duplicate_attempts": 135.39285714285714,
+            "tx": 37.82142857142857,
+            "tx_seconds": 5150.5,
+            "radio_on_seconds": 326.39285714285717,
+            "payload_bytes": 813902.1071428572,
+            "payload_records": 2683.0,
+            "missions": 28,
+            "decisions": 32165,
+            "tx_total": 1059,
+            "tx_percent": 3.2923985698740865,
+            "duplicate_percent": 53.47883404130658,
+            "tx_occupancy_percent": 2.861388888888889,
+            "radio_on_percent": 0.1813293650793651,
+            "packets_per_mission": {
+              "accepted": 32.392857142857146
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.351123246866079,
+              "sensor_1": 3.4604698156100024,
+              "sensor_2": 3.2078275947485757,
+              "sensor_3": 3.1542631838344013
+            }
+          },
+          "losses": {
+            "policy_loss": -0.01698843389749527,
+            "total_loss": 0.07701607048511505,
+            "vf_loss": 0.09403475373983383
+          },
+          "gradient_l2": 1.039949655532837
+        },
+        {
+          "update": 12,
+          "steps": 376240,
+          "published": 1792656948.5490522,
+          "metrics": {
+            "science": 55.3769572081302,
+            "acquisition_value": 57.16393518439305,
+            "delivery_value": 39.29415542176434,
+            "acquisitions": 113.03571428571429,
+            "deliveries": 77.64285714285714,
+            "completed_duplicates": 127.28571428571429,
+            "qualified_captures": 240.32142857142858,
+            "duplicate_attempts": 132.21428571428572,
+            "tx": 39.535714285714285,
+            "tx_seconds": 5192.964285714285,
+            "radio_on_seconds": 349.78571428571416,
+            "payload_bytes": 862280.0,
+            "payload_records": 2837.214285714286,
+            "missions": 28,
+            "decisions": 32009,
+            "tx_total": 1107,
+            "tx_percent": 3.458402324346278,
+            "duplicate_percent": 52.96477931341953,
+            "tx_occupancy_percent": 2.884980158730159,
+            "radio_on_percent": 0.19432539682539676,
+            "packets_per_mission": {
+              "accepted": 34.75
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.367423297580444,
+              "sensor_1": 3.736208625877633,
+              "sensor_2": 3.4044145155256267,
+              "sensor_3": 3.326663331665833
+            }
+          },
+          "losses": {
+            "policy_loss": 0.035264160484075546,
+            "total_loss": 0.145554319024086,
+            "vf_loss": 0.11032035201787949
+          },
+          "gradient_l2": 1.241029143333435
+        },
+        {
+          "update": 13,
+          "steps": 408076,
+          "published": 1792658201.3558064,
+          "metrics": {
+            "science": 54.934972765071755,
+            "acquisition_value": 56.53415721378004,
+            "delivery_value": 40.542312726697226,
+            "acquisitions": 113.57142857142857,
+            "deliveries": 81.35714285714286,
+            "completed_duplicates": 127.85714285714286,
+            "qualified_captures": 241.42857142857142,
+            "duplicate_attempts": 133.64285714285714,
+            "tx": 37.5,
+            "tx_seconds": 4972.75,
+            "radio_on_seconds": 328.85714285714283,
+            "payload_bytes": 802807.1785714285,
+            "payload_records": 2634.535714285714,
+            "missions": 28,
+            "decisions": 31836,
+            "tx_total": 1050,
+            "tx_percent": 3.2981530343007917,
+            "duplicate_percent": 52.9585798816568,
+            "tx_occupancy_percent": 2.762638888888889,
+            "radio_on_percent": 0.1826984126984127,
+            "packets_per_mission": {
+              "accepted": 32.67857142857143
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.135625236116358,
+              "sensor_1": 3.510091513100163,
+              "sensor_2": 3.3208020050125313,
+              "sensor_3": 3.2249937011841774
+            }
+          },
+          "losses": {
+            "policy_loss": -0.1014043465256691,
+            "total_loss": -0.004660608246922493,
+            "vf_loss": 0.09677398204803467
+          },
+          "gradient_l2": 1.498414158821106
+        },
+        {
+          "update": 14,
+          "steps": 439803,
+          "published": 1792659517.998851,
+          "metrics": {
+            "science": 55.354241033305414,
+            "acquisition_value": 56.94785090030432,
+            "delivery_value": 41.01175223031531,
+            "acquisitions": 113.28571428571429,
+            "deliveries": 80.75,
+            "completed_duplicates": 125.10714285714286,
+            "qualified_captures": 238.39285714285714,
+            "duplicate_attempts": 130.82142857142858,
+            "tx": 39.75,
+            "tx_seconds": 5259.25,
+            "radio_on_seconds": 347.60714285714283,
+            "payload_bytes": 826564.6428571428,
+            "payload_records": 2713.75,
+            "missions": 28,
+            "decisions": 31727,
+            "tx_total": 1113,
+            "tx_percent": 3.5080530778201533,
+            "duplicate_percent": 52.47940074906367,
+            "tx_occupancy_percent": 2.9218055555555558,
+            "radio_on_percent": 0.19311507936507938,
+            "packets_per_mission": {
+              "accepted": 34.535714285714285
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.6724940259086907,
+              "sensor_1": 3.5850495804729214,
+              "sensor_2": 3.6994949494949494,
+              "sensor_3": 3.078848560700876
+            }
+          },
+          "losses": {
+            "policy_loss": -0.05583188682794571,
+            "total_loss": 0.02752671390771866,
+            "vf_loss": 0.08338872343301773
+          },
+          "gradient_l2": 1.237659215927124
+        },
+        {
+          "update": 15,
+          "steps": 471315,
+          "published": 1792660791.2412975,
+          "metrics": {
+            "science": 54.87483522906479,
+            "acquisition_value": 56.37525019555717,
+            "delivery_value": 41.37110053063329,
+            "acquisitions": 114.28571428571429,
+            "deliveries": 83.60714285714286,
+            "completed_duplicates": 122.21428571428571,
+            "qualified_captures": 236.5,
+            "duplicate_attempts": 127.71428571428571,
+            "tx": 39.607142857142854,
+            "tx_seconds": 5300.571428571428,
+            "radio_on_seconds": 347.5714285714285,
+            "payload_bytes": 818983.7857142857,
+            "payload_records": 2692.1785714285716,
+            "missions": 28,
+            "decisions": 31512,
+            "tx_total": 1109,
+            "tx_percent": 3.519294237116019,
+            "duplicate_percent": 51.67623074599819,
+            "tx_occupancy_percent": 2.9447619047619047,
+            "radio_on_percent": 0.19309523809523804,
+            "packets_per_mission": {
+              "accepted": 34.32142857142857
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.3535813718046064,
+              "sensor_1": 3.2674772036474162,
+              "sensor_2": 3.9591315453384417,
+              "sensor_3": 3.5007610350076104
+            }
+          },
+          "losses": {
+            "policy_loss": 0.11698229610919952,
+            "total_loss": 0.21912875771522522,
+            "vf_loss": 0.10217535495758057
+          },
+          "gradient_l2": 0.8317071795463562
+        },
+        {
+          "update": 16,
+          "steps": 502606,
+          "published": 1792662156.777036,
+          "metrics": {
+            "science": 55.88925746999818,
+            "acquisition_value": 57.415062306234304,
+            "delivery_value": 42.157013943873025,
+            "acquisitions": 113.39285714285714,
+            "deliveries": 83.0,
+            "completed_duplicates": 119.14285714285714,
+            "qualified_captures": 232.53571428571428,
+            "duplicate_attempts": 124.0,
+            "tx": 40.07142857142857,
+            "tx_seconds": 5194.3214285714275,
+            "radio_on_seconds": 358.03571428571433,
+            "payload_bytes": 817534.9285714285,
+            "payload_records": 2682.0714285714284,
+            "missions": 28,
+            "decisions": 31291,
+            "tx_total": 1122,
+            "tx_percent": 3.585695567415551,
+            "duplicate_percent": 51.23636922131777,
+            "tx_occupancy_percent": 2.885734126984126,
+            "radio_on_percent": 0.1989087301587302,
+            "packets_per_mission": {
+              "accepted": 35.57142857142857
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.619047619047619,
+              "sensor_1": 3.4754521963824287,
+              "sensor_2": 3.803303880138302,
+              "sensor_3": 3.444769289436888
+            }
+          },
+          "losses": {
+            "policy_loss": 0.002285115420818329,
+            "total_loss": 0.07470732927322388,
+            "vf_loss": 0.07245117425918579
+          },
+          "gradient_l2": 0.8362334370613098
+        },
+        {
+          "update": 17,
+          "steps": 533419,
+          "published": 1792663464.6749706,
+          "metrics": {
+            "science": 55.695256549480476,
+            "acquisition_value": 57.135892148826386,
+            "delivery_value": 42.72953615536717,
+            "acquisitions": 114.03571428571429,
+            "deliveries": 85.03571428571429,
+            "completed_duplicates": 116.10714285714286,
+            "qualified_captures": 230.14285714285714,
+            "duplicate_attempts": 120.75,
+            "tx": 38.42857142857143,
+            "tx_seconds": 5211.428571428572,
+            "radio_on_seconds": 333.96428571428584,
+            "payload_bytes": 713899.0,
+            "payload_records": 2342.3928571428573,
+            "missions": 28,
+            "decisions": 30813,
+            "tx_total": 1076,
+            "tx_percent": 3.4920325836497583,
+            "duplicate_percent": 50.450031036623216,
+            "tx_occupancy_percent": 2.895238095238095,
+            "radio_on_percent": 0.18553571428571436,
+            "packets_per_mission": {
+              "accepted": 33.07142857142857
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.5117273551898407,
+              "sensor_1": 3.4428794992175273,
+              "sensor_2": 3.419136765470619,
+              "sensor_3": 3.59358841778697
+            }
+          },
+          "losses": {
+            "policy_loss": -0.07074716687202454,
+            "total_loss": 0.03312855213880539,
+            "vf_loss": 0.10390441864728928
+          },
+          "gradient_l2": 1.4380292892456055
+        },
+        {
+          "update": 18,
+          "steps": 563417,
+          "published": 1792664746.4995077,
+          "metrics": {
+            "science": 54.939210054137064,
+            "acquisition_value": 56.513510502880614,
+            "delivery_value": 40.770506015445065,
+            "acquisitions": 112.03571428571429,
+            "deliveries": 81.14285714285714,
+            "completed_duplicates": 110.03571428571429,
+            "qualified_captures": 222.07142857142858,
+            "duplicate_attempts": 114.10714285714286,
+            "tx": 40.92857142857143,
+            "tx_seconds": 5319.392857142857,
+            "radio_on_seconds": 362.57142857142844,
+            "payload_bytes": 721707.7142857143,
+            "payload_records": 2367.9285714285716,
+            "missions": 28,
+            "decisions": 29998,
+            "tx_total": 1146,
+            "tx_percent": 3.8202546836455764,
+            "duplicate_percent": 49.549694435509814,
+            "tx_occupancy_percent": 2.955218253968254,
+            "radio_on_percent": 0.20142857142857135,
+            "packets_per_mission": {
+              "accepted": 36.07142857142857
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 4.110682453106293,
+              "sensor_1": 3.947544493509969,
+              "sensor_2": 3.515728257996299,
+              "sensor_3": 3.708680462241333
+            }
+          },
+          "losses": {
+            "policy_loss": -0.15392659604549408,
+            "total_loss": -0.055595867335796356,
+            "vf_loss": 0.09835794568061829
+          },
+          "gradient_l2": 1.0058072805404663
+        },
+        {
+          "update": 19,
+          "steps": 593512,
+          "published": 1792666075.3312201,
+          "metrics": {
+            "science": 56.84453904153237,
+            "acquisition_value": 58.38179479188198,
+            "delivery_value": 43.00923728838603,
+            "acquisitions": 114.75,
+            "deliveries": 84.28571428571429,
+            "completed_duplicates": 113.5,
+            "qualified_captures": 228.25,
+            "duplicate_attempts": 118.03571428571429,
+            "tx": 34.82142857142857,
+            "tx_seconds": 4522.0,
+            "radio_on_seconds": 309.7857142857143,
+            "payload_bytes": 618596.8571428572,
+            "payload_records": 2027.75,
+            "missions": 28,
+            "decisions": 30095,
+            "tx_total": 975,
+            "tx_percent": 3.239740820734341,
+            "duplicate_percent": 49.72617743702081,
+            "tx_occupancy_percent": 2.5122222222222224,
+            "radio_on_percent": 0.1721031746031746,
+            "packets_per_mission": {
+              "accepted": 30.892857142857142
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.2447589798370946,
+              "sensor_1": 3.3039357641174147,
+              "sensor_2": 3.164139749505603,
+              "sensor_3": 3.246228448275862
+            }
+          },
+          "losses": {
+            "policy_loss": -0.07833506166934967,
+            "total_loss": 0.013641789555549622,
+            "vf_loss": 0.09200435876846313
+          },
+          "gradient_l2": 1.2616524696350098
+        },
+        {
+          "update": 20,
+          "steps": 623135,
+          "published": 1792667377.0863273,
+          "metrics": {
+            "science": 55.12487218351113,
+            "acquisition_value": 56.66272294273522,
+            "delivery_value": 41.284215350494414,
+            "acquisitions": 113.85714285714286,
+            "deliveries": 82.96428571428571,
+            "completed_duplicates": 108.21428571428571,
+            "qualified_captures": 222.07142857142858,
+            "duplicate_attempts": 112.71428571428571,
+            "tx": 32.92857142857143,
+            "tx_seconds": 4311.178571428572,
+            "radio_on_seconds": 291.28571428571456,
+            "payload_bytes": 542914.75,
+            "payload_records": 1780.2142857142858,
+            "missions": 28,
+            "decisions": 29623,
+            "tx_total": 922,
+            "tx_percent": 3.1124464098842117,
+            "duplicate_percent": 48.72949501447411,
+            "tx_occupancy_percent": 2.3950992063492063,
+            "radio_on_percent": 0.16182539682539696,
+            "packets_per_mission": {
+              "accepted": 28.928571428571427
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.0586006225470292,
+              "sensor_1": 3.1752465882988785,
+              "sensor_2": 3.1114718614718613,
+              "sensor_3": 3.1044214487300095
+            }
+          },
+          "losses": {
+            "policy_loss": -0.17985132336616516,
+            "total_loss": -0.07303574681282043,
+            "vf_loss": 0.10684184730052948
+          },
+          "gradient_l2": 1.32513427734375
+        },
+        {
+          "update": 21,
+          "steps": 652432,
+          "published": 1792668611.6828759,
+          "metrics": {
+            "science": 55.48132214320788,
+            "acquisition_value": 57.00680334526852,
+            "delivery_value": 41.75199132466202,
+            "acquisitions": 112.14285714285714,
+            "deliveries": 82.75,
+            "completed_duplicates": 104.67857142857143,
+            "qualified_captures": 216.82142857142858,
+            "duplicate_attempts": 108.57142857142857,
+            "tx": 34.32142857142857,
+            "tx_seconds": 4620.607142857143,
+            "radio_on_seconds": 300.2500000000001,
+            "payload_bytes": 553930.0,
+            "payload_records": 1815.1785714285713,
+            "missions": 28,
+            "decisions": 29297,
+            "tx_total": 961,
+            "tx_percent": 3.2801993378161587,
+            "duplicate_percent": 48.278702026025364,
+            "tx_occupancy_percent": 2.5670039682539687,
+            "radio_on_percent": 0.16680555555555562,
+            "packets_per_mission": {
+              "accepted": 29.535714285714285
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.361114906407979,
+              "sensor_1": 3.383356070941337,
+              "sensor_2": 3.314238952536825,
+              "sensor_3": 3.0617823947512304
+            }
+          },
+          "losses": {
+            "policy_loss": 0.4964054822921753,
+            "total_loss": 0.5912542343139648,
+            "vf_loss": 0.0948755145072937
+          },
+          "gradient_l2": 2.574056386947632
+        },
+        {
+          "update": 22,
+          "steps": 682206,
+          "published": 1792669982.54577,
+          "metrics": {
+            "science": 55.60884235468097,
+            "acquisition_value": 57.19226375943966,
+            "delivery_value": 41.358049711852814,
+            "acquisitions": 114.85714285714286,
+            "deliveries": 82.71428571428571,
+            "completed_duplicates": 111.0,
+            "qualified_captures": 225.85714285714286,
+            "duplicate_attempts": 115.28571428571429,
+            "tx": 35.75,
+            "tx_seconds": 4705.464285714285,
+            "radio_on_seconds": 318.5,
+            "payload_bytes": 596817.3928571428,
+            "payload_records": 1957.9642857142858,
+            "missions": 28,
+            "decisions": 29774,
+            "tx_total": 1001,
+            "tx_percent": 3.361993685766105,
+            "duplicate_percent": 49.146110056926,
+            "tx_occupancy_percent": 2.6141468253968254,
+            "radio_on_percent": 0.17694444444444443,
+            "packets_per_mission": {
+              "accepted": 31.571428571428573
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.1090174966352624,
+              "sensor_1": 3.5437282695907997,
+              "sensor_2": 3.4690597374765604,
+              "sensor_3": 3.324324324324324
+            }
+          },
+          "losses": {
+            "policy_loss": 0.0663142055273056,
+            "total_loss": 0.15649425983428955,
+            "vf_loss": 0.09020765125751495
+          },
+          "gradient_l2": 1.8644503355026245
+        },
+        {
+          "update": 23,
+          "steps": 711863,
+          "published": 1792671324.1227918,
+          "metrics": {
+            "science": 55.042239788757406,
+            "acquisition_value": 56.4037339463814,
+            "delivery_value": 42.78879237014137,
+            "acquisitions": 113.64285714285714,
+            "deliveries": 86.32142857142857,
+            "completed_duplicates": 109.0,
+            "qualified_captures": 222.64285714285714,
+            "duplicate_attempts": 114.32142857142857,
+            "tx": 33.357142857142854,
+            "tx_seconds": 4513.714285714286,
+            "radio_on_seconds": 289.5357142857145,
+            "payload_bytes": 535318.5,
+            "payload_records": 1754.4285714285713,
+            "missions": 28,
+            "decisions": 29657,
+            "tx_total": 934,
+            "tx_percent": 3.149340796439289,
+            "duplicate_percent": 48.957330766762915,
+            "tx_occupancy_percent": 2.507619047619048,
+            "radio_on_percent": 0.16085317460317472,
+            "packets_per_mission": {
+              "accepted": 28.678571428571427
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.143550998381004,
+              "sensor_1": 3.1023368251410153,
+              "sensor_2": 3.1939369332791987,
+              "sensor_3": 3.1578947368421053
+            }
+          },
+          "losses": {
+            "policy_loss": 0.04229128360748291,
+            "total_loss": 0.11938939988613129,
+            "vf_loss": 0.07712307572364807
+          },
+          "gradient_l2": 1.5598911046981812
+        },
+        {
+          "update": 24,
+          "steps": 741199,
+          "published": 1792672661.6732566,
+          "metrics": {
+            "science": 56.58413687440393,
+            "acquisition_value": 58.004158295176,
+            "delivery_value": 43.80394408745535,
+            "acquisitions": 114.60714285714286,
+            "deliveries": 86.82142857142857,
+            "completed_duplicates": 108.03571428571429,
+            "qualified_captures": 222.64285714285714,
+            "duplicate_attempts": 111.89285714285714,
+            "tx": 31.785714285714285,
+            "tx_seconds": 4091.8928571428573,
+            "radio_on_seconds": 287.25,
+            "payload_bytes": 513612.14285714284,
+            "payload_records": 1683.2857142857142,
+            "missions": 28,
+            "decisions": 29336,
+            "tx_total": 890,
+            "tx_percent": 3.0338151077174804,
+            "duplicate_percent": 48.524222008341354,
+            "tx_occupancy_percent": 2.2732738095238094,
+            "radio_on_percent": 0.15958333333333333,
+            "packets_per_mission": {
+              "accepted": 28.535714285714285
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 2.8199863107460645,
+              "sensor_1": 2.9239766081871346,
+              "sensor_2": 3.456722917800762,
+              "sensor_3": 2.9331514324693044
+            }
+          },
+          "losses": {
+            "policy_loss": -0.06710430234670639,
+            "total_loss": 0.0012446502223610878,
+            "vf_loss": 0.06837465614080429
+          },
+          "gradient_l2": 0.7591609954833984
+        },
+        {
+          "update": 25,
+          "steps": 770361,
+          "published": 1792674013.279893,
+          "metrics": {
+            "science": 57.6448074185868,
+            "acquisition_value": 59.052743314209145,
+            "delivery_value": 44.97338435798557,
+            "acquisitions": 115.35714285714286,
+            "deliveries": 88.0,
+            "completed_duplicates": 107.21428571428571,
+            "qualified_captures": 222.57142857142858,
+            "duplicate_attempts": 111.89285714285714,
+            "tx": 29.0,
+            "tx_seconds": 3822.25,
+            "radio_on_seconds": 256.7857142857143,
+            "payload_bytes": 442879.4285714286,
+            "payload_records": 1448.857142857143,
+            "missions": 28,
+            "decisions": 29162,
+            "tx_total": 812,
+            "tx_percent": 2.784445511281805,
+            "duplicate_percent": 48.170731707317074,
+            "tx_occupancy_percent": 2.1234722222222224,
+            "radio_on_percent": 0.14265873015873015,
+            "packets_per_mission": {
+              "accepted": 25.5
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 2.793296089385475,
+              "sensor_1": 2.8653687962709076,
+              "sensor_2": 2.6828930991564097,
+              "sensor_3": 2.7952863798300904
+            }
+          },
+          "losses": {
+            "policy_loss": 0.046131670475006104,
+            "total_loss": 0.09820961952209473,
+            "vf_loss": 0.0521019883453846
+          },
+          "gradient_l2": 0.9140767455101013
+        },
+        {
+          "update": 26,
+          "steps": 799657,
+          "published": 1792675360.421609,
+          "metrics": {
+            "science": 56.18815065287006,
+            "acquisition_value": 57.557572192102434,
+            "delivery_value": 43.86335679977866,
+            "acquisitions": 114.60714285714286,
+            "deliveries": 86.78571428571429,
+            "completed_duplicates": 108.75,
+            "qualified_captures": 223.35714285714286,
+            "duplicate_attempts": 113.25,
+            "tx": 32.75,
+            "tx_seconds": 4317.035714285715,
+            "radio_on_seconds": 289.2142857142856,
+            "payload_bytes": 497312.39285714284,
+            "payload_records": 1627.892857142857,
+            "missions": 28,
+            "decisions": 29296,
+            "tx_total": 917,
+            "tx_percent": 3.1301201529219007,
+            "duplicate_percent": 48.68883914294851,
+            "tx_occupancy_percent": 2.3983531746031748,
+            "radio_on_percent": 0.1606746031746031,
+            "packets_per_mission": {
+              "accepted": 28.678571428571427
+            },
+            "tx_percent_by_agent": {
+              "sensor_0": 3.1224434142350694,
+              "sensor_1": 3.1068765534382767,
+              "sensor_2": 3.0501089324618738,
+              "sensor_3": 3.240238611713666
+            }
+          },
+          "losses": {
+            "policy_loss": 0.06786178052425385,
+            "total_loss": 0.14836081862449646,
+            "vf_loss": 0.08052665740251541
+          },
+          "gradient_l2": 1.5356342792510986
+        }
+      ],
+      "memory": {
+        "elapsed_hours": 9.331534752515855,
+        "current_gib": 67.28106307983398,
+        "peak_gib": 70.12717056274414,
+        "alignment": "Last memory sample at or before each update journal publication",
+        "max_alignment_gap_s": 33.99761605262756
+      }
+    },
+    "without_communication": {
+      "updates": 34,
+      "steps": 1018399,
+      "missions": 952,
+      "first_3": {
+        "science": 41.63826697344141,
+        "acquisition_value": 44.089652777199646,
+        "delivery_value": 19.575794739617347,
+        "acquisitions": 87.04761904761905,
+        "deliveries": 38.82142857142857,
+        "completed_duplicates": 81.55952380952381,
+        "qualified_captures": 168.60714285714286,
+        "duplicate_attempts": 84.66666666666667,
+        "tx": 0.0,
+        "tx_seconds": 0.0,
+        "radio_on_seconds": 0.0,
+        "payload_bytes": 0.0,
+        "payload_records": 0.0,
+        "missions": 84,
+        "decisions": 88183,
+        "tx_total": 0,
+        "tx_percent": 0.0,
+        "duplicate_percent": 48.372519946339054,
+        "tx_occupancy_percent": 0.0,
+        "radio_on_percent": 0.0,
+        "packets_per_mission": {},
+        "tx_percent_by_agent": {
+          "sensor_0": 0.0,
+          "sensor_1": 0.0,
+          "sensor_2": 0.0,
+          "sensor_3": 0.0
+        }
+      },
+      "latest_3": {
+        "science": 55.32907539044516,
+        "acquisition_value": 56.93577039716479,
+        "delivery_value": 40.868820329968536,
+        "acquisitions": 114.20238095238095,
+        "deliveries": 82.30952380952381,
+        "completed_duplicates": 115.61904761904762,
+        "qualified_captures": 229.82142857142858,
+        "duplicate_attempts": 119.01190476190476,
+        "tx": 0.0,
+        "tx_seconds": 0.0,
+        "radio_on_seconds": 0.0,
+        "payload_bytes": 0.0,
+        "payload_records": 0.0,
+        "missions": 84,
+        "decisions": 88066,
+        "tx_total": 0,
+        "tx_percent": 0.0,
+        "duplicate_percent": 50.308210308210306,
+        "tx_occupancy_percent": 0.0,
+        "radio_on_percent": 0.0,
+        "packets_per_mission": {},
+        "tx_percent_by_agent": {
+          "sensor_0": 0.0,
+          "sensor_1": 0.0,
+          "sensor_2": 0.0,
+          "sensor_3": 0.0
+        }
+      },
+      "latest_5": {
+        "science": 55.83634282861744,
+        "acquisition_value": 57.46017269622717,
+        "delivery_value": 41.22187402012991,
+        "acquisitions": 114.46428571428571,
+        "deliveries": 82.2,
+        "completed_duplicates": 116.77142857142857,
+        "qualified_captures": 231.2357142857143,
+        "duplicate_attempts": 120.36428571428571,
+        "tx": 0.0,
+        "tx_seconds": 0.0,
+        "radio_on_seconds": 0.0,
+        "payload_bytes": 0.0,
+        "payload_records": 0.0,
+        "missions": 140,
+        "decisions": 146694,
+        "tx_total": 0,
+        "tx_percent": 0.0,
+        "duplicate_percent": 50.498872517221145,
+        "tx_occupancy_percent": 0.0,
+        "radio_on_percent": 0.0,
+        "packets_per_mission": {},
+        "tx_percent_by_agent": {
+          "sensor_0": 0.0,
+          "sensor_1": 0.0,
+          "sensor_2": 0.0,
+          "sensor_3": 0.0
+        }
+      },
+      "all": {
+        "science": 53.23301185824462,
+        "acquisition_value": 55.05190755317734,
+        "delivery_value": 36.86295060385027,
+        "acquisitions": 109.64810924369748,
+        "deliveries": 73.58298319327731,
+        "completed_duplicates": 115.64180672268908,
+        "qualified_captures": 225.28991596638656,
+        "duplicate_attempts": 119.89915966386555,
+        "tx": 0.0,
+        "tx_seconds": 0.0,
+        "radio_on_seconds": 0.0,
+        "payload_bytes": 0.0,
+        "payload_records": 0.0,
+        "missions": 952,
+        "decisions": 1018399,
+        "tx_total": 0,
+        "tx_percent": 0.0,
+        "duplicate_percent": 51.33021876573603,
+        "tx_occupancy_percent": 0.0,
+        "radio_on_percent": 0.0,
+        "packets_per_mission": {},
+        "tx_percent_by_agent": {
+          "sensor_0": 0.0,
+          "sensor_1": 0.0,
+          "sensor_2": 0.0,
+          "sensor_3": 0.0
+        }
+      },
+      "curves": [
+        {
+          "update": 1,
+          "steps": 28708,
+          "published": 1792643805.6660168,
+          "metrics": {
+            "science": 37.225006972902364,
+            "acquisition_value": 39.51108672642392,
+            "delivery_value": 16.65028919120834,
+            "acquisitions": 78.17857142857143,
+            "deliveries": 32.67857142857143,
+            "completed_duplicates": 69.64285714285714,
+            "qualified_captures": 147.82142857142858,
+            "duplicate_attempts": 71.85714285714286,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 28708,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 47.11282918579367,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.20829299092292786,
+            "total_loss": 0.24087655544281006,
+            "vf_loss": 0.032616421580314636
+          },
+          "gradient_l2": 0.20610709488391876
+        },
+        {
+          "update": 2,
+          "steps": 57934,
+          "published": 1792644616.9529018,
+          "metrics": {
+            "science": 41.346809076907526,
+            "acquisition_value": 43.807231377620006,
+            "delivery_value": 19.203008370495137,
+            "acquisitions": 87.07142857142857,
+            "deliveries": 38.285714285714285,
+            "completed_duplicates": 79.96428571428571,
+            "qualified_captures": 167.03571428571428,
+            "duplicate_attempts": 82.78571428571429,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29226,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 47.87256788539662,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.046473536640405655,
+            "total_loss": 0.0911623015999794,
+            "vf_loss": 0.044721368700265884
+          },
+          "gradient_l2": 0.3812638819217682
+        },
+        {
+          "update": 3,
+          "steps": 88183,
+          "published": 1792645436.7361174,
+          "metrics": {
+            "science": 46.342984870514364,
+            "acquisition_value": 48.95064022755501,
+            "delivery_value": 22.87408665714855,
+            "acquisitions": 95.89285714285714,
+            "deliveries": 45.5,
+            "completed_duplicates": 95.07142857142857,
+            "qualified_captures": 190.96428571428572,
+            "duplicate_attempts": 99.35714285714286,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 30249,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 49.78492612680007,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.08490423113107681,
+            "total_loss": 0.12333130091428757,
+            "vf_loss": 0.03845938295125961
+          },
+          "gradient_l2": 0.5146682858467102
+        },
+        {
+          "update": 4,
+          "steps": 119721,
+          "published": 1792646311.7484033,
+          "metrics": {
+            "science": 48.99395542754716,
+            "acquisition_value": 51.21750627801179,
+            "delivery_value": 28.981997773365496,
+            "acquisitions": 103.17857142857143,
+            "deliveries": 57.92857142857143,
+            "completed_duplicates": 117.32142857142857,
+            "qualified_captures": 220.5,
+            "duplicate_attempts": 122.14285714285714,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 31538,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 53.20699708454811,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.06860324740409851,
+            "total_loss": 0.11465300619602203,
+            "vf_loss": 0.04608211666345596
+          },
+          "gradient_l2": 0.4556913673877716
+        },
+        {
+          "update": 5,
+          "steps": 150852,
+          "published": 1792647169.0981824,
+          "metrics": {
+            "science": 50.93763188375855,
+            "acquisition_value": 53.344832560605425,
+            "delivery_value": 29.272825792136494,
+            "acquisitions": 105.75,
+            "deliveries": 58.285714285714285,
+            "completed_duplicates": 122.28571428571429,
+            "qualified_captures": 228.03571428571428,
+            "duplicate_attempts": 126.71428571428571,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 31131,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 53.625685199686764,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.2502787411212921,
+            "total_loss": 0.34249401092529297,
+            "vf_loss": 0.09224692732095718
+          },
+          "gradient_l2": 1.2513351440429688
+        },
+        {
+          "update": 6,
+          "steps": 182251,
+          "published": 1792648047.1370242,
+          "metrics": {
+            "science": 50.948936615910284,
+            "acquisition_value": 53.17767301000424,
+            "delivery_value": 30.890309069064703,
+            "acquisitions": 105.78571428571429,
+            "deliveries": 61.57142857142857,
+            "completed_duplicates": 128.46428571428572,
+            "qualified_captures": 234.25,
+            "duplicate_attempts": 134.64285714285714,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 31399,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 54.84067693245922,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.3067549169063568,
+            "total_loss": -0.1574171483516693,
+            "vf_loss": 0.14936870336532593
+          },
+          "gradient_l2": 1.8469557762145996
+        },
+        {
+          "update": 7,
+          "steps": 213863,
+          "published": 1792649134.1202402,
+          "metrics": {
+            "science": 53.09222603395687,
+            "acquisition_value": 55.07854549852904,
+            "delivery_value": 35.215350852807134,
+            "acquisitions": 109.82142857142857,
+            "deliveries": 70.03571428571429,
+            "completed_duplicates": 140.39285714285714,
+            "qualified_captures": 250.21428571428572,
+            "duplicate_attempts": 145.46428571428572,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 31612,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 56.109049386240365,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.0038598813116550446,
+            "total_loss": 0.1108713150024414,
+            "vf_loss": 0.11476167291402817
+          },
+          "gradient_l2": 0.6836731433868408
+        },
+        {
+          "update": 8,
+          "steps": 245377,
+          "published": 1792650094.8926318,
+          "metrics": {
+            "science": 54.44921279731311,
+            "acquisition_value": 56.40637212013577,
+            "delivery_value": 36.83477889190904,
+            "acquisitions": 111.5,
+            "deliveries": 73.60714285714286,
+            "completed_duplicates": 139.25,
+            "qualified_captures": 250.75,
+            "duplicate_attempts": 144.17857142857142,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 31514,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 55.533399800598204,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.18619674444198608,
+            "total_loss": 0.25077810883522034,
+            "vf_loss": 0.06461141258478165
+          },
+          "gradient_l2": 1.1969542503356934
+        },
+        {
+          "update": 9,
+          "steps": 277012,
+          "published": 1792651016.5231164,
+          "metrics": {
+            "science": 53.98209925688229,
+            "acquisition_value": 55.71982853080275,
+            "delivery_value": 38.342535791597996,
+            "acquisitions": 113.10714285714286,
+            "deliveries": 77.96428571428571,
+            "completed_duplicates": 142.25,
+            "qualified_captures": 255.35714285714286,
+            "duplicate_attempts": 147.57142857142858,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 31635,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 55.70629370629371,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.10117454081773758,
+            "total_loss": 0.20341147482395172,
+            "vf_loss": 0.10226666927337646
+          },
+          "gradient_l2": 0.9641238451004028
+        },
+        {
+          "update": 10,
+          "steps": 308139,
+          "published": 1792651928.9161417,
+          "metrics": {
+            "science": 55.13211661883991,
+            "acquisition_value": 57.02465630305271,
+            "delivery_value": 38.099259460924806,
+            "acquisitions": 114.28571428571429,
+            "deliveries": 76.71428571428571,
+            "completed_duplicates": 139.42857142857142,
+            "qualified_captures": 253.71428571428572,
+            "duplicate_attempts": 145.42857142857142,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 31127,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 54.95495495495496,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.06349527090787888,
+            "total_loss": 0.03880015388131142,
+            "vf_loss": 0.10232408344745636
+          },
+          "gradient_l2": 0.9289621710777283
+        },
+        {
+          "update": 11,
+          "steps": 339131,
+          "published": 1792652816.1652427,
+          "metrics": {
+            "science": 54.20445643060698,
+            "acquisition_value": 55.9410362980952,
+            "delivery_value": 38.57523762321286,
+            "acquisitions": 113.64285714285714,
+            "deliveries": 78.82142857142857,
+            "completed_duplicates": 131.92857142857142,
+            "qualified_captures": 245.57142857142858,
+            "duplicate_attempts": 136.75,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 30992,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 53.72309482257126,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.01707843877375126,
+            "total_loss": 0.10580336302518845,
+            "vf_loss": 0.08875401318073273
+          },
+          "gradient_l2": 1.282515048980713
+        },
+        {
+          "update": 12,
+          "steps": 369843,
+          "published": 1792653702.712451,
+          "metrics": {
+            "science": 55.372506190871874,
+            "acquisition_value": 57.240648513182336,
+            "delivery_value": 38.559225290077805,
+            "acquisitions": 113.03571428571429,
+            "deliveries": 75.92857142857143,
+            "completed_duplicates": 126.21428571428571,
+            "qualified_captures": 239.25,
+            "duplicate_attempts": 131.03571428571428,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 30712,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 52.754142409314824,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.15279152989387512,
+            "total_loss": 0.2637021243572235,
+            "vf_loss": 0.11093808710575104
+          },
+          "gradient_l2": 1.4001282453536987
+        },
+        {
+          "update": 13,
+          "steps": 400051,
+          "published": 1792654611.218097,
+          "metrics": {
+            "science": 54.22027614453024,
+            "acquisition_value": 55.98823912373265,
+            "delivery_value": 38.308609331708624,
+            "acquisitions": 111.42857142857143,
+            "deliveries": 77.0,
+            "completed_duplicates": 116.89285714285714,
+            "qualified_captures": 228.32142857142858,
+            "duplicate_attempts": 121.60714285714286,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 30208,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 51.196621304551854,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.3824273943901062,
+            "total_loss": 0.45223164558410645,
+            "vf_loss": 0.0698326826095581
+          },
+          "gradient_l2": 1.7048954963684082
+        },
+        {
+          "update": 14,
+          "steps": 430242,
+          "published": 1792655547.6322472,
+          "metrics": {
+            "science": 54.41760707581076,
+            "acquisition_value": 56.10358711294686,
+            "delivery_value": 39.243786741585765,
+            "acquisitions": 112.10714285714286,
+            "deliveries": 77.96428571428571,
+            "completed_duplicates": 117.60714285714286,
+            "qualified_captures": 229.71428571428572,
+            "duplicate_attempts": 122.0,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 30191,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 51.19713930348259,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.0870826244354248,
+            "total_loss": 0.15328341722488403,
+            "vf_loss": 0.06622704118490219
+          },
+          "gradient_l2": 1.1650887727737427
+        },
+        {
+          "update": 15,
+          "steps": 460504,
+          "published": 1792656468.8394907,
+          "metrics": {
+            "science": 53.239606693409264,
+            "acquisition_value": 55.05560498603047,
+            "delivery_value": 36.89562205981853,
+            "acquisitions": 111.82142857142857,
+            "deliveries": 74.71428571428571,
+            "completed_duplicates": 113.82142857142857,
+            "qualified_captures": 225.64285714285714,
+            "duplicate_attempts": 119.21428571428571,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 30262,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 50.443178220956,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.24540984630584717,
+            "total_loss": 0.30003461241722107,
+            "vf_loss": 0.054651856422424316
+          },
+          "gradient_l2": 1.139095664024353
+        },
+        {
+          "update": 16,
+          "steps": 490803,
+          "published": 1792657399.1809654,
+          "metrics": {
+            "science": 54.508573526385184,
+            "acquisition_value": 56.348961034056664,
+            "delivery_value": 37.9450859573419,
+            "acquisitions": 111.92857142857143,
+            "deliveries": 75.96428571428571,
+            "completed_duplicates": 114.0,
+            "qualified_captures": 225.92857142857142,
+            "duplicate_attempts": 118.35714285714286,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 30299,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 50.45842554536832,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.14840561151504517,
+            "total_loss": 0.24975700676441193,
+            "vf_loss": 0.10137946903705597
+          },
+          "gradient_l2": 1.225317358970642
+        },
+        {
+          "update": 17,
+          "steps": 520697,
+          "published": 1792658388.1361306,
+          "metrics": {
+            "science": 53.84305486552596,
+            "acquisition_value": 55.532246679569184,
+            "delivery_value": 38.64032853913689,
+            "acquisitions": 110.89285714285714,
+            "deliveries": 76.96428571428571,
+            "completed_duplicates": 109.67857142857143,
+            "qualified_captures": 220.57142857142858,
+            "duplicate_attempts": 113.03571428571429,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29894,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 49.72474093264249,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.16957950592041016,
+            "total_loss": -0.08322678506374359,
+            "vf_loss": 0.08637966215610504
+          },
+          "gradient_l2": 1.8315434455871582
+        },
+        {
+          "update": 18,
+          "steps": 550909,
+          "published": 1792659352.4735367,
+          "metrics": {
+            "science": 54.45850755899626,
+            "acquisition_value": 56.145541884204604,
+            "delivery_value": 39.27519863212115,
+            "acquisitions": 111.35714285714286,
+            "deliveries": 78.17857142857143,
+            "completed_duplicates": 117.32142857142857,
+            "qualified_captures": 228.67857142857142,
+            "duplicate_attempts": 121.71428571428571,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 30212,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 51.30407621427456,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.16218301653862,
+            "total_loss": -0.08932159841060638,
+            "vf_loss": 0.07288661599159241
+          },
+          "gradient_l2": 0.8652405738830566
+        },
+        {
+          "update": 19,
+          "steps": 580492,
+          "published": 1792660396.867592,
+          "metrics": {
+            "science": 54.94449584708024,
+            "acquisition_value": 56.57275707023432,
+            "delivery_value": 40.290144838693685,
+            "acquisitions": 111.5,
+            "deliveries": 78.82142857142857,
+            "completed_duplicates": 112.89285714285714,
+            "qualified_captures": 224.39285714285714,
+            "duplicate_attempts": 116.85714285714286,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29583,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 50.31036129237626,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.040130019187927246,
+            "total_loss": 0.037645258009433746,
+            "vf_loss": 0.07780008018016815
+          },
+          "gradient_l2": 1.3564478158950806
+        },
+        {
+          "update": 20,
+          "steps": 609943,
+          "published": 1792661384.518716,
+          "metrics": {
+            "science": 53.63884515590539,
+            "acquisition_value": 55.45436002894557,
+            "delivery_value": 37.29921129854357,
+            "acquisitions": 110.78571428571429,
+            "deliveries": 75.82142857142857,
+            "completed_duplicates": 109.39285714285714,
+            "qualified_captures": 220.17857142857142,
+            "duplicate_attempts": 113.46428571428571,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29451,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 49.68369829683698,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.05993510037660599,
+            "total_loss": 0.14235934615135193,
+            "vf_loss": 0.08244921267032623
+          },
+          "gradient_l2": 1.4820185899734497
+        },
+        {
+          "update": 21,
+          "steps": 639390,
+          "published": 1792662342.7138138,
+          "metrics": {
+            "science": 54.87065349085831,
+            "acquisition_value": 56.51059511489596,
+            "delivery_value": 40.11117887451939,
+            "acquisitions": 110.78571428571429,
+            "deliveries": 79.60714285714286,
+            "completed_duplicates": 111.89285714285714,
+            "qualified_captures": 222.67857142857142,
+            "duplicate_attempts": 115.46428571428571,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29447,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 50.2485966319166,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.22733330726623535,
+            "total_loss": 0.2948389947414398,
+            "vf_loss": 0.06753125786781311
+          },
+          "gradient_l2": 1.1762491464614868
+        },
+        {
+          "update": 22,
+          "steps": 668584,
+          "published": 1792663345.085363,
+          "metrics": {
+            "science": 54.211905772636115,
+            "acquisition_value": 55.91497953078829,
+            "delivery_value": 38.884241949266716,
+            "acquisitions": 112.17857142857143,
+            "deliveries": 78.42857142857143,
+            "completed_duplicates": 111.28571428571429,
+            "qualified_captures": 223.46428571428572,
+            "duplicate_attempts": 115.35714285714286,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29194,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 49.80022374940067,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.16517965495586395,
+            "total_loss": -0.08017085492610931,
+            "vf_loss": 0.08503463864326477
+          },
+          "gradient_l2": 2.2679824829101562
+        },
+        {
+          "update": 23,
+          "steps": 697699,
+          "published": 1792664365.613143,
+          "metrics": {
+            "science": 54.25330703873857,
+            "acquisition_value": 55.81611119264875,
+            "delivery_value": 40.18806965354705,
+            "acquisitions": 111.92857142857143,
+            "deliveries": 80.53571428571429,
+            "completed_duplicates": 109.60714285714286,
+            "qualified_captures": 221.53571428571428,
+            "duplicate_attempts": 113.07142857142857,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29115,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 49.47605997098178,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.29311031103134155,
+            "total_loss": -0.20948970317840576,
+            "vf_loss": 0.08364591747522354
+          },
+          "gradient_l2": 1.8105701208114624
+        },
+        {
+          "update": 24,
+          "steps": 726568,
+          "published": 1792665333.257556,
+          "metrics": {
+            "science": 55.309284049543734,
+            "acquisition_value": 56.9549667911916,
+            "delivery_value": 40.49813937471277,
+            "acquisitions": 112.10714285714286,
+            "deliveries": 80.28571428571429,
+            "completed_duplicates": 109.28571428571429,
+            "qualified_captures": 221.39285714285714,
+            "duplicate_attempts": 112.53571428571429,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 28869,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 49.36280045168576,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.11456087976694107,
+            "total_loss": -0.02071138098835945,
+            "vf_loss": 0.09387409687042236
+          },
+          "gradient_l2": 1.1049054861068726
+        },
+        {
+          "update": 25,
+          "steps": 755752,
+          "published": 1792666293.1646214,
+          "metrics": {
+            "science": 55.802470885694376,
+            "acquisition_value": 57.39942085966624,
+            "delivery_value": 41.42992111994738,
+            "acquisitions": 112.10714285714286,
+            "deliveries": 80.82142857142857,
+            "completed_duplicates": 109.10714285714286,
+            "qualified_captures": 221.21428571428572,
+            "duplicate_attempts": 113.71428571428571,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29184,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 49.321924443009365,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.13470984995365143,
+            "total_loss": -0.06513583660125732,
+            "vf_loss": 0.06960000097751617
+          },
+          "gradient_l2": 2.118279457092285
+        },
+        {
+          "update": 26,
+          "steps": 784950,
+          "published": 1792667276.7247636,
+          "metrics": {
+            "science": 55.26745029232531,
+            "acquisition_value": 56.765911385385216,
+            "delivery_value": 41.781300454786084,
+            "acquisitions": 112.71428571428571,
+            "deliveries": 82.92857142857143,
+            "completed_duplicates": 111.14285714285714,
+            "qualified_captures": 223.85714285714286,
+            "duplicate_attempts": 115.82142857142857,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29198,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 49.64901084875559,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.09333152323961258,
+            "total_loss": -0.023299993947148323,
+            "vf_loss": 0.07005473971366882
+          },
+          "gradient_l2": 1.3480809926986694
+        },
+        {
+          "update": 27,
+          "steps": 813921,
+          "published": 1792668275.3183107,
+          "metrics": {
+            "science": 54.71626157991483,
+            "acquisition_value": 56.2283036828094,
+            "delivery_value": 41.10788265386369,
+            "acquisitions": 112.85714285714286,
+            "deliveries": 81.46428571428571,
+            "completed_duplicates": 113.82142857142857,
+            "qualified_captures": 226.67857142857142,
+            "duplicate_attempts": 118.67857142857143,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 28971,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 50.21269891287222,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.17197538912296295,
+            "total_loss": 0.22286458313465118,
+            "vf_loss": 0.05091283470392227
+          },
+          "gradient_l2": 1.3333162069320679
+        },
+        {
+          "update": 28,
+          "steps": 842766,
+          "published": 1792669249.1088693,
+          "metrics": {
+            "science": 56.00497173414674,
+            "acquisition_value": 57.62715819790323,
+            "delivery_value": 41.4052935603383,
+            "acquisitions": 114.14285714285714,
+            "deliveries": 82.39285714285714,
+            "completed_duplicates": 114.82142857142857,
+            "qualified_captures": 228.96428571428572,
+            "duplicate_attempts": 119.67857142857143,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 28845,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 50.14818281079395,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.15028426051139832,
+            "total_loss": -0.07291613519191742,
+            "vf_loss": 0.07739066332578659
+          },
+          "gradient_l2": 1.7882169485092163
+        },
+        {
+          "update": 29,
+          "steps": 871705,
+          "published": 1792670249.7768347,
+          "metrics": {
+            "science": 55.00547514971497,
+            "acquisition_value": 56.625191207863054,
+            "delivery_value": 40.42803062638222,
+            "acquisitions": 113.82142857142857,
+            "deliveries": 81.60714285714286,
+            "completed_duplicates": 113.17857142857143,
+            "qualified_captures": 227.0,
+            "duplicate_attempts": 116.25,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 28939,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 49.85840151038389,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": -0.15529410541057587,
+            "total_loss": -0.08718936145305634,
+            "vf_loss": 0.06812998652458191
+          },
+          "gradient_l2": 1.633402943611145
+        },
+        {
+          "update": 30,
+          "steps": 900933,
+          "published": 1792671217.8640065,
+          "metrics": {
+            "science": 56.542486227470896,
+            "acquisition_value": 58.20818362576234,
+            "delivery_value": 41.551209642847994,
+            "acquisitions": 114.17857142857143,
+            "deliveries": 81.64285714285714,
+            "completed_duplicates": 119.35714285714286,
+            "qualified_captures": 233.53571428571428,
+            "duplicate_attempts": 123.57142857142857,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29228,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 51.1087322220523,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.11764615774154663,
+            "total_loss": 0.1612153947353363,
+            "vf_loss": 0.043591924011707306
+          },
+          "gradient_l2": 1.2288095951080322
+        },
+        {
+          "update": 31,
+          "steps": 930333,
+          "published": 1792672268.1346278,
+          "metrics": {
+            "science": 56.65200174428092,
+            "acquisition_value": 58.285368663879225,
+            "delivery_value": 41.95169946789594,
+            "acquisitions": 115.53571428571429,
+            "deliveries": 82.42857142857143,
+            "completed_duplicates": 117.64285714285714,
+            "qualified_captures": 233.17857142857142,
+            "duplicate_attempts": 121.21428571428571,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29400,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 50.451830295604225,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.09852584451436996,
+            "total_loss": 0.16609826683998108,
+            "vf_loss": 0.06759777665138245
+          },
+          "gradient_l2": 1.2770246267318726
+        },
+        {
+          "update": 32,
+          "steps": 959944,
+          "published": 1792673378.3229153,
+          "metrics": {
+            "science": 55.640128289977284,
+            "acquisition_value": 57.24070327838529,
+            "delivery_value": 41.23495339430531,
+            "acquisitions": 114.46428571428571,
+            "deliveries": 82.28571428571429,
+            "completed_duplicates": 118.39285714285714,
+            "qualified_captures": 232.85714285714286,
+            "duplicate_attempts": 121.60714285714286,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29611,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 50.84355828220859,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.06692582368850708,
+            "total_loss": 0.14348573982715607,
+            "vf_loss": 0.07658028602600098
+          },
+          "gradient_l2": 1.2186342477798462
+        },
+        {
+          "update": 33,
+          "steps": 989132,
+          "published": 1792674463.179088,
+          "metrics": {
+            "science": 54.40716872028408,
+            "acquisition_value": 55.95274039285194,
+            "delivery_value": 40.49702366717331,
+            "acquisitions": 114.85714285714286,
+            "deliveries": 83.92857142857143,
+            "completed_duplicates": 116.35714285714286,
+            "qualified_captures": 231.21428571428572,
+            "duplicate_attempts": 119.92857142857143,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29188,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 50.324374420759966,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.06253184378147125,
+            "total_loss": 0.13040855526924133,
+            "vf_loss": 0.06789858639240265
+          },
+          "gradient_l2": 0.9732921719551086
+        },
+        {
+          "update": 34,
+          "steps": 1018399,
+          "published": 1792675572.3053918,
+          "metrics": {
+            "science": 55.93992916107414,
+            "acquisition_value": 57.61386752025716,
+            "delivery_value": 40.87448392842702,
+            "acquisitions": 113.28571428571429,
+            "deliveries": 80.71428571428571,
+            "completed_duplicates": 112.10714285714286,
+            "qualified_captures": 225.39285714285714,
+            "duplicate_attempts": 115.5,
+            "tx": 0.0,
+            "tx_seconds": 0.0,
+            "radio_on_seconds": 0.0,
+            "payload_bytes": 0.0,
+            "payload_records": 0.0,
+            "missions": 28,
+            "decisions": 29267,
+            "tx_total": 0,
+            "tx_percent": 0.0,
+            "duplicate_percent": 49.738551735065755,
+            "tx_occupancy_percent": 0.0,
+            "radio_on_percent": 0.0,
+            "packets_per_mission": {},
+            "tx_percent_by_agent": {
+              "sensor_0": 0.0,
+              "sensor_1": 0.0,
+              "sensor_2": 0.0,
+              "sensor_3": 0.0
+            }
+          },
+          "losses": {
+            "policy_loss": 0.011304515413939953,
+            "total_loss": 0.05862687528133392,
+            "vf_loss": 0.04734671115875244
+          },
+          "gradient_l2": 1.3930448293685913
+        }
+      ],
+      "memory": {
+        "elapsed_hours": 9.356611202874983,
+        "current_gib": 79.90058517456055,
+        "peak_gib": 82.80846405029297,
+        "alignment": "Last memory sample at or before each update journal publication",
+        "max_alignment_gap_s": 25.18493676185608
+      }
+    }
+  },
+  "matched_all": {
+    "with_communication": {
+      "science": 52.31469218542974,
+      "acquisition_value": 54.12799149460533,
+      "delivery_value": 35.994998402849724,
+      "acquisitions": 107.84615384615384,
+      "deliveries": 71.79120879120879,
+      "completed_duplicates": 108.85164835164835,
+      "qualified_captures": 216.6978021978022,
+      "duplicate_attempts": 113.26510989010988,
+      "tx": 36.502747252747255,
+      "tx_seconds": 4824.0920329670325,
+      "radio_on_seconds": 321.4835164835165,
+      "payload_bytes": 739849.3708791209,
+      "payload_records": 2435.173076923077,
+      "missions": 728,
+      "decisions": 799657,
+      "tx_total": 26574,
+      "tx_percent": 3.3231748112003023,
+      "duplicate_percent": 50.2320038540531,
+      "tx_occupancy_percent": 2.6800511294261296,
+      "radio_on_percent": 0.1786019536019536,
+      "packets_per_mission": {
+        "accepted": 31.907967032967033
+      },
+      "tx_percent_by_agent": {
+        "sensor_0": 3.2846587526700985,
+        "sensor_1": 3.3639464445343363,
+        "sensor_2": 3.3693187789973122,
+        "sensor_3": 3.2746827963988503
+      }
+    },
+    "without_communication": {
+      "science": 52.500537714363524,
+      "acquisition_value": 54.383974624550596,
+      "delivery_value": 35.549605522679904,
+      "acquisitions": 108.26510989010988,
+      "deliveries": 70.97527472527473,
+      "completed_duplicates": 115.62087912087912,
+      "qualified_captures": 223.88598901098902,
+      "duplicate_attempts": 120.00549450549451,
+      "tx": 0.0,
+      "tx_seconds": 0.0,
+      "radio_on_seconds": 0.0,
+      "payload_bytes": 0.0,
+      "payload_records": 0.0,
+      "missions": 728,
+      "decisions": 784950,
+      "tx_total": 0,
+      "tx_percent": 0.0,
+      "duplicate_percent": 51.642748897164836,
+      "tx_occupancy_percent": 0.0,
+      "radio_on_percent": 0.0,
+      "packets_per_mission": {},
+      "tx_percent_by_agent": {
+        "sensor_0": 0.0,
+        "sensor_1": 0.0,
+        "sensor_2": 0.0,
+        "sensor_3": 0.0
+      }
+    },
+    "n": 728,
+    "with_percent_change": {
+      "science": -0.3539878580766209,
+      "acquisitions": -0.38697235368004845,
+      "deliveries": 1.1496032514031196,
+      "completed_duplicates": -5.854678515420808
+    }
+  },
+  "matched_recent_5_with_batches": {
+    "with_communication": {
+      "science": 56.21363541785984,
+      "acquisition_value": 57.642094301461725,
+      "delivery_value": 43.35750546544276,
+      "acquisitions": 114.61428571428571,
+      "deliveries": 86.12857142857143,
+      "completed_duplicates": 108.8,
+      "qualified_captures": 223.4142857142857,
+      "duplicate_attempts": 113.32857142857142,
+      "tx": 32.52857142857143,
+      "tx_seconds": 4290.071428571428,
+      "radio_on_seconds": 288.25714285714287,
+      "payload_bytes": 517187.97142857144,
+      "payload_records": 1694.4857142857143,
+      "missions": 140,
+      "decisions": 147225,
+      "tx_total": 4554,
+      "tx_percent": 3.0932246561385632,
+      "duplicate_percent": 48.69876590574845,
+      "tx_occupancy_percent": 2.383373015873016,
+      "radio_on_percent": 0.16014285714285714,
+      "packets_per_mission": {
+        "accepted": 28.59285714285714
+      },
+      "tx_percent_by_agent": {
+        "sensor_0": 2.9983704508419335,
+        "sensor_1": 3.1103142911471493,
+        "sensor_2": 3.173092609712328,
+        "sensor_3": 3.091215298527734
+      }
+    },
+    "without_communication": {
+      "science": 54.968883607787625,
+      "acquisition_value": 56.570277951936035,
+      "delivery_value": 40.55633451045202,
+      "acquisitions": 112.20714285714286,
+      "deliveries": 80.6,
+      "completed_duplicates": 110.08571428571429,
+      "qualified_captures": 222.29285714285714,
+      "duplicate_attempts": 114.1,
+      "tx": 0.0,
+      "tx_seconds": 0.0,
+      "radio_on_seconds": 0.0,
+      "payload_bytes": 0.0,
+      "payload_records": 0.0,
+      "missions": 140,
+      "decisions": 145560,
+      "tx_total": 0,
+      "tx_percent": 0.0,
+      "duplicate_percent": 49.52283024324411,
+      "tx_occupancy_percent": 0.0,
+      "radio_on_percent": 0.0,
+      "packets_per_mission": {},
+      "tx_percent_by_agent": {
+        "sensor_0": 0.0,
+        "sensor_1": 0.0,
+        "sensor_2": 0.0,
+        "sensor_3": 0.0
+      }
+    },
+    "n": 140,
+    "with_percent_change": {
+      "science": 2.264466236850904,
+      "acquisitions": 2.145267044369481,
+      "deliveries": 6.859269762495579,
+      "completed_duplicates": -1.167921100441216
+    }
+  },
+  "limitations": [
+    "One training seed per arm",
+    "Changing training scenarios, not frozen evaluation",
+    "Control has more completed experience; no unmatched right-tail advantage claim",
+    "Counts reconstructed from compact episode ledgers; full raw terminal numerical audit pending",
+    "TX selection is not successful packet delivery or causal mission benefit"
+  ]
+}

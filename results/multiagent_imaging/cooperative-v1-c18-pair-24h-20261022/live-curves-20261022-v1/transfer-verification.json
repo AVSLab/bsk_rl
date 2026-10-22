@@ -1,0 +1,7 @@
+{
+  "transport": "Termius SFTP",
+  "verified": true,
+  "actual_bytes": 1344372,
+  "sha256": "fb75a9cae496e01245750d50a0155b9d826c5479c96aa1bcba14b59838cf0e09",
+  "raw_terminal_audit": false
+}

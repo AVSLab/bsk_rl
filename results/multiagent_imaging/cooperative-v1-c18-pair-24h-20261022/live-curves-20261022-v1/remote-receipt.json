@@ -1,0 +1,24 @@
+{
+  "remote_path": "/projects/dahu1128/cooperative-v1-c18-pair-24h-evidence-20261022/timeseries-20261022T134118198776Z.json.gz",
+  "bytes": 1344372,
+  "sha256": "fb75a9cae496e01245750d50a0155b9d826c5479c96aa1bcba14b59838cf0e09",
+  "reader_peak_RSS_bytes": 87445504,
+  "counts": {
+    "with_communication": {
+      "updates": 26,
+      "missions": 728,
+      "memory": 1489
+    },
+    "without_communication": {
+      "updates": 34,
+      "missions": 952,
+      "memory": 1565
+    }
+  },
+  "fresh_Termius_screenshot_verified": true,
+  "active_training_source_unchanged": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+  "reader_source_commit": "1d165f33c76aa9e0f922f53d7fe581587f7661d0",
+  "reader_sha256": "3d907cd326827cc6b4f5515bdfe7eaa9bf8085360f3b2bd42b7538b58b8de977",
+  "new_jobs": 0,
+  "new_PPO_updates": 0
+}

@@ -1,0 +1,80 @@
+{
+  "passed": true,
+  "archive_transport": "Termius SFTP",
+  "archive_bytes": 1344372,
+  "archive_sha256": "fb75a9cae496e01245750d50a0155b9d826c5479c96aa1bcba14b59838cf0e09",
+  "focused_parser_tests": {
+    "passed": 12,
+    "seconds": 0.69,
+    "paths": [
+      "tests/unittest/multiagent/test_pair_projection.py",
+      "tests/unittest/multiagent/test_pair_timeseries.py"
+    ]
+  },
+  "historical_112_matched_mission_reproduction": {
+    "passed": true,
+    "with_science": 40.94369642187625,
+    "control_science": 43.47718908696783,
+    "fixture_memory_is_synthetic_and_not_used_in_actual_plots": true
+  },
+  "actual_checks": [
+    "all projected missions 45000 simulated seconds",
+    "actual decisions equal action count sums and condensed rows per update",
+    "finite reported losses",
+    "unshaped science equals .9 acquisition value + .1 verified delivery value",
+    "matched seeds have identical initial-condition hashes",
+    "no cgroup fail count recorded",
+    "three exported PNGs visually inspected"
+  ],
+  "not_a_terminal_acceptance": true,
+  "training_source_unchanged": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+  "new_jobs": 0,
+  "new_native_missions": 0,
+  "new_PPO_updates": 0,
+  "files": {
+    "ram-vs-steps.svg": {
+      "bytes": 47576,
+      "sha256": "6f65e67e889c2a93dcc858bd300a5b116d5e9adc7503de38cacd79a211294f76"
+    },
+    "comms-vs-steps.png": {
+      "bytes": 255149,
+      "sha256": "9c8ae2dab822ba1f0b2ff920bd91d5218026cf73922745995b7511aa60d9ba9d"
+    },
+    "comms-vs-steps.svg": {
+      "bytes": 93938,
+      "sha256": "4cbc6ca8156955c15a992e8725c58fe204e98a84054ad355ab0aa417eff8a77f"
+    },
+    "ram-vs-steps.png": {
+      "bytes": 90761,
+      "sha256": "e7b37292543526c75d9603caf7bc66cb436b876d4e3d013b1113daa0edf37f9c"
+    },
+    "remote-receipt.json": {
+      "bytes": 813,
+      "sha256": "94fc154b82089bf95b51a1746a7aab1595580d4a5d37625d3d0067163a0eca1a"
+    },
+    "transfer-verification.json": {
+      "bytes": 192,
+      "sha256": "fdc7a5806e2be4069a1c09af8cc843b468101f780de1995d00d37d9eb990ae76"
+    },
+    "statistics.json": {
+      "bytes": 103217,
+      "sha256": "9dd69f1d175755f0f230c1a2bd2173430df59c0c5bd24f67be13c1c4f7319653"
+    },
+    "mission-vs-steps.png": {
+      "bytes": 295362,
+      "sha256": "f1017d80a9bc32b3812dd2e5b308b229893057fc90fac4ed1ab9632c1b15044e"
+    },
+    "analyze.py": {
+      "bytes": 11432,
+      "sha256": "14a415e8164bab75726510700d71526039ad56022dfceeb95be6048e7e8c1bcd"
+    },
+    "mission-vs-steps.svg": {
+      "bytes": 91249,
+      "sha256": "0a10062b8926ad9a1587b2f6f2e9afb93b9b9d7d1228907b41b29ee8c20f7533"
+    },
+    "download/timeseries-20261022T134118198776Z.json.gz": {
+      "bytes": 1344372,
+      "sha256": "fb75a9cae496e01245750d50a0155b9d826c5479c96aa1bcba14b59838cf0e09"
+    }
+  }
+}
