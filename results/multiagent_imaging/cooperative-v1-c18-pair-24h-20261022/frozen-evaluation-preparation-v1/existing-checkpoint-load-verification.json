@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "evidence": "Existing independently verified canary checkpoints only; no new native mission or PPO",
+  "rows": [
+    {
+      "checkpoint": "results/multiagent_imaging/cooperative-v1-canary-b205fc16-20261021/terminal-review/collected/canary/training/checkpoint_0000",
+      "iteration": 0,
+      "module_eval_mode": true,
+      "bytes_unchanged": true,
+      "manifest_sha256": "43a788de54ae1730c5294647c3fc8bdc9176a8701f8499d3b554aa02afc799ab",
+      "policy_sha256": "72b256ffead5ad74d49dcf63436ce6f5b32c6fb35f7f070c4497300292919126"
+    },
+    {
+      "checkpoint": "results/multiagent_imaging/cooperative-v1-canary-b205fc16-20261021/terminal-review/collected/canary/training/checkpoint_0002",
+      "iteration": 2,
+      "module_eval_mode": true,
+      "bytes_unchanged": true,
+      "manifest_sha256": "20bc54ef63b3cb4f7c1bb271dda59c90d5c650a2d23b8b7d0339a27522b70c73",
+      "policy_sha256": "ea9638c064150dc6fdffb08a2caea0f27b09617afad05c34c090d0d84f70b685"
+    }
+  ],
+  "final_pair_checkpoints_still_pending": true
+}

@@ -9,5 +9,6 @@
   "new_intervention_qualification": "Transport/catalog unit tests, bounded private-flow probes and existing native episode reconstruction; full held-out native comparison not executed",
   "runtime_changes": 0,
   "active_source_changed": false,
-  "script_syntax_passed": true
+  "script_syntax_passed": true,
+  "existing_canary_initial_and_final_checkpoint_load": "passed; eval mode; exact policy and manifest bytes unchanged; no new simulation or PPO"
 }
