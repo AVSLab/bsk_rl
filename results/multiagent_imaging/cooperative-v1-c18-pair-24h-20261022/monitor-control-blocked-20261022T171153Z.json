@@ -1,0 +1,20 @@
+{
+  "observed_utc": "2026-10-22T17:11:53Z",
+  "jobs": {
+    "with_communication": "34768424",
+    "without_communication": "34768425"
+  },
+  "control_status": "blocked_pending_user_foreground_unlock",
+  "initial_error": "Computer Use server error -10005: noWindowsAvailable",
+  "bounded_recovery": "Rebound Termius and used refreshed accessibility terminal input instead of coordinate input",
+  "recovery_observation": "Native calls returned but screenshot remained at the old 15:55:55 readback and shell prompt; no fresh command execution verified",
+  "fresh_remote_health_verified": false,
+  "remote_monitor_execution_unverified": true,
+  "last_verified_health_file": "health-observed-20261022T155555Z.json",
+  "last_verified_wandb_utc": "2026-10-22T15:40:53Z/2026-10-22T15:41:02Z",
+  "user_requested_once": "Unlock the Mac, bring authenticated Termius terminal to foreground, and reply when ready; no credentials needed",
+  "monitoring_pause_required": true,
+  "job_cancellation_or_submission_performed": false,
+  "new_jobs_submitted": 0,
+  "scientific_training_runtime_modified": false
+}
