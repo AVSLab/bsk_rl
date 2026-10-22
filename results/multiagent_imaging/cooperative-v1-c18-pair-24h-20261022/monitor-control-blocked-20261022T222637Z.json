@@ -1,0 +1,16 @@
+{
+  "observed_utc": "2026-10-22T22:26:37Z",
+  "human_confirmed_unlocked_and_Termius_foreground": true,
+  "initial_error_after_confirmation": "Computer Use server error -10005: noWindowsAvailable on coordinate focus",
+  "bounded_recovery_after_confirmation": "Raised native Termius window, refreshed AX/screenshot, used AX terminal input then paste/Return",
+  "recovery_result": "Native calls returned but screenshot still showed only the historical 20:48 output and old prompt; no fresh command/readback verified",
+  "remote_monitor_execution_unverified": true,
+  "fresh_remote_health_verified": false,
+  "last_verified_health_file": "health-observed-20261022T204813Z.json",
+  "monitoring_pause_required": true,
+  "user_requested_manual_readonly_monitor_and_new_output_screenshot": true,
+  "credentials_requested": false,
+  "new_jobs_submitted": 0,
+  "jobs_cancelled": 0,
+  "scientific_training_runtime_modified": false
+}
