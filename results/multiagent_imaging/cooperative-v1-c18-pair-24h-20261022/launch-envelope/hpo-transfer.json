@@ -1,0 +1,45 @@
+{
+  "profile": "cooperative-v1-c18-optimizer-transfer-v1",
+  "source_commit": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+  "retained_cooperative_horizons": true,
+  "hpo_source": {
+    "thread": "HyperP Tuning",
+    "thread_id": "01a13c59-8bb2-73b2-bf87-5be550cf3e65",
+    "trial": "C18",
+    "run_id": "um2t84jc",
+    "selection": "Best independently verified original-21 latest-ten-mission objective; expansion endpoint leaders not independently closed",
+    "objective": 357.93156355124,
+    "ranking_file_sha256": "08fe9eea4d4c7b4dda496ddf257c5e8fb83a27f5cd56b3b124be31b7219f6408",
+    "ranking_file": "/Users/dahu1128/.codex/worktrees/2fba/bsk_rl/results/amos_2026/optuna-preparation-20261014/baseline-gap-audit-20261015T2055Z/verified-completed-ranking-and-parameters.csv",
+    "original_seven_parameters": {
+      "lr": 5.5086251013380465e-05,
+      "gamma_half_life_s": 85.97581389523639,
+      "lambda_": 0.837999339730316,
+      "num_sgd_iter": 10.0,
+      "clip_param": 0.28561625869311813,
+      "grad_clip": 3.5469819242980924,
+      "entropy_coeff": 1.290350868902825e-05
+    },
+    "transfer_is_not_multisatellite_optimality_proof": true
+  },
+  "ppo_settings": {
+    "learning_rate": [
+      [
+        0,
+        5.5086251013380465e-05
+      ],
+      [
+        40000,
+        3.288833613882778e-06
+      ]
+    ],
+    "entropy_coeff": 1.290350868902825e-05,
+    "grad_clip": 3.5469819242980924,
+    "num_sgd_iter": 10,
+    "minibatch_size": 128,
+    "vf_clip_param": 10.0,
+    "vf_loss_coeff": 1.0,
+    "clip_param": 0.28561625869311813,
+    "use_kl_loss": false
+  }
+}

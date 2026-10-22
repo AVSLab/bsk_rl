@@ -1,0 +1,51 @@
+{
+  "job_id": "34752183",
+  "observed_utc": "2026-10-21T22:34:54.323655+00:00",
+  "observation_method": "Fresh Termius screenshot readback of timestamped bounded monitor and subsequent final W&B snapshot",
+  "original_scheduler": {
+    "state": "FAILED",
+    "exit_code": "1:0",
+    "elapsed_seconds": 2867,
+    "allocated_cpus": 56,
+    "allocated_cpu_hours": 44.59777777777778
+  },
+  "completed_PPO_updates": 2,
+  "committed_true_decisions": 59023,
+  "training_topology": {
+    "last": "worker-topology-0002.json",
+    "passed": true,
+    "actor_restart_count": 0,
+    "changed_process_indices": []
+  },
+  "restore": {
+    "passed": true,
+    "worker_count": 29,
+    "training_iteration": 2,
+    "max_logit_error": 0.0,
+    "new_PPO_updates": 0,
+    "new_sampled_episodes": 0
+  },
+  "acceptance_failure": {
+    "passed": false,
+    "error_type": "KeyError",
+    "error": "'workers'"
+  },
+  "job_exit_code": 1,
+  "training_job_cgroup_peak_bytes_observed": 32793788416,
+  "training_job_cgroup_failcnt_observed": 0,
+  "post_restore_memory_file_present": true,
+  "post_restore_memory_peak_not_yet_independently_verified": true,
+  "wandb": {
+    "id": "efb3c608",
+    "state": "finished",
+    "training_iteration": 2,
+    "lifetime_true_decisions": 59023,
+    "latest_mission_unshaped_weighted_science": 45.30200557730503
+  },
+  "remote_final_monitor": "/projects/dahu1128/cooperative-v1-canary-b205fc16-evidence-20261021/monitor-20261021T223520451731Z.json",
+  "release_sha256": "ec3c3a1ec0a4c26ceab243771daf4bfeb2b18d91ecd1433c50f0778d5b4b9dbc",
+  "evidence_downloaded": false,
+  "independent_local_audit_pending": true,
+  "communication_benefit_not_established": true,
+  "new_jobs_submitted": 0
+}

@@ -1,0 +1,1106 @@
+{
+  "passed": true,
+  "missions": 56,
+  "totals": {
+    "true_decisions": 59023,
+    "physical_completed_captures": 32007,
+    "qualified_request_captures": 8113,
+    "unique_request_acquisitions": 4607,
+    "completed_redundant_request_captures": 3506,
+    "physical_deliveries": 23655,
+    "quality_qualified_deliveries": 20814,
+    "useful_delivered_requests": 1841,
+    "unshaped_weighted_science": 2184.457138046944,
+    "redundant_capture_cost": 87.56194582664699,
+    "radio_occupancy_s": 284483.0
+  },
+  "means": {
+    "true_decisions": 1053.982142857143,
+    "physical_completed_captures": 571.5535714285714,
+    "qualified_request_captures": 144.875,
+    "unique_request_acquisitions": 82.26785714285714,
+    "completed_redundant_request_captures": 62.607142857142854,
+    "physical_deliveries": 422.4107142857143,
+    "quality_qualified_deliveries": 371.67857142857144,
+    "useful_delivered_requests": 32.875,
+    "unshaped_weighted_science": 39.00816317940971,
+    "redundant_capture_cost": 1.563606175475839,
+    "radio_occupancy_s": 5080.053571428572
+  },
+  "missions_audit": [
+    {
+      "episode_id": "a3ce793c6bcc4d0f8b9a6ec5632563a1",
+      "episode_seed": 1313384415,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 996,
+      "physical_completed_captures": 491,
+      "qualified_request_captures": 131,
+      "unique_request_acquisitions": 69,
+      "completed_redundant_request_captures": 62,
+      "physical_deliveries": 392,
+      "quality_qualified_deliveries": 344,
+      "useful_delivered_requests": 26,
+      "unshaped_weighted_science": 31.23700637928451,
+      "redundant_capture_cost": 1.4873494043518476,
+      "radio_occupancy_s": 4768.0,
+      "packet_outcomes": {
+        "accepted": 29
+      }
+    },
+    {
+      "episode_id": "24193412ff274a28b643ef628708c04e",
+      "episode_seed": 1691587715,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1119,
+      "physical_completed_captures": 657,
+      "qualified_request_captures": 166,
+      "unique_request_acquisitions": 87,
+      "completed_redundant_request_captures": 79,
+      "physical_deliveries": 457,
+      "quality_qualified_deliveries": 419,
+      "useful_delivered_requests": 48,
+      "unshaped_weighted_science": 44.242800230598974,
+      "redundant_capture_cost": 1.9146062104847679,
+      "radio_occupancy_s": 5940.0,
+      "packet_outcomes": {
+        "accepted": 27
+      }
+    },
+    {
+      "episode_id": "8e6158053c2f43c4920710ef0133f3fa",
+      "episode_seed": 111343623,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1055,
+      "physical_completed_captures": 576,
+      "qualified_request_captures": 130,
+      "unique_request_acquisitions": 72,
+      "completed_redundant_request_captures": 58,
+      "physical_deliveries": 465,
+      "quality_qualified_deliveries": 395,
+      "useful_delivered_requests": 36,
+      "unshaped_weighted_science": 35.79023349834717,
+      "redundant_capture_cost": 1.5803327896215746,
+      "radio_occupancy_s": 5444.999999999998,
+      "packet_outcomes": {
+        "accepted": 36
+      }
+    },
+    {
+      "episode_id": "5f36f70d9d8c4a3b8e256c198b307853",
+      "episode_seed": 2544462623,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1206,
+      "physical_completed_captures": 775,
+      "qualified_request_captures": 196,
+      "unique_request_acquisitions": 98,
+      "completed_redundant_request_captures": 98,
+      "physical_deliveries": 605,
+      "quality_qualified_deliveries": 515,
+      "useful_delivered_requests": 42,
+      "unshaped_weighted_science": 44.76635107675966,
+      "redundant_capture_cost": 2.424642273817836,
+      "radio_occupancy_s": 5410.0000000000055,
+      "packet_outcomes": {
+        "accepted": 36
+      }
+    },
+    {
+      "episode_id": "5a5fb01e167745c394af8859f1a3f4f3",
+      "episode_seed": 578361593,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1053,
+      "physical_completed_captures": 569,
+      "qualified_request_captures": 130,
+      "unique_request_acquisitions": 79,
+      "completed_redundant_request_captures": 51,
+      "physical_deliveries": 386,
+      "quality_qualified_deliveries": 337,
+      "useful_delivered_requests": 22,
+      "unshaped_weighted_science": 33.747698297973066,
+      "redundant_capture_cost": 1.1563908027367706,
+      "radio_occupancy_s": 6279.0,
+      "packet_outcomes": {
+        "accepted": 44
+      }
+    },
+    {
+      "episode_id": "27d8ead58a0841d5ad1c12632eb762d2",
+      "episode_seed": 2364367597,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1136,
+      "physical_completed_captures": 668,
+      "qualified_request_captures": 196,
+      "unique_request_acquisitions": 105,
+      "completed_redundant_request_captures": 91,
+      "physical_deliveries": 534,
+      "quality_qualified_deliveries": 493,
+      "useful_delivered_requests": 42,
+      "unshaped_weighted_science": 49.62611240589951,
+      "redundant_capture_cost": 2.2205159389506486,
+      "radio_occupancy_s": 4601.0,
+      "packet_outcomes": {
+        "accepted": 29
+      }
+    },
+    {
+      "episode_id": "60b8193167f14d9dacb2896f67cb915b",
+      "episode_seed": 4218569549,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1128,
+      "physical_completed_captures": 662,
+      "qualified_request_captures": 167,
+      "unique_request_acquisitions": 98,
+      "completed_redundant_request_captures": 69,
+      "physical_deliveries": 512,
+      "quality_qualified_deliveries": 439,
+      "useful_delivered_requests": 25,
+      "unshaped_weighted_science": 47.12892702222127,
+      "redundant_capture_cost": 1.7658984088661596,
+      "radio_occupancy_s": 7704.000000000005,
+      "packet_outcomes": {
+        "accepted": 45
+      }
+    },
+    {
+      "episode_id": "aa2044552b7345b5a66affa495fe95c8",
+      "episode_seed": 118725655,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1144,
+      "physical_completed_captures": 697,
+      "qualified_request_captures": 199,
+      "unique_request_acquisitions": 102,
+      "completed_redundant_request_captures": 97,
+      "physical_deliveries": 587,
+      "quality_qualified_deliveries": 532,
+      "useful_delivered_requests": 57,
+      "unshaped_weighted_science": 43.539176828975336,
+      "redundant_capture_cost": 2.115600975841538,
+      "radio_occupancy_s": 5431.0,
+      "packet_outcomes": {
+        "accepted": 34
+      }
+    },
+    {
+      "episode_id": "83a84fbed2d04568b52bb274b9ca1b9a",
+      "episode_seed": 3739455103,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1100,
+      "physical_completed_captures": 646,
+      "qualified_request_captures": 173,
+      "unique_request_acquisitions": 94,
+      "completed_redundant_request_captures": 79,
+      "physical_deliveries": 540,
+      "quality_qualified_deliveries": 476,
+      "useful_delivered_requests": 42,
+      "unshaped_weighted_science": 41.424379859123526,
+      "redundant_capture_cost": 1.8569676166861595,
+      "radio_occupancy_s": 4894.0,
+      "packet_outcomes": {
+        "accepted": 28
+      }
+    },
+    {
+      "episode_id": "a88a0b3a45e9495e9b149fab7dbab92e",
+      "episode_seed": 4253594015,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1028,
+      "physical_completed_captures": 554,
+      "qualified_request_captures": 145,
+      "unique_request_acquisitions": 87,
+      "completed_redundant_request_captures": 58,
+      "physical_deliveries": 394,
+      "quality_qualified_deliveries": 336,
+      "useful_delivered_requests": 30,
+      "unshaped_weighted_science": 41.9162733445259,
+      "redundant_capture_cost": 1.5541910456489518,
+      "radio_occupancy_s": 5156.000000000001,
+      "packet_outcomes": {
+        "accepted": 33
+      }
+    },
+    {
+      "episode_id": "bc7c965c2d714bb8ae1ad42a3e5e83e4",
+      "episode_seed": 578361594,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1070,
+      "physical_completed_captures": 615,
+      "qualified_request_captures": 148,
+      "unique_request_acquisitions": 91,
+      "completed_redundant_request_captures": 57,
+      "physical_deliveries": 463,
+      "quality_qualified_deliveries": 415,
+      "useful_delivered_requests": 19,
+      "unshaped_weighted_science": 37.461572145082975,
+      "redundant_capture_cost": 1.1268562962443096,
+      "radio_occupancy_s": 5384.000000000004,
+      "packet_outcomes": {
+        "accepted": 35
+      }
+    },
+    {
+      "episode_id": "fc0cd396c2c24adea298730ffb98cf9d",
+      "episode_seed": 1134219080,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1032,
+      "physical_completed_captures": 529,
+      "qualified_request_captures": 149,
+      "unique_request_acquisitions": 93,
+      "completed_redundant_request_captures": 56,
+      "physical_deliveries": 353,
+      "quality_qualified_deliveries": 314,
+      "useful_delivered_requests": 20,
+      "unshaped_weighted_science": 45.66831550713305,
+      "redundant_capture_cost": 1.5920991637307667,
+      "radio_occupancy_s": 4808.0,
+      "packet_outcomes": {
+        "accepted": 33
+      }
+    },
+    {
+      "episode_id": "6539917732894fe98d85614685151948",
+      "episode_seed": 1501352480,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1001,
+      "physical_completed_captures": 511,
+      "qualified_request_captures": 135,
+      "unique_request_acquisitions": 82,
+      "completed_redundant_request_captures": 53,
+      "physical_deliveries": 462,
+      "quality_qualified_deliveries": 428,
+      "useful_delivered_requests": 39,
+      "unshaped_weighted_science": 37.798486575447164,
+      "redundant_capture_cost": 1.3450658089795973,
+      "radio_occupancy_s": 4297.0,
+      "packet_outcomes": {
+        "accepted": 28
+      }
+    },
+    {
+      "episode_id": "c969377345ff4c378de21b1a9b42cc6e",
+      "episode_seed": 998711915,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1127,
+      "physical_completed_captures": 670,
+      "qualified_request_captures": 164,
+      "unique_request_acquisitions": 98,
+      "completed_redundant_request_captures": 66,
+      "physical_deliveries": 509,
+      "quality_qualified_deliveries": 468,
+      "useful_delivered_requests": 40,
+      "unshaped_weighted_science": 46.64629190548513,
+      "redundant_capture_cost": 1.6357298373062545,
+      "radio_occupancy_s": 7116.0,
+      "packet_outcomes": {
+        "accepted": 48
+      }
+    },
+    {
+      "episode_id": "dabd110586834df487898dfa6101d314",
+      "episode_seed": 3255212324,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1068,
+      "physical_completed_captures": 612,
+      "qualified_request_captures": 138,
+      "unique_request_acquisitions": 80,
+      "completed_redundant_request_captures": 58,
+      "physical_deliveries": 528,
+      "quality_qualified_deliveries": 449,
+      "useful_delivered_requests": 32,
+      "unshaped_weighted_science": 33.41701425835655,
+      "redundant_capture_cost": 1.3128577117529008,
+      "radio_occupancy_s": 4056.9999999999945,
+      "packet_outcomes": {
+        "accepted": 29
+      }
+    },
+    {
+      "episode_id": "aad4b7e72e194317bc4da797d624e95d",
+      "episode_seed": 3959187958,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1022,
+      "physical_completed_captures": 518,
+      "qualified_request_captures": 124,
+      "unique_request_acquisitions": 79,
+      "completed_redundant_request_captures": 45,
+      "physical_deliveries": 328,
+      "quality_qualified_deliveries": 301,
+      "useful_delivered_requests": 23,
+      "unshaped_weighted_science": 36.40064157288413,
+      "redundant_capture_cost": 1.0862758687642693,
+      "radio_occupancy_s": 5307.999999999998,
+      "packet_outcomes": {
+        "accepted": 36
+      }
+    },
+    {
+      "episode_id": "8df708dcb91441a498a0ef3190b70008",
+      "episode_seed": 457420752,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1082,
+      "physical_completed_captures": 608,
+      "qualified_request_captures": 151,
+      "unique_request_acquisitions": 95,
+      "completed_redundant_request_captures": 56,
+      "physical_deliveries": 438,
+      "quality_qualified_deliveries": 372,
+      "useful_delivered_requests": 61,
+      "unshaped_weighted_science": 46.90206135945421,
+      "redundant_capture_cost": 1.3703875768311526,
+      "radio_occupancy_s": 5280.0,
+      "packet_outcomes": {
+        "accepted": 31
+      }
+    },
+    {
+      "episode_id": "1c52478d7ed94980bc320f6ab98fc1a1",
+      "episode_seed": 169461328,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1136,
+      "physical_completed_captures": 684,
+      "qualified_request_captures": 158,
+      "unique_request_acquisitions": 90,
+      "completed_redundant_request_captures": 68,
+      "physical_deliveries": 505,
+      "quality_qualified_deliveries": 441,
+      "useful_delivered_requests": 52,
+      "unshaped_weighted_science": 48.936555041658686,
+      "redundant_capture_cost": 1.9150695481029052,
+      "radio_occupancy_s": 4445.000000000002,
+      "packet_outcomes": {
+        "accepted": 35
+      }
+    },
+    {
+      "episode_id": "c75d2993c68141b0aef0b1b5ab19b484",
+      "episode_seed": 2544462622,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1149,
+      "physical_completed_captures": 679,
+      "qualified_request_captures": 147,
+      "unique_request_acquisitions": 82,
+      "completed_redundant_request_captures": 65,
+      "physical_deliveries": 480,
+      "quality_qualified_deliveries": 412,
+      "useful_delivered_requests": 36,
+      "unshaped_weighted_science": 41.743513204143504,
+      "redundant_capture_cost": 1.5133147471712523,
+      "radio_occupancy_s": 5554.0,
+      "packet_outcomes": {
+        "accepted": 48
+      }
+    },
+    {
+      "episode_id": "d385a5dba9144689823115530921fe02",
+      "episode_seed": 1352971319,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1071,
+      "physical_completed_captures": 578,
+      "qualified_request_captures": 153,
+      "unique_request_acquisitions": 79,
+      "completed_redundant_request_captures": 74,
+      "physical_deliveries": 379,
+      "quality_qualified_deliveries": 343,
+      "useful_delivered_requests": 28,
+      "unshaped_weighted_science": 36.14221930615305,
+      "redundant_capture_cost": 1.4355248121961475,
+      "radio_occupancy_s": 4504.999999999993,
+      "packet_outcomes": {
+        "accepted": 36
+      }
+    },
+    {
+      "episode_id": "4ce64360c0574dd899c790a8f10f9974",
+      "episode_seed": 1964699236,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1053,
+      "physical_completed_captures": 582,
+      "qualified_request_captures": 118,
+      "unique_request_acquisitions": 71,
+      "completed_redundant_request_captures": 47,
+      "physical_deliveries": 430,
+      "quality_qualified_deliveries": 351,
+      "useful_delivered_requests": 39,
+      "unshaped_weighted_science": 35.03211676555083,
+      "redundant_capture_cost": 1.0948471410612906,
+      "radio_occupancy_s": 5532.999999999997,
+      "packet_outcomes": {
+        "accepted": 29
+      }
+    },
+    {
+      "episode_id": "f7ba5a57fff14c2d8aa62e9bc5a4fe4a",
+      "episode_seed": 998711914,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1002,
+      "physical_completed_captures": 515,
+      "qualified_request_captures": 123,
+      "unique_request_acquisitions": 79,
+      "completed_redundant_request_captures": 44,
+      "physical_deliveries": 365,
+      "quality_qualified_deliveries": 327,
+      "useful_delivered_requests": 19,
+      "unshaped_weighted_science": 34.25131857086104,
+      "redundant_capture_cost": 0.9870669268488147,
+      "radio_occupancy_s": 4691.0,
+      "packet_outcomes": {
+        "accepted": 31
+      }
+    },
+    {
+      "episode_id": "797afccb14444bd39d1be6e5b1f02852",
+      "episode_seed": 355888025,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1063,
+      "physical_completed_captures": 573,
+      "qualified_request_captures": 148,
+      "unique_request_acquisitions": 91,
+      "completed_redundant_request_captures": 57,
+      "physical_deliveries": 460,
+      "quality_qualified_deliveries": 387,
+      "useful_delivered_requests": 33,
+      "unshaped_weighted_science": 44.85927535561724,
+      "redundant_capture_cost": 1.483886479988314,
+      "radio_occupancy_s": 5569.999999999998,
+      "packet_outcomes": {
+        "accepted": 32
+      }
+    },
+    {
+      "episode_id": "fc6f557565124b91a84dd3337a581b6f",
+      "episode_seed": 2164367807,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1158,
+      "physical_completed_captures": 717,
+      "qualified_request_captures": 172,
+      "unique_request_acquisitions": 94,
+      "completed_redundant_request_captures": 78,
+      "physical_deliveries": 535,
+      "quality_qualified_deliveries": 484,
+      "useful_delivered_requests": 38,
+      "unshaped_weighted_science": 46.64257199052552,
+      "redundant_capture_cost": 1.965982509431673,
+      "radio_occupancy_s": 6633.999999999996,
+      "packet_outcomes": {
+        "accepted": 44
+      }
+    },
+    {
+      "episode_id": "7a9b93607e9845a7871319d71ba849f3",
+      "episode_seed": 2888668426,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1127,
+      "physical_completed_captures": 664,
+      "qualified_request_captures": 175,
+      "unique_request_acquisitions": 95,
+      "completed_redundant_request_captures": 80,
+      "physical_deliveries": 608,
+      "quality_qualified_deliveries": 529,
+      "useful_delivered_requests": 42,
+      "unshaped_weighted_science": 45.033871486330796,
+      "redundant_capture_cost": 2.0058553742558822,
+      "radio_occupancy_s": 4985.0,
+      "packet_outcomes": {
+        "accepted": 30
+      }
+    },
+    {
+      "episode_id": "672e2516099b49ccb62aef28090f9d11",
+      "episode_seed": 355888026,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1210,
+      "physical_completed_captures": 782,
+      "qualified_request_captures": 158,
+      "unique_request_acquisitions": 92,
+      "completed_redundant_request_captures": 66,
+      "physical_deliveries": 582,
+      "quality_qualified_deliveries": 525,
+      "useful_delivered_requests": 50,
+      "unshaped_weighted_science": 44.525210565125114,
+      "redundant_capture_cost": 1.8428062273010735,
+      "radio_occupancy_s": 6584.999999999999,
+      "packet_outcomes": {
+        "accepted": 39
+      }
+    },
+    {
+      "episode_id": "e970cb4682574edc8367f4003a57ca8d",
+      "episode_seed": 3255212323,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 980,
+      "physical_completed_captures": 471,
+      "qualified_request_captures": 139,
+      "unique_request_acquisitions": 82,
+      "completed_redundant_request_captures": 57,
+      "physical_deliveries": 312,
+      "quality_qualified_deliveries": 277,
+      "useful_delivered_requests": 19,
+      "unshaped_weighted_science": 37.99779378862278,
+      "redundant_capture_cost": 1.4108962418429962,
+      "radio_occupancy_s": 6387.0,
+      "packet_outcomes": {
+        "accepted": 33
+      }
+    },
+    {
+      "episode_id": "86788b05118f4384a3aab69b6cc79897",
+      "episode_seed": 1691587714,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 992,
+      "physical_completed_captures": 472,
+      "qualified_request_captures": 127,
+      "unique_request_acquisitions": 80,
+      "completed_redundant_request_captures": 47,
+      "physical_deliveries": 321,
+      "quality_qualified_deliveries": 276,
+      "useful_delivered_requests": 23,
+      "unshaped_weighted_science": 37.83163891733598,
+      "redundant_capture_cost": 1.236891216071677,
+      "radio_occupancy_s": 5419.0,
+      "packet_outcomes": {
+        "accepted": 29
+      }
+    },
+    {
+      "episode_id": "f7bcac6bd3a74e71858ab21d5dabcb96",
+      "episode_seed": 3138826433,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1109,
+      "physical_completed_captures": 658,
+      "qualified_request_captures": 176,
+      "unique_request_acquisitions": 99,
+      "completed_redundant_request_captures": 77,
+      "physical_deliveries": 458,
+      "quality_qualified_deliveries": 416,
+      "useful_delivered_requests": 39,
+      "unshaped_weighted_science": 48.431351527753186,
+      "redundant_capture_cost": 2.264172455944213,
+      "radio_occupancy_s": 4890.0,
+      "packet_outcomes": {
+        "accepted": 35
+      }
+    },
+    {
+      "episode_id": "576938ddc7994f5481ea90d02d0cc623",
+      "episode_seed": 3959187959,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1083,
+      "physical_completed_captures": 621,
+      "qualified_request_captures": 188,
+      "unique_request_acquisitions": 101,
+      "completed_redundant_request_captures": 87,
+      "physical_deliveries": 497,
+      "quality_qualified_deliveries": 423,
+      "useful_delivered_requests": 62,
+      "unshaped_weighted_science": 49.82393183125055,
+      "redundant_capture_cost": 2.2308685239736934,
+      "radio_occupancy_s": 4108.000000000002,
+      "packet_outcomes": {
+        "accepted": 24
+      }
+    },
+    {
+      "episode_id": "ac4f04c3ba8f43769bbf1fc73c6c9539",
+      "episode_seed": 1822828261,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1017,
+      "physical_completed_captures": 524,
+      "qualified_request_captures": 157,
+      "unique_request_acquisitions": 85,
+      "completed_redundant_request_captures": 72,
+      "physical_deliveries": 362,
+      "quality_qualified_deliveries": 317,
+      "useful_delivered_requests": 36,
+      "unshaped_weighted_science": 42.72791986486054,
+      "redundant_capture_cost": 2.043895357498256,
+      "radio_occupancy_s": 5060.0,
+      "packet_outcomes": {
+        "accepted": 38
+      }
+    },
+    {
+      "episode_id": "d58f545cd1c144ca90eacfbd80cbb216",
+      "episode_seed": 1134219079,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 953,
+      "physical_completed_captures": 440,
+      "qualified_request_captures": 118,
+      "unique_request_acquisitions": 71,
+      "completed_redundant_request_captures": 47,
+      "physical_deliveries": 270,
+      "quality_qualified_deliveries": 233,
+      "useful_delivered_requests": 21,
+      "unshaped_weighted_science": 32.91674451302511,
+      "redundant_capture_cost": 1.2659275776491152,
+      "radio_occupancy_s": 4576.999999999998,
+      "packet_outcomes": {
+        "accepted": 31
+      }
+    },
+    {
+      "episode_id": "f5df1a78ca0f4446bbceea3a8632f4fc",
+      "episode_seed": 2888668425,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1016,
+      "physical_completed_captures": 524,
+      "qualified_request_captures": 142,
+      "unique_request_acquisitions": 75,
+      "completed_redundant_request_captures": 67,
+      "physical_deliveries": 372,
+      "quality_qualified_deliveries": 340,
+      "useful_delivered_requests": 31,
+      "unshaped_weighted_science": 36.637473087320565,
+      "redundant_capture_cost": 1.68826541934624,
+      "radio_occupancy_s": 6428.999999999996,
+      "packet_outcomes": {
+        "accepted": 37
+      }
+    },
+    {
+      "episode_id": "6d01ab7afe6b4b31b39d6cd754a885b0",
+      "episode_seed": 24610859,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1085,
+      "physical_completed_captures": 613,
+      "qualified_request_captures": 174,
+      "unique_request_acquisitions": 91,
+      "completed_redundant_request_captures": 83,
+      "physical_deliveries": 491,
+      "quality_qualified_deliveries": 450,
+      "useful_delivered_requests": 52,
+      "unshaped_weighted_science": 47.43366600206643,
+      "redundant_capture_cost": 2.3635702189072947,
+      "radio_occupancy_s": 3704.0,
+      "packet_outcomes": {
+        "accepted": 20
+      }
+    },
+    {
+      "episode_id": "65450f4df9084c9191d008da7f4de923",
+      "episode_seed": 1964699237,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1064,
+      "physical_completed_captures": 575,
+      "qualified_request_captures": 136,
+      "unique_request_acquisitions": 83,
+      "completed_redundant_request_captures": 53,
+      "physical_deliveries": 446,
+      "quality_qualified_deliveries": 394,
+      "useful_delivered_requests": 36,
+      "unshaped_weighted_science": 40.47079655192284,
+      "redundant_capture_cost": 1.4198799447764427,
+      "radio_occupancy_s": 5640.0,
+      "packet_outcomes": {
+        "accepted": 32
+      }
+    },
+    {
+      "episode_id": "301c506145044926a901d949f5708d52",
+      "episode_seed": 4096590637,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1119,
+      "physical_completed_captures": 655,
+      "qualified_request_captures": 174,
+      "unique_request_acquisitions": 91,
+      "completed_redundant_request_captures": 83,
+      "physical_deliveries": 503,
+      "quality_qualified_deliveries": 462,
+      "useful_delivered_requests": 31,
+      "unshaped_weighted_science": 45.30200557730503,
+      "redundant_capture_cost": 2.4242327623501865,
+      "radio_occupancy_s": 4835.0,
+      "packet_outcomes": {
+        "accepted": 34
+      }
+    },
+    {
+      "episode_id": "0db036975e354764bb7aa50630843bfb",
+      "episode_seed": 1425132734,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1032,
+      "physical_completed_captures": 541,
+      "qualified_request_captures": 148,
+      "unique_request_acquisitions": 83,
+      "completed_redundant_request_captures": 65,
+      "physical_deliveries": 427,
+      "quality_qualified_deliveries": 373,
+      "useful_delivered_requests": 30,
+      "unshaped_weighted_science": 37.81654819489296,
+      "redundant_capture_cost": 1.6195255478359745,
+      "radio_occupancy_s": 3966.000000000001,
+      "packet_outcomes": {
+        "accepted": 26
+      }
+    },
+    {
+      "episode_id": "ecf42a2c92cc48968180262441732446",
+      "episode_seed": 3138826432,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1120,
+      "physical_completed_captures": 674,
+      "qualified_request_captures": 147,
+      "unique_request_acquisitions": 82,
+      "completed_redundant_request_captures": 65,
+      "physical_deliveries": 519,
+      "quality_qualified_deliveries": 459,
+      "useful_delivered_requests": 37,
+      "unshaped_weighted_science": 34.62121382875083,
+      "redundant_capture_cost": 1.3069512443075322,
+      "radio_occupancy_s": 3890.0,
+      "packet_outcomes": {
+        "accepted": 30
+      }
+    },
+    {
+      "episode_id": "b5cbb7b7c761433a96160625141abefd",
+      "episode_seed": 602887303,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1084,
+      "physical_completed_captures": 605,
+      "qualified_request_captures": 134,
+      "unique_request_acquisitions": 79,
+      "completed_redundant_request_captures": 55,
+      "physical_deliveries": 405,
+      "quality_qualified_deliveries": 356,
+      "useful_delivered_requests": 43,
+      "unshaped_weighted_science": 40.25736717666128,
+      "redundant_capture_cost": 1.528552864208403,
+      "radio_occupancy_s": 6780.000000000003,
+      "packet_outcomes": {
+        "accepted": 42
+      }
+    },
+    {
+      "episode_id": "9520602719654ae4b73d13f80aee526f",
+      "episode_seed": 111343622,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1000,
+      "physical_completed_captures": 499,
+      "qualified_request_captures": 130,
+      "unique_request_acquisitions": 73,
+      "completed_redundant_request_captures": 57,
+      "physical_deliveries": 399,
+      "quality_qualified_deliveries": 345,
+      "useful_delivered_requests": 30,
+      "unshaped_weighted_science": 34.75553169867751,
+      "redundant_capture_cost": 1.469989301769453,
+      "radio_occupancy_s": 4997.0,
+      "packet_outcomes": {
+        "accepted": 29
+      }
+    },
+    {
+      "episode_id": "25b4a84818ed486b914059adbe6ba635",
+      "episode_seed": 1425132733,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 936,
+      "physical_completed_captures": 420,
+      "qualified_request_captures": 124,
+      "unique_request_acquisitions": 73,
+      "completed_redundant_request_captures": 51,
+      "physical_deliveries": 289,
+      "quality_qualified_deliveries": 256,
+      "useful_delivered_requests": 18,
+      "unshaped_weighted_science": 37.4939279760375,
+      "redundant_capture_cost": 1.6309670772296263,
+      "radio_occupancy_s": 5005.0,
+      "packet_outcomes": {
+        "accepted": 27
+      }
+    },
+    {
+      "episode_id": "a8e82041bbb74e9fab630e3050706145",
+      "episode_seed": 3739455102,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1112,
+      "physical_completed_captures": 652,
+      "qualified_request_captures": 142,
+      "unique_request_acquisitions": 84,
+      "completed_redundant_request_captures": 58,
+      "physical_deliveries": 499,
+      "quality_qualified_deliveries": 424,
+      "useful_delivered_requests": 45,
+      "unshaped_weighted_science": 41.27935602545587,
+      "redundant_capture_cost": 1.2860123504023246,
+      "radio_occupancy_s": 4862.0,
+      "packet_outcomes": {
+        "accepted": 34
+      }
+    },
+    {
+      "episode_id": "dd7e2e69d09a416a82e94229272e1362",
+      "episode_seed": 24610858,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1039,
+      "physical_completed_captures": 544,
+      "qualified_request_captures": 151,
+      "unique_request_acquisitions": 84,
+      "completed_redundant_request_captures": 67,
+      "physical_deliveries": 408,
+      "quality_qualified_deliveries": 367,
+      "useful_delivered_requests": 37,
+      "unshaped_weighted_science": 41.094555713734195,
+      "redundant_capture_cost": 1.7178335055503664,
+      "radio_occupancy_s": 4697.0,
+      "packet_outcomes": {
+        "accepted": 30
+      }
+    },
+    {
+      "episode_id": "b513b95023084d95a79252f124dcc3fa",
+      "episode_seed": 4253594014,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 948,
+      "physical_completed_captures": 421,
+      "qualified_request_captures": 111,
+      "unique_request_acquisitions": 68,
+      "completed_redundant_request_captures": 43,
+      "physical_deliveries": 271,
+      "quality_qualified_deliveries": 241,
+      "useful_delivered_requests": 21,
+      "unshaped_weighted_science": 29.14038510920666,
+      "redundant_capture_cost": 1.0647881661226757,
+      "radio_occupancy_s": 4114.0,
+      "packet_outcomes": {
+        "accepted": 32
+      }
+    },
+    {
+      "episode_id": "8bb75fd183334383af36fcfeef6b4f20",
+      "episode_seed": 1352971320,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 994,
+      "physical_completed_captures": 512,
+      "qualified_request_captures": 117,
+      "unique_request_acquisitions": 62,
+      "completed_redundant_request_captures": 55,
+      "physical_deliveries": 312,
+      "quality_qualified_deliveries": 264,
+      "useful_delivered_requests": 24,
+      "unshaped_weighted_science": 29.153900031267064,
+      "redundant_capture_cost": 1.2033365546363481,
+      "radio_occupancy_s": 3583.999999999998,
+      "packet_outcomes": {
+        "accepted": 16
+      }
+    },
+    {
+      "episode_id": "2b2b9ec1702f4d39a5f0154d06ca953e",
+      "episode_seed": 2164367808,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 957,
+      "physical_completed_captures": 437,
+      "qualified_request_captures": 116,
+      "unique_request_acquisitions": 59,
+      "completed_redundant_request_captures": 57,
+      "physical_deliveries": 237,
+      "quality_qualified_deliveries": 205,
+      "useful_delivered_requests": 20,
+      "unshaped_weighted_science": 30.42375539940761,
+      "redundant_capture_cost": 1.497719642742452,
+      "radio_occupancy_s": 4825.0,
+      "packet_outcomes": {
+        "accepted": 26
+      }
+    },
+    {
+      "episode_id": "30e0f2e746364dc5ab24b7597f5efbf5",
+      "episode_seed": 457420753,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1003,
+      "physical_completed_captures": 512,
+      "qualified_request_captures": 117,
+      "unique_request_acquisitions": 69,
+      "completed_redundant_request_captures": 48,
+      "physical_deliveries": 327,
+      "quality_qualified_deliveries": 287,
+      "useful_delivered_requests": 17,
+      "unshaped_weighted_science": 34.38267705342225,
+      "redundant_capture_cost": 1.269832164006191,
+      "radio_occupancy_s": 4011.0000000000027,
+      "packet_outcomes": {
+        "accepted": 34
+      }
+    },
+    {
+      "episode_id": "225025e310d041aa981a2479360399a2",
+      "episode_seed": 2364367596,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 866,
+      "physical_completed_captures": 311,
+      "qualified_request_captures": 84,
+      "unique_request_acquisitions": 52,
+      "completed_redundant_request_captures": 32,
+      "physical_deliveries": 153,
+      "quality_qualified_deliveries": 130,
+      "useful_delivered_requests": 1,
+      "unshaped_weighted_science": 22.49626906804026,
+      "redundant_capture_cost": 0.7168027644851573,
+      "radio_occupancy_s": 3747.9999999999995,
+      "packet_outcomes": {
+        "accepted": 24
+      }
+    },
+    {
+      "episode_id": "068cdcb0711f40b5bccc70170665f25f",
+      "episode_seed": 1313384416,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1104,
+      "physical_completed_captures": 655,
+      "qualified_request_captures": 165,
+      "unique_request_acquisitions": 93,
+      "completed_redundant_request_captures": 72,
+      "physical_deliveries": 490,
+      "quality_qualified_deliveries": 419,
+      "useful_delivered_requests": 57,
+      "unshaped_weighted_science": 42.58053548920739,
+      "redundant_capture_cost": 1.5598382845524674,
+      "radio_occupancy_s": 4862.0,
+      "packet_outcomes": {
+        "accepted": 26
+      }
+    },
+    {
+      "episode_id": "d967127b7ef94850ab6ff76770839796",
+      "episode_seed": 1822828260,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1066,
+      "physical_completed_captures": 589,
+      "qualified_request_captures": 154,
+      "unique_request_acquisitions": 84,
+      "completed_redundant_request_captures": 70,
+      "physical_deliveries": 510,
+      "quality_qualified_deliveries": 458,
+      "useful_delivered_requests": 27,
+      "unshaped_weighted_science": 39.48640762996513,
+      "redundant_capture_cost": 1.7410300734621074,
+      "radio_occupancy_s": 6345.999999999996,
+      "packet_outcomes": {
+        "accepted": 26
+      }
+    },
+    {
+      "episode_id": "1a74c44fafcb4edc82e206bc41b32ede",
+      "episode_seed": 4096590636,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1139,
+      "physical_completed_captures": 676,
+      "qualified_request_captures": 166,
+      "unique_request_acquisitions": 87,
+      "completed_redundant_request_captures": 79,
+      "physical_deliveries": 512,
+      "quality_qualified_deliveries": 438,
+      "useful_delivered_requests": 31,
+      "unshaped_weighted_science": 39.2313820553333,
+      "redundant_capture_cost": 1.671619934749329,
+      "radio_occupancy_s": 6892.999999999996,
+      "packet_outcomes": {
+        "accepted": 42
+      }
+    },
+    {
+      "episode_id": "f0e2e219d49544c7be01a803546e6eed",
+      "episode_seed": 602887302,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1020,
+      "physical_completed_captures": 530,
+      "qualified_request_captures": 142,
+      "unique_request_acquisitions": 84,
+      "completed_redundant_request_captures": 58,
+      "physical_deliveries": 430,
+      "quality_qualified_deliveries": 368,
+      "useful_delivered_requests": 27,
+      "unshaped_weighted_science": 37.665892330109656,
+      "redundant_capture_cost": 1.3344259764488875,
+      "radio_occupancy_s": 3532.0,
+      "packet_outcomes": {
+        "accepted": 23
+      }
+    },
+    {
+      "episode_id": "9f19fb01d7c34f1b81b9bd602834cfc2",
+      "episode_seed": 4218569550,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1065,
+      "physical_completed_captures": 583,
+      "qualified_request_captures": 117,
+      "unique_request_acquisitions": 65,
+      "completed_redundant_request_captures": 52,
+      "physical_deliveries": 383,
+      "quality_qualified_deliveries": 333,
+      "useful_delivered_requests": 23,
+      "unshaped_weighted_science": 28.652109900480554,
+      "redundant_capture_cost": 1.2077588941810564,
+      "radio_occupancy_s": 5654.999999999998,
+      "packet_outcomes": {
+        "accepted": 40
+      }
+    },
+    {
+      "episode_id": "a60899a826ac4c4ca0d0511c78701bec",
+      "episode_seed": 118725654,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 908,
+      "physical_completed_captures": 349,
+      "qualified_request_captures": 85,
+      "unique_request_acquisitions": 57,
+      "completed_redundant_request_captures": 28,
+      "physical_deliveries": 221,
+      "quality_qualified_deliveries": 192,
+      "useful_delivered_requests": 5,
+      "unshaped_weighted_science": 30.129143263457873,
+      "redundant_capture_cost": 0.8098667085735294,
+      "radio_occupancy_s": 4804.0,
+      "packet_outcomes": {
+        "accepted": 37
+      }
+    },
+    {
+      "episode_id": "92dfe0095fe448749509b686ab7c17de",
+      "episode_seed": 1501352479,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 857,
+      "physical_completed_captures": 296,
+      "qualified_request_captures": 82,
+      "unique_request_acquisitions": 41,
+      "completed_redundant_request_captures": 41,
+      "physical_deliveries": 96,
+      "quality_qualified_deliveries": 87,
+      "useful_delivered_requests": 13,
+      "unshaped_weighted_science": 18.957787908012733,
+      "redundant_capture_cost": 1.1239507804091629,
+      "radio_occupancy_s": 3164.0,
+      "packet_outcomes": {
+        "accepted": 27
+      }
+    },
+    {
+      "episode_id": "b32ca0c65fbb4970924f5bab15fa8bc5",
+      "episode_seed": 169461329,
+      "simulated_seconds": 45000.0,
+      "true_decisions": 1019,
+      "physical_completed_captures": 516,
+      "qualified_request_captures": 156,
+      "unique_request_acquisitions": 88,
+      "completed_redundant_request_captures": 68,
+      "physical_deliveries": 438,
+      "quality_qualified_deliveries": 392,
+      "useful_delivered_requests": 44,
+      "unshaped_weighted_science": 40.38507597984281,
+      "redundant_capture_cost": 1.662422775640965,
+      "radio_occupancy_s": 3319.0000000000036,
+      "packet_outcomes": {
+        "accepted": 25
+      }
+    }
+  ],
+  "independent_checks": [
+    "full horizons",
+    "unique product identities",
+    "physical ownership and delivery ordering",
+    "seeded active request qualification",
+    "completed duplicate versus unique request acquisition",
+    "physical delivery report consistency",
+    "unshaped acquisition/delivery weighting"
+  ],
+  "comparison": "One communication-enabled sampling run only. No matched control or held-out evaluation; no reduction or policy improvement claim."
+}

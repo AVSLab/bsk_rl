@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "method": "Termius SFTP download with fresh screenshot outer receipt and independent full per-file verification",
+  "archive_bytes": 165373161,
+  "archive_sha256": "56fc99155ddd3b9bf7e82bf61557be3cbe2d1ad94c86a225ad16e966b9b4b261",
+  "manifest_sha256": "67d0cbf342b716b4aa0196f210394ae834f785b404dc6a99acfd1425fb20c5b6",
+  "verified_files": 422,
+  "source_commit": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+  "source_files_verified": 186,
+  "release_sha256": "ec3c3a1ec0a4c26ceab243771daf4bfeb2b18d91ecd1433c50f0778d5b4b9dbc"
+}

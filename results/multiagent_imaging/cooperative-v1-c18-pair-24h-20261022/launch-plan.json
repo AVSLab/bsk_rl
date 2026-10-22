@@ -1,0 +1,40 @@
+{
+  "profile": "cooperative-v1-c18-pair-24h-acceptance-repair-v1",
+  "source_commit": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+  "source_tree": "ed1c9cc998d54e66a3019e5cc5671a98258e68da",
+  "source_files": 186,
+  "verifier_commit": "67664a272f0d1b8e570e9e20975deb8fd175f47c",
+  "envelope_sha256": "7cf9f127a9c9e0c1411693e27b35851eccc96091cf5f6a1df667bee9f1587b91",
+  "account": "ucb550_asc3",
+  "partition": "acpu",
+  "qos": "cpu-normal",
+  "per_arm": {
+    "cpus": 56,
+    "memory_gib": 200,
+    "wall_seconds": 86400,
+    "max_PPO_updates": 200,
+    "max_training_missions": 5600,
+    "max_sampled_true_decisions": 6000000,
+    "remote_env_runners": 28,
+    "local_env_runners": 1,
+    "remote_learners": 0,
+    "torch_threads": 1,
+    "no_requeue": true,
+    "reserved_allocated_cpu_hours": 1344
+  },
+  "pair_reserved_allocated_cpu_hours": 2688,
+  "seed": 3105,
+  "fresh_start_both_arms": true,
+  "treatment_difference_only": "information_case catalog_tx versus geometry_only; transmit/remote receipts disabled in control, model inputs/capacity retained",
+  "configs_sha256": {
+    "catalog_tx": "72584bb7de636580e2a3f96e60caf09de6bb4bcb0b69b90e314f74102552be91",
+    "geometry_only": "abe250934e6c4e8a226e5948bbfb92485d4a02bd8c4499c71cfe3285fbfdf30c"
+  },
+  "canary_independent_acceptance_passed": true,
+  "communication_benefit_proven": false,
+  "user_authorization": "Latest human request authorizes 24-hour training after operational fixes; matched pair tests communication benefit",
+  "scientific_changes_since_canary": [],
+  "runtime_changes": 0,
+  "automatic_successor": false,
+  "submitted": false
+}

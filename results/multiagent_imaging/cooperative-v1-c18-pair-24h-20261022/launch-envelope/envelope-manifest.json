@@ -1,0 +1,21 @@
+{
+  "version": "cooperative-hpo-launch-envelope-v2",
+  "profile": "cooperative-v1-c18-pair-24h-acceptance-repair-v1",
+  "source_commit": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+  "source_checkout_unchanged": true,
+  "original_launcher_sha256": "5a652cb6506ece6d3dba7d1c93163328b85047f7ee228da42f73611f3a2bfb86",
+  "changes": [
+    "External thin entry point passes C18 PPOSettings to unchanged train_run",
+    "Preserve cooperative gamma/lambda and all approved resources/caps",
+    "Distinct c18opt W&B group"
+  ],
+  "files": {
+    "cooperative-hpo.slurm": "6a07cae7ed8c0a1c34db3ff91dd8919c2ab2889c4854d148f8b5262817ef8e45",
+    "cooperative_accept.py": "43c14695d64917cb96014bb87f889bd07acded910fed6cf6361025ad8d0a6107",
+    "hpo-transfer.json": "0768b6a033db1232cc3b3295fd96671b507e3254141b1437aea4c99f4a01795b",
+    "train_hpo_transfer.py": "59fb1df169ee9b6b22be3712671c4f5705843e1b8e045514b4065ed1dfa25d10"
+  },
+  "required_export": "BSK_HPO_ENVELOPE_ROOT",
+  "changes_from_canary": "Only final verifier routing to the canonical qualified worker-schema reader; scientific trainer/config/runtime and C18 optimizer unchanged",
+  "verifier_canonical_commit": "67664a272f0d1b8e570e9e20975deb8fd175f47c"
+}

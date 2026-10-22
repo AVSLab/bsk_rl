@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "original_job_id": "34752183",
+  "original_scheduler_state": "FAILED",
+  "original_failure": "Final evidence reader KeyError: workers; training/restore succeeded",
+  "corrected_independent_acceptance": true,
+  "full_missions": 56,
+  "true_decisions": 59023,
+  "PPO_updates": 2,
+  "cgroup_peak_bytes": 32793788416,
+  "cgroup_peak_gib": 30.541595458984375,
+  "post_restore_included": true,
+  "retained_target_max_abs_error": 0.0,
+  "initial_workers": 29,
+  "stable_topology": true,
+  "runtime_match": true,
+  "checkpoint_bytes_unchanged": true,
+  "WandB": {
+    "evidence_source": {
+      "method": "preserved_Termius_API_snapshot",
+      "observed_utc": "2026-10-21T22:35:08.532565+00:00",
+      "path": "/Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/results/multiagent_imaging/cooperative-v1-canary-b205fc16-20261021/terminal-review/collected/receipts/monitor-20261021T223520451731Z.json",
+      "sha256": "cbd8435a90b67346eee260dc5a44ef9b7b83fedbbcbd3bf623752524bcc24f98"
+    },
+    "id": "efb3c608",
+    "iteration": 2,
+    "passed": true,
+    "state": "finished",
+    "true_decisions": 59023,
+    "url": "https://wandb.ai/daniel-hutererprats-university-of-colorado-boulder/multi-agent-space-imaging/runs/efb3c608"
+  },
+  "sender_transmit_rows_with_later_shared_science": 1034,
+  "sender_association_is_not_causal_credit": true,
+  "local_tests": 366,
+  "tests_log_sha256": "ce24a0a2f5dc2cf188291c106a93d4d7084f79af7e95c874b9fb043e30e97ccb",
+  "actual_allocated_cpu_hours": 44.59777777777778,
+  "communication_benefit_proven": false,
+  "new_training_authorization": "Latest user request authorizes a 24-hour session after operational qualification; use matched pair and report benefit as an open question",
+  "new_jobs_submitted": 0
+}
