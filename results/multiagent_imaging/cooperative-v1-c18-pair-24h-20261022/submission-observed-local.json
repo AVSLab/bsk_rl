@@ -1,0 +1,29 @@
+{
+  "job_ids": {
+    "with_communication": "34768424",
+    "without_communication": "34768425"
+  },
+  "observed_method": "Fresh Termius screenshot of successful parsable submissions and scontrol queued gates",
+  "state": "PENDING",
+  "queued_resource_gates_passed": true,
+  "compute_runtime_accepted": false,
+  "account": "ucb550_asc3",
+  "partition": "acpu",
+  "qos": "cpu-normal",
+  "cpus_per_job": 56,
+  "memory_gib_per_job": 200,
+  "wall_seconds_per_job": 86400,
+  "no_requeue": true,
+  "reserved_allocated_cpu_hours_total": 2688,
+  "source_commit": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+  "source_path": "/projects/dahu1128/bsk_rl-cooperative-v1-c18-pair-b205fc16-20261022",
+  "envelope_commit": "45d17081ad1370b4e17443b241f8f5c96c9b3849",
+  "envelope_sha256": "7cf9f127a9c9e0c1411693e27b35851eccc96091cf5f6a1df667bee9f1587b91",
+  "evidence_root": "/projects/dahu1128/cooperative-v1-c18-pair-24h-evidence-20261022",
+  "output_root": "/scratch/alpine/dahu1128/cooperative-v1-c18-pair-24h-20261022",
+  "verifier_sha256": "43c14695d64917cb96014bb87f889bd07acded910fed6cf6361025ad8d0a6107",
+  "canary_independently_passed": true,
+  "communication_benefit_proven": false,
+  "exact_submissions": 2,
+  "no_automatic_successor": true
+}
