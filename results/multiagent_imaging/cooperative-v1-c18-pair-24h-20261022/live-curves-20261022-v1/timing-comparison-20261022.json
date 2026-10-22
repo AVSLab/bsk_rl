@@ -1,0 +1,31 @@
+{
+  "observed_utc": "2026-10-22T18:28:13.356626+00:00",
+  "input_sha256": "fb75a9cae496e01245750d50a0155b9d826c5479c96aa1bcba14b59838cf0e09",
+  "snapshot_utc": "2026-10-22T13:37:58.155016+00:00",
+  "measurement_scope": "algorithm.train wall time; sampling and learning combined, excludes later checkpoint/audit/logging",
+  "missions_per_batch": 28,
+  "episode_duration_s": 45000,
+  "arms": {
+    "with_communication": {
+      "completed_updates": 26,
+      "mean_train_call_minutes": 19.44329191854937,
+      "true_decisions_per_episode": 1098.4299450549452,
+      "first_26_train_wall_s": 30331.535392937018,
+      "first_26_true_decisions": 799657,
+      "first_26_missions": 728
+    },
+    "without_communication": {
+      "completed_updates": 34,
+      "mean_train_call_minutes": 15.047022735551982,
+      "true_decisions_per_episode": 1069.7468487394958,
+      "first_26_train_wall_s": 23226.53559364425,
+      "first_26_true_decisions": 784950,
+      "first_26_missions": 728
+    }
+  },
+  "causal_profile_available": false,
+  "new_jobs": 0,
+  "new_PPO_updates": 0,
+  "first_26_time_ratio": 1.3059001102702976,
+  "first_26_decision_ratio": 1.0187362252372762
+}

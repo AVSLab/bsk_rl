@@ -1,0 +1,14 @@
+{
+  "observed_utc": "2026-10-22T18:28:13.361605+00:00",
+  "fresh_remote_health_verified": false,
+  "initial_error": "Sky Computer Use service startup request failed",
+  "bounded_recovery": "Native inventory refresh and Termius rebinding succeeded; terminal-input operation returned but screenshot did not advance; visible-coordinate input then returned noWindowsAvailable",
+  "final_error": "Computer Use server error -10005: noWindowsAvailable",
+  "monitor_execution_unverified": true,
+  "last_verified_health_file": "health-observed-20261022T180703Z.json",
+  "new_jobs_submitted": 0,
+  "jobs_cancelled": 0,
+  "runtime_source_science_changes": 0,
+  "monitoring_paused_pending_user_unlock_foreground_confirmation": true,
+  "user_asked_once_this_block": true
+}
