@@ -36,7 +36,8 @@ Training
 .. toctree::
    :maxdepth: 1
 
-   rllib_training
+   rllib_training 
+   dqn_training
    time_discounted_gae
    async_multiagent_training
    curriculum_learning
