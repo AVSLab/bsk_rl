@@ -1,0 +1,30 @@
+{
+  "version": "frozen-evaluation-launch-preparation-v1",
+  "prepared_source_commit": "00c18ecb8adbf3dc5719b33956f391e030b5be17",
+  "trained_source_commit": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+  "release_sha256": "fdb6367eecf577046b1f6603f74227a8235fbcf4cb071dc8e6122079eb204c9f",
+  "plan_sha256": "a272868e54063b27f2babc28c0ab76fb4d66926d4e323d0c871ecc889dfbbc38",
+  "script": "examples/multiagent_imaging/cluster/frozen_evaluation.slurm",
+  "script_sha256": "3f6fd93594bb2b5af57cdad74ade7450668f06e2e502a322256359d5bf3b4e4a",
+  "status": "PREPARED_NOT_SUBMITTED",
+  "budget_approval_required": true,
+  "terminal_qualification_required": true,
+  "account": "ucb550_asc3",
+  "partition": "acpu",
+  "qos": "cpu-normal",
+  "cpus": 16,
+  "memory_gib": 64,
+  "wall_seconds": 7200,
+  "total_allocated_cpu_hours": 32,
+  "full_missions": 32,
+  "new_PPO_updates": 0,
+  "separate_launch_approval_received": false,
+  "allocation_verification": "Existing 24-hour pair association verified; evaluation allocation limits must be rechecked through read-only Termius before launch",
+  "execution_identity": "Deploy fresh immutable evaluation checkout at prepared_source_commit. Do not replace the running b205 training source.",
+  "command_template": "sbatch --account=ucb550_asc3 examples/multiagent_imaging/cluster/frozen_evaluation.slurm REVIEWED_RELEASE.json PLAN.json QUALIFICATION.json FRESH_OUTPUT",
+  "blocked_by": [
+    "Training jobs not terminal; final checkpoints, full numerical audit, restore and final cost receipts pending",
+    "Separate evaluation budget/launch approval pending",
+    "Latest Termius refresh blocked by locked Mac"
+  ]
+}

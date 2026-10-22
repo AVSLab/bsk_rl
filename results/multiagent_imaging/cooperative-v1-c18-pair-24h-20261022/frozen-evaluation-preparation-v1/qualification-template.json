@@ -1,0 +1,31 @@
+{
+  "version": "cooperative-pair-terminal-qualification-v1",
+  "passed": false,
+  "reason": "Both training jobs remain running; terminal raw transfers, independent numerical audits, restore and final costs are pending.",
+  "training_episode_seeds": [],
+  "reserved_worker_seed_intervals": [],
+  "arms": {
+    "with_communication": {
+      "job_id": "34768424",
+      "terminal_state": null,
+      "exit_code": null,
+      "source_commit": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+      "acceptance_path": null,
+      "acceptance_sha256": null,
+      "initial_checkpoint": null,
+      "final_checkpoint": null,
+      "checkpoint_sha256": {}
+    },
+    "without_communication": {
+      "job_id": "34768425",
+      "terminal_state": null,
+      "exit_code": null,
+      "source_commit": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+      "acceptance_path": null,
+      "acceptance_sha256": null,
+      "initial_checkpoint": null,
+      "final_checkpoint": null,
+      "checkpoint_sha256": {}
+    }
+  }
+}

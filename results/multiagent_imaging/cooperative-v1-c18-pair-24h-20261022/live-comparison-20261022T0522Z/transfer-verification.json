@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "method": "Termius SFTP download; expected outer bytes and SHA256 read from fresh screenshot",
+  "file": "comparison-20261022T052235301178Z.json.gz",
+  "bytes": 3032702,
+  "sha256": "6034e6d15a6ce4dfa01f593f6edfdf0008a59642db23692c56c9fef73529107a",
+  "expected_bytes": 3032702,
+  "expected_sha256": "6034e6d15a6ce4dfa01f593f6edfdf0008a59642db23692c56c9fef73529107a",
+  "raw_terminal_collection": false,
+  "original_input_file_manifest_preserved_inside_projection": true
+}

@@ -1,0 +1,76 @@
+{
+  "version": "cooperative-frozen-abcd-v1",
+  "source_commit": "b205fc1603b5ca887aaadcb3c34de2700d563c0c",
+  "jobs": {
+    "with_communication": "34768424",
+    "without_communication": "34768425"
+  },
+  "seeds": [
+    9000101,
+    9000102,
+    9000103,
+    9000104
+  ],
+  "modes": [
+    "argmax",
+    "stochastic"
+  ],
+  "conditions": [
+    {
+      "label": "A",
+      "arm": "with_communication",
+      "checkpoint_selector": "final_checkpoint",
+      "config": "examples/multiagent_imaging/configs/cooperative_v1_shared_catalog_tx.json",
+      "config_sha256": "72584bb7de636580e2a3f96e60caf09de6bb4bcb0b69b90e314f74102552be91",
+      "metadata_intervention": "normal"
+    },
+    {
+      "label": "B",
+      "arm": "with_communication",
+      "checkpoint_selector": "final_checkpoint",
+      "config": "examples/multiagent_imaging/configs/cooperative_v1_shared_catalog_tx.json",
+      "config_sha256": "72584bb7de636580e2a3f96e60caf09de6bb4bcb0b69b90e314f74102552be91",
+      "metadata_intervention": "suppress_receiver_catalog_v1"
+    },
+    {
+      "label": "C",
+      "arm": "without_communication",
+      "checkpoint_selector": "final_checkpoint",
+      "config": "examples/multiagent_imaging/configs/cooperative_v1_shared_geometry_only.json",
+      "config_sha256": "abe250934e6c4e8a226e5948bbfb92485d4a02bd8c4499c71cfe3285fbfdf30c",
+      "metadata_intervention": "normal"
+    },
+    {
+      "label": "D",
+      "arm": "with_communication",
+      "checkpoint_selector": "initial_checkpoint",
+      "config": "examples/multiagent_imaging/configs/cooperative_v1_shared_catalog_tx.json",
+      "config_sha256": "72584bb7de636580e2a3f96e60caf09de6bb4bcb0b69b90e314f74102552be91",
+      "metadata_intervention": "normal"
+    }
+  ],
+  "expected_missions": 32,
+  "horizon_s": 45000,
+  "new_PPO_updates": 0,
+  "maximum_workers": 8,
+  "torch_threads": 1,
+  "proposed_allocation": {
+    "account": "ucb550_asc3",
+    "partition": "acpu",
+    "qos": "cpu-normal",
+    "cpus": 16,
+    "memory_gib": 64,
+    "wall_seconds": 7200,
+    "allocated_cpu_hours": 32,
+    "no_requeue": true
+  },
+  "submitted": false,
+  "terminal_qualification_pending": true,
+  "interpretation": {
+    "A_minus_C": "trained policies; report differing actual training experience",
+    "A_minus_B": "receiver information intervention; same frozen weights and physical TX mechanism",
+    "A_minus_D": "communication-policy training progress on unseen scenarios",
+    "B": "Successful transport and ideal ACK remain; only receiver catalog updates are suppressed. Not packet loss.",
+    "scope": "Four scenario seeds, one training seed per arm. Exploratory, not training-seed generalization."
+  }
+}

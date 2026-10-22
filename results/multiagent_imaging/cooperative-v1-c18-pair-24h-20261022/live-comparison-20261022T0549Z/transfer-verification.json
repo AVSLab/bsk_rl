@@ -1,0 +1,10 @@
+{
+  "transport": "Termius SFTP",
+  "archive_path": "/Users/dahu1128/Repositories/bsk_rl-multi-agent-space-imaging-2026/results/multiagent_imaging/cooperative-v1-c18-pair-24h-20261022/live-comparison-20261022T0522Z/download/comparison-20261022T054955176693Z.json.gz",
+  "expected_bytes": 4864870,
+  "actual_bytes": 4864870,
+  "sha256": "51e5b6adfd69e52c37d7b530f5ebf96e204ad55e75c104298fff694e84835aa8",
+  "verified": true,
+  "remote_receipt_screenshot_verified": true,
+  "terminal_archive": false
+}

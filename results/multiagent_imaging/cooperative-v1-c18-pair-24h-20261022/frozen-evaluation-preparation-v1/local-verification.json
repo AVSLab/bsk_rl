@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "unit_tests": 411,
+  "new_PPO_updates": 0,
+  "new_native_missions": 0,
+  "new_cluster_jobs": 0,
+  "tests_log_sha256": "4e36f48802f9e3d81124b5a8b411281a597d3693808d92b3b26653e8eb48c3d9",
+  "native_fixture_reused": "native-replay-1-episode.json.gz",
+  "new_intervention_qualification": "Transport/catalog unit tests, bounded private-flow probes and existing native episode reconstruction; full held-out native comparison not executed",
+  "runtime_changes": 0,
+  "active_source_changed": false,
+  "script_syntax_passed": true
+}

@@ -1,0 +1,9 @@
+{
+  "status": "PAUSED_PENDING_MAC_UNLOCK",
+  "reason": "Termius control reported locked Mac; distinct app reacquisition also reported locked Mac",
+  "minimum_input": "Unlock the Mac and leave authenticated Termius open; no credentials needed",
+  "training_jobs_cancelled": false,
+  "latest_independently_verified_comparison": "live-comparison-20261022T0549Z/comparison.json",
+  "live_status_not_reverified_after": "2026-10-22T05:49:55Z",
+  "recorded_utc": "2026-10-22T10:13:19Z"
+}
