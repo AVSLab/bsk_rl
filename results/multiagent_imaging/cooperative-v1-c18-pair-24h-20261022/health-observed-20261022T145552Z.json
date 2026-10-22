@@ -1,0 +1,49 @@
+{
+  "observation_method": "Fresh Termius screenshot readback",
+  "new_jobs_submitted": 0,
+  "wandb_API_queried_this_check": false,
+  "remote_snapshot_transfer_pending": true,
+  "terminal_audit": false,
+  "arms": {
+    "with_communication": {
+      "job_id": "34768424",
+      "observed_utc": "2026-10-22T14:55:51.590821Z",
+      "state": "RUNNING",
+      "elapsed": "10:38:53",
+      "job_cgroup_current_bytes": 77656715264,
+      "job_cgroup_peak_bytes": 80685305856,
+      "job_cgroup_limit_bytes": 214748364800,
+      "job_cgroup_failcnt": 0,
+      "topology": "worker-topology-0029.json",
+      "topology_passed": true,
+      "actor_restart_count": 0,
+      "changed_process_indices": [],
+      "expected_worker_PIDs": 29,
+      "missing_worker_PIDs": [],
+      "failed_gates": [],
+      "remote_snapshot": "monitor-with_communication-20261022T145552052057Z.json",
+      "remote_snapshot_sha256": "3b3fa7ffaf2d96e53e19d8922ac61b52ec7af5c315eba1b2485a465962d85776",
+      "restore_and_terminal_acceptance_pending": true
+    },
+    "without_communication": {
+      "job_id": "34768425",
+      "observed_utc": "2026-10-22T14:55:52.063241Z",
+      "state": "RUNNING",
+      "elapsed": "10:38:24",
+      "job_cgroup_current_bytes": 92154380288,
+      "job_cgroup_peak_bytes": 95279521792,
+      "job_cgroup_limit_bytes": 214748364800,
+      "job_cgroup_failcnt": 0,
+      "topology": "worker-topology-0038.json",
+      "topology_passed": true,
+      "actor_restart_count": 0,
+      "changed_process_indices": [],
+      "expected_worker_PIDs": 29,
+      "missing_worker_PIDs": [],
+      "failed_gates": [],
+      "remote_snapshot": "monitor-without_communication-20261022T145552534705Z.json",
+      "remote_snapshot_sha256": "e0d35ff45bebd64d31fe92333775b7c10aa2d832a35cfa6f765f40b2addab0ea",
+      "restore_and_terminal_acceptance_pending": true
+    }
+  }
+}
