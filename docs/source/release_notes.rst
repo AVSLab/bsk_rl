@@ -14,6 +14,8 @@ Development - |version|
   overlapping assignments and passive target spacecraft. Communication shares
   channel data while preserving local data production and reward attribution.
   See :doc:`the mixed ground and space imaging example <examples/mixed_environment>`.
+* Add :doc:`the DQN training example <examples/dqn_training>`, which trains a DQN agent
+  in plain PyTorch using semi-MDP time discounting (``gamma ** d_ts``) in the TD target.
 * Add :doc:`the space-to-space imaging example <examples/space_to_space_rso_imaging>`
   for independently orbiting spacecraft:
   replayable RSO catalogs, explicitly named observers, moving-target access,
