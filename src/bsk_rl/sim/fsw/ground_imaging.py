@@ -1,5 +1,6 @@
 """FSW models for ground imaging scenarios."""
 
+import logging
 from typing import TYPE_CHECKING, Iterable
 
 import numpy as np
@@ -9,6 +10,7 @@ from Basilisk.fswAlgorithms import (
     scanningInstrumentController,
     simpleInstrumentController,
 )
+from Basilisk.utilities import macros as mc
 
 from bsk_rl.sim import dyn
 from bsk_rl.sim.fsw import BasicFSWModel, SteeringFSWModel, Task, action
@@ -18,6 +20,8 @@ from bsk_rl.utils.orbital import rv2HN
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sim.dyn import DynamicsModelABC
+
+logger = logging.getLogger(__name__)
 
 
 class ImagingFSWModel(BasicFSWModel):
@@ -76,6 +80,7 @@ class ImagingFSWModel(BasicFSWModel):
         def _setup_fsw_objects(self, **kwargs) -> None:
             self.setup_location_pointing(**kwargs)
             self.setup_instrument_controller(**kwargs)
+            self.setup_instrument_time_tolerance(**kwargs)
             self.show_sensor()
 
         @default_args(inst_pHat_B=[0, 0, 1])
@@ -140,6 +145,50 @@ class ImagingFSWModel(BasicFSWModel):
 
             self._add_model_to_task(self.insControl, priority=987)
 
+        @default_args(timeToleranceLower=0, timeToleranceUpper=0)
+        def setup_instrument_time_tolerance(
+            self,
+            timeToleranceLower: float | int = 0,
+            timeToleranceUpper: float | int = 0,
+            **kwargs,
+        ):
+            """Set the instrument controller time tolerance.
+
+            The instrument controller will only trigger an image if the current time is within
+            the time tolerance window. This is useful for scheduling imaging at a specific time.
+
+            Args:
+                timeToleranceLower: [s] Allowed time before the desired imaging time.
+                    Zero disables the lower time bound.
+                timeToleranceUpper: [s] Allowed time after the desired imaging time.
+                    Zero disables the upper time bound.
+                kwargs: Passed to other setup functions.
+
+            Raises:
+                ValueError: If either tolerance is negative, or non-finite.
+            """
+            tolerances_ns = {}
+            for name, value in (
+                ("timeToleranceLower", timeToleranceLower),
+                ("timeToleranceUpper", timeToleranceUpper),
+            ):
+                bound = "lower" if name == "timeToleranceLower" else "upper"
+                if not np.isfinite(value) or value < 0:
+                    raise ValueError(
+                        f"{name} must be finite and nonnegative; "
+                        f"0 disables the {bound} time bound."
+                    )
+                tolerances_ns[name] = mc.sec2nano(value)
+
+            try:
+                self.insControl.timeToleranceLower = tolerances_ns["timeToleranceLower"]
+                self.insControl.timeToleranceUpper = tolerances_ns["timeToleranceUpper"]
+            except Exception as e:
+                logger.warning(
+                    "insControl.timeTolerance not available; continuing without it (reason: %s)",
+                    e,
+                )
+
         @vizard.visualize
         def show_sensor(self, vizInterface=None, vizSupport=None):
             """Visualize the sensor in Vizard."""
@@ -163,7 +212,9 @@ class ImagingFSWModel(BasicFSWModel):
             return super().reset_for_action()
 
     @action
-    def action_image(self, r_LP_P: Iterable[float], data_name: str) -> None:
+    def action_image(
+        self, r_LP_P: Iterable[float], data_name: str, imaging_time: float | None = None
+    ) -> None:
         """Attempt to image a target at a location.
 
         This action sets the target attitude to one tracking a ground location. If the
@@ -174,8 +225,21 @@ class ImagingFSWModel(BasicFSWModel):
         Args:
             r_LP_P: [m] Planet-fixed planet relative target location.
             data_name: Data buffer to store image data to.
+            imaging_time: [s] Desired capture offset from the current simulation
+                time, not an exposure duration. If None, retain the controller's
+                existing imaging time and tolerances.
         """
         self.insControl.controllerStatus = 1
+        if imaging_time is not None:
+            try:
+                self.insControl.imagingTime = mc.sec2nano(
+                    imaging_time + self.simulator.sim_time
+                )
+            except Exception as e:
+                logger.warning(
+                    "insControl.imagingTime not available; proceeding without setting it (reason: %s)",
+                    e,
+                )
         self.dynamics.instrumentPowerSink.powerStatus = 1
         self.dynamics.imagingTarget.r_LP_P_Init = r_LP_P
         self.dynamics.instrument.nodeDataName = data_name
