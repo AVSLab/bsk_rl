@@ -97,14 +97,28 @@ handles the combination of multiple reward systems.
 """
 
 from bsk_rl.data.base import GlobalReward
+from bsk_rl.data.composition import MixedData, MixedDataStore, MixedReward
 from bsk_rl.data.nadir_data import ScanningTimeReward
 from bsk_rl.data.no_data import NoReward
 from bsk_rl.data.resource_data import ResourceReward
+from bsk_rl.data.rso_imaging import (
+    RSOImageData,
+    RSOImageRecord,
+    RSOImageReward,
+    RSOImageStore,
+)
 from bsk_rl.data.rso_inspection import RSOInspectionReward
 from bsk_rl.data.unique_image_data import UniqueImageReward
 
 __doc_title__ = "Data & Reward"
 __all__ = [
+    "MixedData",
+    "MixedDataStore",
+    "MixedReward",
+    "RSOImageRecord",
+    "RSOImageData",
+    "RSOImageStore",
+    "RSOImageReward",
     "GlobalReward",
     "NoReward",
     "UniqueImageReward",

@@ -15,16 +15,28 @@ For RSO Inspection tasks, the following scenario has been implemented:
 These RSO scenarios can be used with :class:`RSOInspectionReward`.
 """
 
+from bsk_rl.scene.composition import MixedScenario
 from bsk_rl.scene.rso_points import RSOPoints, SphericalRSO
+from bsk_rl.scene.rso_targets import (
+    RSOPriorityEvent,
+    RSOTarget,
+    RSOTargetCatalog,
+    RSOTargets,
+)
 from bsk_rl.scene.scenario import Scenario, UniformNadirScanning
 from bsk_rl.scene.targets import CityTargets, UniformTargets
 
 __doc_title__ = "Scenario"
 __all__ = [
+    "MixedScenario",
     "Scenario",
     "UniformTargets",
     "CityTargets",
     "UniformNadirScanning",
     "RSOPoints",
     "SphericalRSO",
+    "RSOTarget",
+    "RSOTargetCatalog",
+    "RSOPriorityEvent",
+    "RSOTargets",
 ]

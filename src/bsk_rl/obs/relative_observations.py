@@ -3,7 +3,7 @@
 from typing import Any
 
 import numpy as np
-from Basilisk.utilities.RigidBodyKinematics import MRP2C
+from Basilisk.utilities.RigidBodyKinematics import C2MRP, MRP2C
 
 from bsk_rl.obs import Observation
 from bsk_rl.utils.orbital import rv2HN, rv2omega
@@ -85,6 +85,19 @@ def sigma_HdHc(deputy, chief):
 # TODO Could probably make some thing that generates these and other relative properties
 # (i.e. whether to use body or hill frame for each sat, what
 # frame to express in)
+
+
+def rso_sigma_BH(_, rso):
+    """RSO body attitude relative to its Hill frame as MRPs."""
+    BN = rso.dynamics.BN
+    HN = rso.dynamics.HN
+    BH = BN @ HN.T
+    return C2MRP(BH)
+
+
+def rso_omega_BH(_, rso):
+    """RSO body rate relative to its Hill frame in Hill coordinates [rad/s]."""
+    return rso.dynamics.omega_BH_H
 
 
 def rso_imaged_regions(
@@ -236,5 +249,7 @@ __all__ = [
     "sigma_DHc",
     "sigma_HdC",
     "sigma_HdHc",
+    "rso_sigma_BH",
+    "rso_omega_BH",
     "rso_imaged_regions",
 ]

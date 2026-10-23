@@ -22,6 +22,8 @@ class RSOSat(sats.Satellite):
 class InspectorSat(sats.Satellite):
     observation_spec: ClassVar[list[obs.Observation]] = [
         obs.RelativeProperties(
+            dict(prop="rso_sigma_BH", norm=1.0),
+            dict(prop="rso_omega_BH", norm=0.01),
             dict(
                 prop="rso_imaged_regions",
                 fn=partial(
@@ -95,6 +97,12 @@ def test_inspection():
     )
 
     observation, _ = env.reset()
+    assert observation["Inspector"]["rel_props"]["rso_sigma_BH"].shape == (3,)
+    assert observation["Inspector"]["rel_props"]["rso_omega_BH_normd"].shape == (3,)
+    assert np.all(np.isfinite(observation["Inspector"]["rel_props"]["rso_sigma_BH"]))
+    assert np.all(
+        np.isfinite(observation["Inspector"]["rel_props"]["rso_omega_BH_normd"])
+    )
     in_eclipse_start = (
         observation["Inspector"]["eclipse"][0] > observation["Inspector"]["eclipse"][1]
     )

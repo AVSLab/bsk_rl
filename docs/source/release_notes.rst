@@ -5,6 +5,39 @@ Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
 
+* Add ``block_pending_targets=False`` to :class:`~bsk_rl.scene.RSOTargets`
+  to allow reimaging before downlink, preserving cooldowns and image/reward
+  bookkeeping. Pending targets remain blocked by default. See issue #364.
+* Add :class:`~bsk_rl.scene.MixedScenario` and :class:`~bsk_rl.data.MixedReward`
+  to combine independent scenarios and rewarders with different data types.
+  Explicit scenario and reward-channel IDs bind named satellite groups, including
+  overlapping assignments and passive target spacecraft. Communication shares
+  channel data while preserving local data production and reward attribution.
+  See :doc:`the mixed ground and space imaging example <examples/mixed_environment>`.
+* Add :doc:`the space-to-space imaging example <examples/space_to_space_rso_imaging>`
+  for independently orbiting spacecraft:
+  replayable RSO catalogs, explicitly named observers, moving-target access,
+  continuous and cumulative acquisition holds, optional ground-station downlink,
+  independently sized target observations and image actions, owned image ledgers, configurable
+  acquisition/delivery rewards, and replayable policy evaluation with plots.
+  Acquisition currently uses a temporary BSK-RL gate; adopting the proposed
+  Basilisk controller update is tracked in `#358
+  <https://github.com/AVSLab/bsk_rl/issues/358>`_.
+  Existing RSO surface-point inspection is unchanged.
+* Validate satellite names at construction and renaming so simulator events use
+  those names directly. Names must be valid Python identifiers, for example
+  ``EO_1`` rather than ``EO-1``. Target catalog IDs may still contain punctuation.
+  RSO image rewards default to full priority credit after complete downlink;
+  acquisition shaping is available through explicit reward callbacks.
+* Fix incorrect eclipse-observation test assertions that assumed countdowns could
+  not increase across a long step. The tests now use the same simulation start
+  date, orbit, and random seed on every run, so the results are repeatable.
+  They check shadow entry and countdown rollover to later orbits.
+  Eclipse prediction is unchanged.
+  See `#359 <https://github.com/AVSLab/bsk_rl/issues/359>`_.
+* Fix a bug where condensing ``NO_ACTION`` steps for sMDP discounting dropped the
+  final observation and ``d_ts``, and could give the last super-action an empty
+  reward. See issue #248.
 * Fix a bug where extending an access opportunity window across a generation seam
   could leave the satellite's ``opportunities`` list out of close-time order, which
   corrupted ``bisect``-based opportunity lookups. See issue #205.
@@ -17,6 +50,7 @@ Development - |version|
 * Update ``np2EigenMatrix3d`` and ``np2EigenVectorXd`` import path to prevent deprecation warning while preserving compatibility with older versions of Basilisk.
 * Allow :func:`~bsk_rl.utils.functional.aliveness_checker` to run as a continuous Basilisk
   event that interrupts the environment step on failure. See issue #337.
+* Add support for configurable RSO attitude dynamics and new relative attitude observations, enabling inspection of spinning and tumbling targets. Update the `RSO Inspection <examples/rso_inspection.ipynb>`_ example to demonstrate non-nadir-pointing targets. See issue #355.
 
 Version 1.3.0
 -------------

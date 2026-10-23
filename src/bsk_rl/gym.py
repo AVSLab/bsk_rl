@@ -36,10 +36,18 @@ def is_no_action(action):
     """Check if the action is a no-action placeholder."""
     if action is None:
         return True
-    if isinstance(action, (int, np.integer)) and action == NO_ACTION:
-        return True
-    if isinstance(action, (np.ndarray, list, tuple)) and np.allclose(action, NO_ACTION):
-        return True
+    if isinstance(action, (int, np.integer)):
+        return int(action) == NO_ACTION
+    if isinstance(action, (float, np.floating)):
+        # float32 cannot represent 2**31-1 exactly
+        return bool(np.isclose(action, NO_ACTION, rtol=0.0, atol=1.0))
+    if isinstance(action, (np.ndarray, list, tuple)):
+        arr = np.asarray(action)
+        if arr.size == 0:
+            return False
+        if np.issubdtype(arr.dtype, np.integer):
+            return bool(np.all(arr == NO_ACTION))
+        return bool(np.all(np.isclose(arr, NO_ACTION, rtol=0.0, atol=1.0)))
     return False
 
 
@@ -48,6 +56,16 @@ def no_action_like(action):
     if isinstance(action, (int, np.integer)):
         return NO_ACTION
     return action * 0 + NO_ACTION  # Aggressively try to convert while retaining type
+
+
+def no_action_keep_indices(actions, n_observations):
+    """Return action and observation indices after dropping ``NO_ACTION`` steps.
+
+    The final observation is always kept so the last ``d_ts`` is not lost when
+    an episode (or chunk) ends on ``NO_ACTION``.
+    """
+    action_idx = [i for i, action in enumerate(actions) if not is_no_action(action)]
+    return action_idx, action_idx + [n_observations - 1]
 
 
 class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
@@ -142,6 +160,8 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
 
         if isinstance(satellites, Satellite):
             satellites = [satellites]
+        if scenario is not None:
+            scenario.validate_satellite_names(satellites)
         self.satellites = deepcopy(satellites)
 
         self.dtype = dtype
@@ -512,6 +532,7 @@ class GeneralSatelliteTasking(Env, Generic[SatObs, SatAct]):
         }
         self.reward_dict = self.rewarder.reward(new_data)
 
+        self.scenario.after_step(self.simulator.sim_time)
         self.communicator.communicate()
 
         for satellite in self.satellites:

@@ -28,7 +28,7 @@ def test_multi_rewarder():
         "GeneralSatelliteTasking-v1",
         satellites=[
             FullFeaturedSatellite(
-                "Sentinel-2A",
+                "Sentinel_2A",
                 sat_args=FullFeaturedSatellite.default_sat_args(
                     oe=random_orbit,
                     imageAttErrorRequirement=0.01,
@@ -36,7 +36,7 @@ def test_multi_rewarder():
                 ),
             ),
             FullFeaturedSatellite(
-                "Sentinel-2B",
+                "Sentinel_2B",
                 sat_args=FullFeaturedSatellite.default_sat_args(
                     oe=random_orbit,
                     imageAttErrorRequirement=0.01,

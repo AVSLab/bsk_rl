@@ -47,7 +47,7 @@ class FullFeaturedSatellite(sats.ImagingSatellite):
 def make_communication_env(oes, comm_type):
     satellites = [
         FullFeaturedSatellite(
-            "EO-1",
+            "EO_1",
             sat_args=FullFeaturedSatellite.default_sat_args(
                 oe=oe,
                 imageAttErrorRequirement=0.05,

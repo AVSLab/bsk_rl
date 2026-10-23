@@ -79,6 +79,7 @@ from bsk_rl.act.discrete_actions import (
     NadirPoint,
     Scan,
 )
+from bsk_rl.act.rso_imaging import ImageRSO
 
 __doc_title__ = "Actions"
 __all__ = [
@@ -91,6 +92,7 @@ __all__ = [
     "Desat",
     "Downlink",
     "Image",
+    "ImageRSO",
     "Scan",
     "Broadcast",
     "ContinuousAction",

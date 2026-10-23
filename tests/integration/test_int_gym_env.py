@@ -102,11 +102,11 @@ class TestGeneralSatelliteTasking:
         "GeneralSatelliteTasking-v1",
         satellites=[
             DoNothingSatellite(
-                "Sentinel-2A",
+                "Sentinel_2A",
                 sat_args=DoNothingSatellite.default_sat_args(oe=random_orbit),
             ),
             DoNothingSatellite(
-                "Sentinel-2B",
+                "Sentinel_2B",
                 sat_args=DoNothingSatellite.default_sat_args(oe=random_orbit),
             ),
         ],

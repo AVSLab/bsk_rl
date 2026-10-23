@@ -84,6 +84,39 @@ class TestSatellite:
             sat.sat_args_generator, {"a": 1, "b": 2, "c": 3, "d": np.array([4, 5])}
         )
 
+    @pytest.mark.parametrize("name", ["", None, 83])
+    def test_invalid_name_fails_at_construction(self, name):
+        with pytest.raises(ValueError, match="nonempty string"):
+            sats.Satellite(name=name)
+
+    @pytest.mark.parametrize("name", ["camera-a", "camera a", "83", "class"])
+    def test_invalid_identifier_fails_at_construction_and_renaming(self, name):
+        with pytest.raises(ValueError, match="valid Python identifier"):
+            sats.Satellite(name=name)
+        sat = sats.Satellite(name="camera_a")
+        with pytest.raises(ValueError, match="valid Python identifier"):
+            sat.name = name
+        assert sat.name == "camera_a"
+
+    def test_deadline_events_use_the_validated_name_after_renaming(self):
+        sat = sats.Satellite(name="camera_a")
+        sat.simulator = MagicMock(eventMap={}, sim_rate=1.0)
+        sat.simulator.createNewEvent.side_effect = (
+            lambda name, *args, **kwargs: sat.simulator.eventMap.setdefault(
+                name, MagicMock()
+            )
+        )
+        sat.update_timed_terminal_event(10.0)
+        assert sat._timed_terminal_event_name == "timed_terminal_camera_a"
+        sat.update_timed_terminal_event(20.0)
+        assert sat._timed_terminal_event_name == "timed_terminal_camera_a"
+        assert sat.simulator.createNewEvent.call_args.kwargs["conditionTime"] == (
+            macros.sec2nano(20.0)
+        )
+        sat.name = "renamed_camera"
+        sat.update_timed_terminal_event(30.0)
+        assert sat._timed_terminal_event_name == "timed_terminal_renamed_camera"
+
     def test_generate_sat_args(self):
         sat = sats.Satellite(
             name="TestSat",

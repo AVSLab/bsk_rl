@@ -6,7 +6,59 @@ from gymnasium import spaces
 
 from bsk_rl import ConstellationTasking, GeneralSatelliteTasking, SatelliteTasking
 from bsk_rl.data.composition import ComposedReward
+from bsk_rl.gym import NO_ACTION, is_no_action, no_action_keep_indices, no_action_like
 from bsk_rl.sats import Satellite
+
+
+@pytest.mark.parametrize(
+    "action,expected",
+    [
+        (None, True),
+        (NO_ACTION, True),
+        (np.int64(NO_ACTION), True),
+        (float(NO_ACTION), True),
+        (np.array(NO_ACTION), True),
+        (np.array([NO_ACTION, NO_ACTION]), True),
+        ([NO_ACTION], True),
+        (np.float32(NO_ACTION), True),
+        (np.array([NO_ACTION, NO_ACTION], dtype=np.float32), True),
+        (0, False),
+        (1, False),
+        (NO_ACTION - 1, False),
+        (NO_ACTION + 1, False),
+        (np.array([NO_ACTION - 1]), False),
+        (np.array([]), False),
+        (np.array([0.0, 1.0]), False),
+    ],
+)
+def test_is_no_action(action, expected):
+    assert is_no_action(action) is expected
+
+
+def test_no_action_like():
+    assert no_action_like(0) == NO_ACTION
+    assert np.allclose(no_action_like(np.array([1.0, 2.0])), NO_ACTION)
+
+
+@pytest.mark.parametrize(
+    "actions,action_idx",
+    [
+        ([0, 1, 2], [0, 1, 2]),
+        ([0, NO_ACTION, NO_ACTION, 1, NO_ACTION], [0, 3]),
+        ([0, NO_ACTION, 1], [0, 2]),
+        ([NO_ACTION, 0, 1], [1, 2]),
+        ([NO_ACTION, NO_ACTION, 0], [2]),
+        ([0], [0]),
+        ([NO_ACTION], []),
+        ([NO_ACTION, NO_ACTION], []),
+        ([0, NO_ACTION, 1, NO_ACTION, 2], [0, 2, 4]),
+    ],
+)
+def test_no_action_keep_indices(actions, action_idx):
+    n_obs = len(actions) + 1
+    got_action_idx, obs_idx = no_action_keep_indices(actions, n_obs)
+    assert got_action_idx == action_idx
+    assert obs_idx == action_idx + [n_obs - 1]
 
 
 class TypeA:
@@ -238,6 +290,27 @@ class TestGeneralSatelliteTasking:
         for sat in mock_sats:
             sat.data_store.update_from_logs.assert_called_once()
         assert reward == 25.0
+
+    @pytest.mark.parametrize(
+        "idle_action",
+        [NO_ACTION, None, np.int64(NO_ACTION), np.array([NO_ACTION, NO_ACTION])],
+    )
+    def test_step_no_action(self, idle_action):
+        mock_sats = [MagicMock() for _ in range(2)]
+        env = GeneralSatelliteTasking(
+            satellites=mock_sats,
+            scenario=MagicMock(),
+            communicator=MagicMock(),
+            rewarder=MagicMock(
+                reward=MagicMock(return_value={sat.name: 12.5 for sat in mock_sats})
+            ),
+        )
+        env._randomize_time_limit()
+        mock_sats = env.satellites
+        env.unwrapped.simulator = MagicMock(sim_time=101.0)
+        env.step((idle_action, 10))
+        mock_sats[0].set_action.assert_not_called()
+        mock_sats[1].set_action.assert_called_once_with(10)
 
     def test_step_bad_action(self):
         mock_sats = [MagicMock() for _ in range(2)]

@@ -9,6 +9,7 @@ Environments
    simple_environment
    satellite_configuration
    multiagent_envs
+   mixed_environment
    fault_environment
    communication_action
    cloud_environment
@@ -22,12 +23,13 @@ Earth Observation
    cloud_environment_with_reimaging
    aeos
 
-RSO Inspection
-~~~~~~~~~~~~~~
+RSO Missions
+~~~~~~~~~~~~
 .. toctree::
    :maxdepth: 1
 
    rso_inspection
+   space_to_space_rso_imaging
 
 Training
 --------

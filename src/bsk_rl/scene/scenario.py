@@ -28,6 +28,22 @@ class Scenario(ABC, Resetable):
         """
         self.satellites = satellites
 
+    def validate_satellite_names(self, satellites: list["Satellite"]) -> None:
+        """Optionally validate original participant names before automatic renaming.
+
+        The default permits existing environment name normalization. Scenarios with
+        explicit identity bindings can reject ambiguous original names.
+        """
+        pass
+
+    def after_step(self, sim_time: float) -> None:
+        """Update scenario conditions after reward and before communication/observation.
+
+        The default does nothing. Scheduled scenarios can override this hook without
+        putting scenario-specific logic in the environment.
+        """
+        pass
+
 
 class UniformNadirScanning(Scenario):
     """Defines a nadir target center at the center of the planet."""
