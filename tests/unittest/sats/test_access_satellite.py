@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from typing import ClassVar
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, create_autospec, patch
 
 import numpy as np
 import pytest
@@ -463,10 +463,38 @@ class TestImagingSatellite:
         sat.update_timed_terminal_event = MagicMock()
         sat.logger = MagicMock()
         sat.task_target_for_imaging(self.tgt0)
-        sat.fsw.action_image.assert_called_once()
+        sat.fsw.action_image.assert_called_once_with(self.tgt0.r_LP_P, sat.buffer_name)
         sat.logger.info.assert_called()
         sat._update_image_event.assert_called_once()
         assert sat._update_image_event.call_args[0][0] == self.tgt0
         sat.update_timed_terminal_event.assert_called_once()
         assert sat.update_timed_terminal_event.call_args[0][0] == 50.0
         assert sat.latest_target == self.tgt0
+
+    def test_task_target_for_imaging_legacy_fsw_override(self):
+        sat = self.make_sat()
+        sat.logger = MagicMock()
+        sat.fsw = MagicMock()
+        sat.fsw.action_image = create_autospec(lambda position, buffer_name: None)
+        sat.enable_target_window = MagicMock()
+        sat.draw_imaging_line = MagicMock()
+
+        sat.task_target_for_imaging(self.tgt0, max_duration=100.0)
+
+        sat.fsw.action_image.assert_called_once_with(self.tgt0.r_LP_P, sat.buffer_name)
+        sat.enable_target_window.assert_called_once_with(self.tgt0, max_duration=100.0)
+        assert sat.latest_target == self.tgt0
+
+    @pytest.mark.parametrize("imaging_time", [0.0, 20.0])
+    def test_task_target_for_imaging_forwards_requested_time(self, imaging_time):
+        sat = self.make_sat()
+        sat.logger = MagicMock()
+        sat.fsw = MagicMock()
+        sat.enable_target_window = MagicMock()
+        sat.draw_imaging_line = MagicMock()
+
+        sat.task_target_for_imaging(self.tgt0, imaging_time=imaging_time)
+
+        sat.fsw.action_image.assert_called_once_with(
+            self.tgt0.r_LP_P, sat.buffer_name, imaging_time=imaging_time
+        )
