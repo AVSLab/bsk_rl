@@ -1,4 +1,5 @@
-from unittest.mock import MagicMock, call, patch
+from types import SimpleNamespace
+from unittest.mock import MagicMock, call, create_autospec, patch
 
 import numpy as np
 import pytest
@@ -8,6 +9,15 @@ from bsk_rl import act
 from bsk_rl.act.actions import ActionBuilder
 from bsk_rl.act.continuous_actions import ContinuousActionBuilder
 from bsk_rl.act.discrete_actions import DiscreteActionBuilder
+
+
+@pytest.fixture
+def imaging_satellite():
+    satellite = MagicMock()
+    satellite.fsw.insControl = SimpleNamespace(
+        timeToleranceLower=0, timeToleranceUpper=0, imagingTime=0
+    )
+    return satellite
 
 
 @patch.multiple(ActionBuilder, __abstractmethods__=set())
@@ -32,8 +42,21 @@ class TestDiscreteActionBuilder:
         satellite = MagicMock(
             action_spec=[MagicMock(n_actions=1), MagicMock(n_actions=2)]
         )
+        for action in satellite.action_spec:
+            action.hybrid = False
         ab = DiscreteActionBuilder(satellite)
         assert ab.action_space == spaces.Discrete(3)
+
+    def test_hybrid_action_space(self):
+        satellite = MagicMock(
+            action_spec=[MagicMock(n_actions=1), MagicMock(n_actions=2)]
+        )
+        for action in satellite.action_spec:
+            action.hybrid = True
+        ab = DiscreteActionBuilder(satellite)
+        assert ab.action_space == spaces.Tuple(
+            (spaces.Discrete(3), spaces.Box(low=0, high=np.inf, shape=(1,)))
+        )
 
     def test_action_description(self):
         satellite = MagicMock(
@@ -57,13 +80,21 @@ class TestDiscreteActionBuilder:
         )
         ab = DiscreteActionBuilder(satellite)
         ab.set_action(0)
-        assert ab.action_spec[0].set_action.call_args == call(0, prev_action_key=None)
+        assert ab.action_spec[0].set_action.call_args == call(
+            (0, None), prev_action_key=None
+        )
         ab.set_action(1)
-        assert ab.action_spec[1].set_action.call_args == call(0, prev_action_key="foo")
+        assert ab.action_spec[1].set_action.call_args == call(
+            (0, None), prev_action_key="foo"
+        )
         ab.set_action(2)
-        assert ab.action_spec[1].set_action.call_args == call(1, prev_action_key="bar")
+        assert ab.action_spec[1].set_action.call_args == call(
+            (1, None), prev_action_key="bar"
+        )
         ab.set_action(3)
-        assert ab.action_spec[2].set_action.call_args == call(0, prev_action_key="bar")
+        assert ab.action_spec[2].set_action.call_args == call(
+            (0, None), prev_action_key="bar"
+        )
 
     def test_set_action_override(self):
         satellite = MagicMock(
@@ -75,7 +106,7 @@ class TestDiscreteActionBuilder:
         ab = DiscreteActionBuilder(satellite)
         ab.set_action("foo")
         assert ab.action_spec[1].set_action_override.call_args == call(
-            "foo", prev_action_key=None
+            ("foo", None), prev_action_key=None
         )
 
 
@@ -83,72 +114,368 @@ class TestDiscreteFSWAction:
     def test_set_action(self):
         fswact = act.DiscreteFSWAction("action_fsw")
         fswact.satellite = MagicMock()
-        fswact.simulator = MagicMock()
+        fswact.simulator = SimpleNamespace(sim_rate=1.0, sim_time=0.0)
         fswact.set_action(0)
         fswact.satellite.fsw.action_fsw.assert_called_once()
 
     def test_set_action_again(self):
         fswact = act.DiscreteFSWAction("action_fsw")
         fswact.satellite = MagicMock()
-        fswact.simulator = MagicMock()
+        fswact.simulator = SimpleNamespace(sim_rate=1.0, sim_time=0.0)
         fswact.set_action(0, prev_action_key="action_fsw")
         fswact.satellite.fsw.action_fsw.assert_not_called()
 
     def test_set_action_reset(self):
         fswact = act.DiscreteFSWAction("action_fsw", reset_task=True)
         fswact.satellite = MagicMock()
-        fswact.simulator = MagicMock()
+        fswact.simulator = SimpleNamespace(sim_rate=1.0, sim_time=0.0)
         fswact.set_action(0, prev_action_key="action_fsw")
         fswact.satellite.fsw.action_fsw.assert_called_once()
 
 
+@pytest.mark.parametrize("kind", ["fsw", "broadcast"])
+@pytest.mark.parametrize(
+    "requested,cap,sim_rate,expected_duration",
+    [
+        (0.0, 100.0, 1.0, 1.0),
+        (0.25, 100.0, 1.0, 1.0),
+        (5.0, 100.0, 1.0, 5.0),
+        (20.0, 10.0, 1.0, 10.0),
+        (0.1, 0.25, 1.0, 1.0),
+        (None, 0.25, 1.0, 1.0),
+        (None, 10.0, 1.0, 10.0),
+        (0.25, 100.0, 0.5, 0.5),
+    ],
+)
+def test_hybrid_mode_action_duration(kind, requested, cap, sim_rate, expected_duration):
+    if kind == "fsw":
+        action = act.DiscreteFSWAction("action_fsw", duration=cap, hybrid=True)
+    else:
+        action = act.Broadcast(duration=cap, hybrid=True)
+    action.satellite = MagicMock()
+    action.simulator = SimpleNamespace(sim_rate=sim_rate, sim_time=10.0)
+
+    action.set_action((0, requested))
+
+    action.satellite.update_timed_terminal_event.assert_called_once()
+    assert action.satellite.update_timed_terminal_event.call_args.args[
+        0
+    ] == pytest.approx(10.0 + expected_duration)
+    if kind == "fsw":
+        action.satellite.logger.info.assert_called_once_with(
+            f"{action.name} tasked for {expected_duration} seconds"
+        )
+
+
+@pytest.fixture
+def make_image(imaging_satellite):
+    def make(*, hybrid=True, max_duration=None, sim_rate=1.0, lower=0, upper=0):
+        image = act.Image(n_ahead_image=10, max_duration=max_duration, hybrid=hybrid)
+        image.satellite = imaging_satellite
+        image.simulator = SimpleNamespace(sim_rate=sim_rate, sim_time=100.0)
+        image.satellite.fsw.insControl.timeToleranceLower = int(lower * 1e9)
+        image.satellite.fsw.insControl.timeToleranceUpper = int(upper * 1e9)
+        image.satellite.parse_target_selection.return_value = SimpleNamespace(
+            id="target_1"
+        )
+        image.reset_post_sim_init()
+        image.satellite.logger.reset_mock()
+        return image
+
+    return make
+
+
 class TestImage:
-    target = MagicMock()
-    target.id = "target_1"
+    # image() is shared by discrete and hybrid actions; only the entry points
+    # below need to vary the hybrid flag.
+    def test_image(self, make_image):
+        image = make_image()
+        target = image.satellite.parse_target_selection.return_value
 
-    def test_image(self):
-        image = act.Image(n_ahead_image=10)
-        image.satellite = MagicMock()
-        image.satellite.parse_target_selection.return_value = self.target
-        out = image.image(5, None)
+        assert image.image(5) == target.id
         image.satellite.task_target_for_imaging.assert_called_once_with(
-            self.target, max_duration=None
+            target, max_duration=None
         )
-        assert out == "target_1"
 
-    def test_image_retask(self):
-        image = act.Image(n_ahead_image=10)
-        image.satellite = MagicMock()
-        image.satellite.parse_target_selection.return_value = self.target
-        out = image.image(5, "target_1")
+    @pytest.mark.parametrize("hybrid", [False, True])
+    def test_image_legacy_satellite_override(self, make_image, hybrid):
+        image = make_image(hybrid=hybrid)
+        target = image.satellite.parse_target_selection.return_value
+        image.satellite.task_target_for_imaging = create_autospec(
+            lambda target, max_duration=None: None
+        )
+
+        assert image.set_action(5) == target.id
+        image.satellite.task_target_for_imaging.assert_called_once_with(
+            target, max_duration=None
+        )
+
+    def test_image_retask(self, make_image):
+        image = make_image()
+        target = image.satellite.parse_target_selection.return_value
+
+        assert image.image(5, target.id) == target.id
         image.satellite.enable_target_window.assert_called_once_with(
-            self.target, max_duration=None
+            target, max_duration=None
         )
-        assert out == "target_1"
+        image.satellite.task_target_for_imaging.assert_not_called()
 
-    def test_image_max_duration(self):
-        image = act.Image(n_ahead_image=10, max_duration=100.0)
-        image.satellite = MagicMock()
-        image.satellite.parse_target_selection.return_value = self.target
-        out = image.image(5, None)
+    def test_image_max_duration(self, make_image):
+        image = make_image(max_duration=100.0)
+        target = image.satellite.parse_target_selection.return_value
+
+        assert image.image(5) == target.id
         image.satellite.task_target_for_imaging.assert_called_once_with(
-            self.target, max_duration=100.0
+            target, max_duration=100.0
         )
-        assert out == "target_1"
 
-    def test_set_action(self):
-        image = act.Image(n_ahead_image=10)
-        image.satellite = MagicMock()
-        image.image = MagicMock()
-        image.set_action(5)
-        image.image.assert_called_once_with(5, None)
+    @pytest.mark.parametrize("imaging_time", [0.0, 20.0])
+    def test_image_forwards_requested_time(self, make_image, imaging_time):
+        image = make_image()
+        target = image.satellite.parse_target_selection.return_value
 
-    def test_set_action_override(self):
-        image = act.Image(n_ahead_image=10)
-        image.satellite = MagicMock()
+        assert image.image(5, imaging_time=imaging_time) == target.id
+        image.satellite.task_target_for_imaging.assert_called_once_with(
+            target, max_duration=None, imaging_time=imaging_time
+        )
+
+    @pytest.mark.parametrize(
+        "imaging_time,upper,cap,sim_rate,expected_duration,prev_action_key",
+        [
+            (20.0, 3.0, None, 1.0, 23.0, None),
+            (20.0, 3.0, 10.0, 1.0, 10.0, None),
+            (20.0, 3.0, 100.0, 1.0, 23.0, None),
+            (0.0, 0.25, None, 1.0, 1.0, None),
+            (20.0, 3.0, 0.25, 1.0, 1.0, None),
+            (0.0, 0.25, None, 0.5, 0.5, None),
+            (20.0, 0.0, None, 1.0, None, None),
+            (20.0, 0.0, 100.0, 1.0, 100.0, None),
+            (None, 3.0, None, 1.0, None, None),
+            (None, 3.0, 100.0, 1.0, 100.0, None),
+            # The deadline calculation is shared. Retasking needs representative
+            # timed and untimed cases to check the separate forwarding path.
+            (0.0, 0.25, None, 1.0, 1.0, "target_1"),
+            (None, 3.0, 100.0, 1.0, 100.0, "target_1"),
+        ],
+    )
+    def test_imaging_deadline(
+        self,
+        make_image,
+        imaging_time,
+        upper,
+        cap,
+        sim_rate,
+        expected_duration,
+        prev_action_key,
+    ):
+        image = make_image(max_duration=cap, sim_rate=sim_rate, upper=upper)
+        target = image.satellite.parse_target_selection.return_value
+
+        assert (
+            image.image(5, prev_action_key=prev_action_key, imaging_time=imaging_time)
+            == target.id
+        )
+
+        if prev_action_key is None:
+            kwargs = {} if imaging_time is None else {"imaging_time": imaging_time}
+            image.satellite.task_target_for_imaging.assert_called_once_with(
+                target, max_duration=expected_duration, **kwargs
+            )
+            image.satellite.enable_target_window.assert_not_called()
+        else:
+            image.satellite.enable_target_window.assert_called_once_with(
+                target, max_duration=expected_duration
+            )
+            image.satellite.task_target_for_imaging.assert_not_called()
+            if imaging_time is None:
+                image.satellite.update_imaging_time.assert_not_called()
+            else:
+                image.satellite.update_imaging_time.assert_called_once_with(
+                    imaging_time=imaging_time
+                )
+
+    @pytest.mark.parametrize("prev_action_key", [None, "target_1"])
+    @pytest.mark.parametrize(
+        "lower,upper,imaging_time,expect_warning",
+        [
+            (0, 0, None, False),
+            (2, 0, None, True),
+            (0, 3, None, True),
+            (2, 3, None, True),
+            (2, 3, 0.0, False),
+            (2, 3, 20.0, False),
+        ],
+    )
+    def test_missing_imaging_time_warning(
+        self,
+        make_image,
+        recwarn,
+        prev_action_key,
+        lower,
+        upper,
+        imaging_time,
+        expect_warning,
+    ):
+        image = make_image(lower=lower, upper=upper)
+        target = image.satellite.parse_target_selection.return_value
+        controller = image.satellite.fsw.insControl
+        controller.imagingTime = int(100 * 1e9)
+        previous_timing = vars(controller).copy()
+
+        assert (
+            image.image(5, prev_action_key=prev_action_key, imaging_time=imaging_time)
+            == target.id
+        )
+
+        assert not recwarn
+        if expect_warning:
+            image.satellite.logger.warning.assert_called_once()
+            assert (
+                "existing imagingTime and tolerances are retained"
+                in (image.satellite.logger.warning.call_args.args[0])
+            )
+        else:
+            image.satellite.logger.warning.assert_not_called()
+        if imaging_time is None:
+            assert vars(controller) == previous_timing
+            image.satellite.update_imaging_time.assert_not_called()
+            if prev_action_key is None:
+                image.satellite.task_target_for_imaging.assert_called_once_with(
+                    target, max_duration=None
+                )
+
+    @pytest.mark.parametrize(
+        "hybrid,lower,keyword",
+        [
+            (False, 0, "max_duration"),
+            (True, 0, "max_duration"),
+            (True, 1, "imaging_time"),
+        ],
+        ids=["discrete", "hybrid_duration", "hybrid_capture_time"],
+    )
+    @pytest.mark.parametrize(
+        "selection,method", [(5, "set_action"), ("image", "set_action_override")]
+    )
+    @pytest.mark.parametrize("imaging_time", [None, 20.0])
+    def test_action_entry_points(
+        self, make_image, hybrid, lower, keyword, selection, method, imaging_time
+    ):
+        image = make_image(hybrid=hybrid, lower=lower)
         image.image = MagicMock()
-        image.set_action_override("image")
-        image.image.assert_called_once_with("image", None)
+        payload = selection if imaging_time is None else (selection, imaging_time)
+
+        getattr(image, method)(payload)
+
+        image.image.assert_called_once_with(
+            selection, None, **{keyword: imaging_time if hybrid else None}
+        )
+
+    @pytest.mark.parametrize(
+        "requested,cap,sim_rate,expected_duration",
+        [
+            (0.0, None, 1.0, 1.0),
+            (0.25, None, 1.0, 1.0),
+            (5.0, None, 1.0, 5.0),
+            (20.0, 10.0, 1.0, 10.0),
+            (0.1, 0.25, 1.0, 1.0),
+            (0.25, None, 0.5, 0.5),
+            (None, 10.0, 1.0, 10.0),
+            (None, None, 1.0, None),
+        ],
+    )
+    def test_duration_mode_limits_wait_without_setting_capture_time(
+        self,
+        make_image,
+        requested,
+        cap,
+        sim_rate,
+        expected_duration,
+    ):
+        image = make_image(max_duration=cap, sim_rate=sim_rate)
+        target = image.satellite.parse_target_selection.return_value
+        controller = image.satellite.fsw.insControl
+        controller.imagingTime = int(200e9)
+
+        assert image.set_action((5, requested)) == target.id
+
+        image.satellite.task_target_for_imaging.assert_called_once_with(
+            target, max_duration=expected_duration
+        )
+        assert controller.imagingTime == int(200e9)
+        assert image.max_duration == cap
+        image.satellite.logger.warning.assert_not_called()
+
+    def test_duration_retask_does_not_update_capture_time(self, make_image):
+        image = make_image(max_duration=10.0)
+        target = image.satellite.parse_target_selection.return_value
+
+        assert (
+            image.set_action_override((target.id, 0.0), prev_action_key=target.id)
+            == target.id
+        )
+
+        image.satellite.enable_target_window.assert_called_once_with(
+            target, max_duration=1.0
+        )
+        image.satellite.update_imaging_time.assert_not_called()
+        image.satellite.task_target_for_imaging.assert_not_called()
+        assert image.max_duration == 10.0
+
+
+@pytest.mark.parametrize("lower,upper", [(0, 0), (1, 0), (0, 2), (1, 2)])
+@pytest.mark.parametrize("hybrid", [False, True])
+def test_image_mode_warning_only_for_hybrid_capture_time(
+    imaging_satellite, lower, upper, hybrid
+):
+    image = act.Image(1, hybrid=hybrid)
+    image.satellite = imaging_satellite
+    controller = imaging_satellite.fsw.insControl
+    controller.timeToleranceLower = int(lower * 1e9)
+    controller.timeToleranceUpper = int(upper * 1e9)
+
+    image.reset_post_sim_init()
+
+    assert image._use_capture_time is bool(lower or upper)
+    assert image._time_tolerance_upper == pytest.approx(upper)
+    if hybrid and (lower or upper):
+        imaging_satellite.logger.warning.assert_called_once()
+        assert (
+            "rather than a maximum duration"
+            in imaging_satellite.logger.warning.call_args.args[0]
+        )
+    else:
+        imaging_satellite.logger.warning.assert_not_called()
+
+
+def test_image_mode_refreshes_at_reset(imaging_satellite):
+    image = act.Image(1, hybrid=True)
+    image.satellite = imaging_satellite
+    controller = imaging_satellite.fsw.insControl
+    image.reset_post_sim_init()
+    assert not image._use_capture_time
+
+    controller.timeToleranceUpper = int(2e9)
+    image.reset_post_sim_init()
+    assert image._use_capture_time
+    assert image._time_tolerance_upper == 2.0
+
+    controller.timeToleranceUpper = 0
+    image.reset_post_sim_init()
+    assert not image._use_capture_time
+    assert image._time_tolerance_upper == 0.0
+    imaging_satellite.logger.warning.assert_called_once()
+
+
+def test_image_without_controller_tolerances_uses_duration_mode(imaging_satellite):
+    image = act.Image(1, hybrid=True)
+    image.satellite = imaging_satellite
+    imaging_satellite.fsw.insControl = SimpleNamespace()
+
+    image.reset_post_sim_init()
+
+    assert not image._use_capture_time
+    assert image._time_tolerance_upper == 0.0
+    imaging_satellite.logger.warning.assert_not_called()
 
 
 class TestContinuousActionBuilder:
