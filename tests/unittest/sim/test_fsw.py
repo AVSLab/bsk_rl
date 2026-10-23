@@ -1,6 +1,10 @@
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import pytest
+from Basilisk.fswAlgorithms import simpleInstrumentController
+from Basilisk.utilities import macros
 
 from bsk_rl.sim.fsw import BasicFSWModel, FSWModelABC, ImagingFSWModel, Task, action
 
@@ -30,7 +34,6 @@ class TestFSWModel:
     def test_base_class(self):
         sat = MagicMock()
         fsw = FSWModelABC(sat, 1.0)
-        # fsw.simulator.CreateNewProcess.assert_called_once()
         assert sat.simulator.world == fsw.world
         assert sat.dynamics == fsw.dynamics
 
@@ -83,3 +86,51 @@ class TestImagingFSWModel:
         fsw.locPoint = MagicMock(pHat_B=np.array([1.0, 0.0, 0.0]))
         fsw.satellite = MagicMock(dynamics=MagicMock(BP=np.identity(3)))
         assert (fsw.c_hat_P == np.array([1.0, 0.0, 0.0])).all()
+
+
+class TestImagingTimeTolerance:
+    def test_unsupported_controller_logs_warning(self, caplog):
+        task = SimpleNamespace(insControl=object())
+
+        ImagingFSWModel.LocPointTask.setup_instrument_time_tolerance(
+            task, timeToleranceLower=2.0, timeToleranceUpper=3.0
+        )
+
+        assert (
+            "insControl.timeTolerance not available; continuing without it"
+            in caplog.text
+        )
+
+    @pytest.fixture
+    def task(self):
+        controller = simpleInstrumentController.simpleInstrumentController()
+        controller.timeToleranceLower = macros.sec2nano(11)
+        controller.timeToleranceUpper = macros.sec2nano(12)
+        return SimpleNamespace(insControl=controller)
+
+    @pytest.mark.parametrize(
+        "lower,upper", [(0, 0), (0, 2.5), (1.25, 0), (1.25, 2.5), (1e-9, 2e-9)]
+    )
+    def test_valid_tolerances(self, task, lower, upper):
+        ImagingFSWModel.LocPointTask.setup_instrument_time_tolerance(
+            task, timeToleranceLower=lower, timeToleranceUpper=upper
+        )
+
+        assert task.insControl.timeToleranceLower == macros.sec2nano(lower)
+        assert task.insControl.timeToleranceUpper == macros.sec2nano(upper)
+
+    @pytest.mark.parametrize("name", ["timeToleranceLower", "timeToleranceUpper"])
+    @pytest.mark.parametrize("value", [-1.0, -1e-9, np.nan, np.inf, -np.inf])
+    def test_invalid_tolerance_preserves_both_bounds(self, task, caplog, name, value):
+        kwargs = {"timeToleranceLower": 2.0, "timeToleranceUpper": 3.0, name: value}
+        bound = "lower" if name == "timeToleranceLower" else "upper"
+
+        with pytest.raises(
+            ValueError,
+            match=f"{name} must be finite and nonnegative; 0 disables the {bound} time bound",
+        ):
+            ImagingFSWModel.LocPointTask.setup_instrument_time_tolerance(task, **kwargs)
+
+        assert task.insControl.timeToleranceLower == macros.sec2nano(11)
+        assert task.insControl.timeToleranceUpper == macros.sec2nano(12)
+        assert not caplog.records
