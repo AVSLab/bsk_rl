@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -29,9 +30,50 @@ from bsk_rl.sats import Satellite
         (np.array([NO_ACTION - 1]), False),
         (np.array([]), False),
         (np.array([0.0, 1.0]), False),
+        ((0, np.array([5.0])), False),
+        (("target_id", np.array([5.0])), False),
+        ((NO_ACTION, np.array([NO_ACTION], dtype=np.float32)), True),
+        (((0, np.array([5.0])), (1, np.array([10.0]))), False),
+        ((None, (1, np.array([10.0]))), False),
+        ((None, (NO_ACTION, np.array([NO_ACTION]))), True),
+        ([], False),
+        ((), False),
+        (np.array(None, dtype=object), True),
+        (np.array(NO_ACTION, dtype=object), True),
+        (np.array(0, dtype=object), False),
+        (np.array([[None, NO_ACTION], [NO_ACTION, None]], dtype=object), True),
+        ([float(NO_ACTION)] * 64, True),
+        ((float(NO_ACTION),) * 64, True),
+        ([NO_ACTION] * 64, True),
+        ([NO_ACTION, NO_ACTION - 1], False),
+        ([float(NO_ACTION), float(NO_ACTION + 1)], True),
+        ([float(NO_ACTION), float(NO_ACTION + 2)], False),
+        ([float(NO_ACTION), NO_ACTION - 1], False),
+        ([NO_ACTION - 1, float(NO_ACTION)], False),
+        ([float(NO_ACTION), NO_ACTION], True),
+        ([float(NO_ACTION), np.float32(NO_ACTION)], True),
     ],
 )
 def test_is_no_action(action, expected):
+    assert is_no_action(action) is expected
+
+
+@pytest.mark.parametrize(
+    "entries,expected",
+    [
+        ([], False),
+        ([None, NO_ACTION], True),
+        ([(NO_ACTION, np.array([NO_ACTION], dtype=np.float32)), None], True),
+        ([(0, np.array([5.0])), (1, np.array([10.0]))], False),
+        ([None, (1, np.array([10.0]))], False),
+        ([np.array([None, NO_ACTION], dtype=object)], True),
+    ],
+)
+def test_is_no_action_structured_object_array(entries, expected):
+    action = np.empty(len(entries), dtype=object)
+    for i, entry in enumerate(entries):
+        action[i] = entry
+
     assert is_no_action(action) is expected
 
 
@@ -59,6 +101,20 @@ def test_no_action_keep_indices(actions, action_idx):
     got_action_idx, obs_idx = no_action_keep_indices(actions, n_obs)
     assert got_action_idx == action_idx
     assert obs_idx == action_idx + [n_obs - 1]
+
+
+def test_no_action_keep_indices_with_hybrid_actions():
+    actions = [
+        (0, np.array([5.0])),
+        None,
+        (NO_ACTION, np.array([NO_ACTION], dtype=np.float32)),
+        (1, np.array([2.0])),
+    ]
+
+    action_idx, observation_idx = no_action_keep_indices(actions, n_observations=5)
+
+    assert action_idx == [0, 3]
+    assert observation_idx == [0, 3, 4]
 
 
 class TypeA:
@@ -454,6 +510,110 @@ class TestSatelliteTasking:
     def test_get_obs(self):
         env, _mock_sat = self.make_env()
         assert env._get_obs() == env.satellite.get_obs()
+
+
+class TestMetaActionDecomposition:
+    @staticmethod
+    def make_env(action_spaces, only_retask_idle=False):
+        satellites = [
+            MagicMock(action_space=space, requires_retasking=True)
+            for space in action_spaces
+        ]
+        return SimpleNamespace(
+            meta_agent_groupings={"group": satellites},
+            only_retask_idle_meta_agent_members=only_retask_idle,
+            dtype=None,
+        ), satellites
+
+    @staticmethod
+    def hybrid_space(n=2):
+        return spaces.Tuple((spaces.Discrete(n), spaces.Box(0, np.inf, shape=(1,))))
+
+    @pytest.mark.parametrize("n_satellites", [1, 2, 3])
+    def test_sampled_hybrid_actions(self, n_satellites):
+        env, satellites = self.make_env(
+            [self.hybrid_space(i + 2) for i in range(n_satellites)]
+        )
+        space = ConstellationTasking.action_spaces.fget(env)["group"]
+        action = space.sample()
+
+        result = ConstellationTasking._decompose_meta_action(env, "group", action)
+
+        member_actions = (action,) if n_satellites == 1 else action
+        for satellite, member_action in zip(satellites, member_actions):
+            assert result[satellite] is member_action
+
+    @pytest.mark.parametrize("enabled", [False, True])
+    @pytest.mark.parametrize("kind", ["discrete", "box", "hybrid"])
+    def test_idle_filter_preserves_member_positions(self, enabled, kind):
+        if kind == "hybrid":
+            action_spaces = [self.hybrid_space(), self.hybrid_space()]
+            expected = ((0, np.array([5.0])), (1, np.array([10.0])))
+            action = expected
+        elif kind == "box":
+            action_spaces = [spaces.Box(-10, 10, (2,)), spaces.Box(-10, 10, (1,))]
+            action = np.array([1.0, 2.0, 3.0])
+            expected = (np.array([1.0, 2.0]), 3.0)
+        else:
+            action_spaces = [spaces.Discrete(2), spaces.Discrete(3)]
+            action = np.array([1, 2])
+            expected = (1, 2)
+        env, satellites = self.make_env(action_spaces, only_retask_idle=enabled)
+        satellites[0].requires_retasking = False
+
+        result = ConstellationTasking._decompose_meta_action(env, "group", action)
+
+        for i, satellite in enumerate(satellites):
+            if enabled and i == 0:
+                assert result[satellite] is None
+            elif kind == "hybrid":
+                assert result[satellite] is expected[i]
+            else:
+                np.testing.assert_array_equal(result[satellite], expected[i])
+
+    @pytest.mark.parametrize("n_satellites", [1, 2])
+    @pytest.mark.parametrize(
+        "action", [None, NO_ACTION, (NO_ACTION, np.array([NO_ACTION]))]
+    )
+    def test_hybrid_group_no_action(self, n_satellites, action):
+        env, satellites = self.make_env([self.hybrid_space()] * n_satellites)
+
+        result = ConstellationTasking._decompose_meta_action(env, "group", action)
+
+        assert result == dict.fromkeys(satellites)
+
+    @pytest.mark.parametrize("idle_action", [None, NO_ACTION])
+    def test_individual_hybrid_member_no_action(self, idle_action):
+        env, satellites = self.make_env([self.hybrid_space()] * 2)
+        active_action = (1, np.array([5.0]))
+
+        result = ConstellationTasking._decompose_meta_action(
+            env, "group", (idle_action, active_action)
+        )
+
+        assert result[satellites[0]] is idle_action
+        assert result[satellites[1]] is active_action
+
+    @pytest.mark.parametrize("first_action", [None, NO_ACTION, (0, np.array([5.0]))])
+    def test_structured_object_array_members(self, first_action):
+        env, satellites = self.make_env([self.hybrid_space()] * 2)
+        action = np.empty(2, dtype=object)
+        action[0] = first_action
+        action[1] = (1, np.array([10.0]))
+
+        result = ConstellationTasking._decompose_meta_action(env, "group", action)
+
+        assert result[satellites[0]] is action[0]
+        assert result[satellites[1]] is action[1]
+
+    @pytest.mark.parametrize(
+        "action", [(), ((0, 5.0),), ((0, 5.0),) * 3, 0, np.array(0), "bad"]
+    )
+    def test_invalid_hybrid_group_size(self, action):
+        env, _ = self.make_env([self.hybrid_space()] * 2)
+
+        with pytest.raises(ValueError, match="one hybrid action per satellite"):
+            ConstellationTasking._decompose_meta_action(env, "group", action)
 
 
 class TestConstellationTasking:
