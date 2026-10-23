@@ -101,10 +101,8 @@ class TestSatellite:
     def test_deadline_events_use_the_validated_name_after_renaming(self):
         sat = sats.Satellite(name="camera_a")
         sat.simulator = MagicMock(eventMap={}, sim_rate=1.0)
-        sat.simulator.createNewEvent.side_effect = (
-            lambda name, *args, **kwargs: sat.simulator.eventMap.setdefault(
-                name, MagicMock()
-            )
+        sat.simulator.createNewEvent.side_effect = lambda name, *args, **kwargs: (
+            sat.simulator.eventMap.setdefault(name, MagicMock())
         )
         sat.update_timed_terminal_event(10.0)
         assert sat._timed_terminal_event_name == "timed_terminal_camera_a"
@@ -179,16 +177,19 @@ class TestSatellite:
     def test_update_timed_terminal_event(self):
         pass  # Probably better with integration testing
 
-    def test_setup_aliveness_events(self):
+    @pytest.mark.parametrize("model_name", ["dynamics", "fsw"])
+    def test_setup_aliveness_events(self, model_name):
         sat = sats.Satellite(name="TestSat", sat_args={})
         sat._is_alive = True
         sat.time_of_death = None
-        sat.simulator = MagicMock(sim_rate=1.0, sim_time=12.0)
+        sat.simulator = MagicMock(sim_rate=2.0, sim_time=12.0)
+        sat.logger = MagicMock()
 
         class Dyn:
             def __init__(self, satellite):
                 self.satellite = satellite
                 self.fail_continuous = False
+                self.check_count = 0
 
             @property
             def should_not_run(self):
@@ -200,15 +201,14 @@ class TestSatellite:
 
             @functional.aliveness_checker(continuous=True, check_rate=0.25)
             def continuous_valid(self):
+                self.check_count += 1
                 return not self.fail_continuous
 
-        class Fsw:
-            def __init__(self, satellite):
-                self.satellite = satellite
-
+        class Fsw(Dyn):
             @functional.aliveness_checker(continuous=True)
-            def fsw_valid(self):
-                return True
+            def continuous_valid(self):
+                self.check_count += 1
+                return not self.fail_continuous
 
         dyn = Dyn(sat)
         fsw = Fsw(sat)
@@ -221,21 +221,40 @@ class TestSatellite:
             call.args[0] for call in sat.simulator.createNewEvent.call_args_list
         ]
         assert any("continuous_valid" in name and "Dyn" in name for name in event_names)
-        assert any("fsw_valid" in name and "Fsw" in name for name in event_names)
+        assert any("continuous_valid" in name and "Fsw" in name for name in event_names)
+        assert len(set(event_names)) == 2
         assert not any("ProxyType" in name for name in event_names)
 
         dyn_call = sat.simulator.createNewEvent.call_args_list[0]
-        assert "continuous_valid" in dyn_call.args[0]
+        fsw_call = sat.simulator.createNewEvent.call_args_list[1]
         assert dyn_call.args[1] == macros.sec2nano(0.25)
-        assert dyn_call.kwargs["terminal"] is True
-        assert dyn_call.kwargs["exactRateMatch"] is False
+        assert fsw_call.args[1] == macros.sec2nano(sat.simulator.sim_rate)
+        for event_call in (dyn_call, fsw_call):
+            assert event_call.kwargs["terminal"] is True
+            assert event_call.kwargs["exactRateMatch"] is False
+            assert event_call.kwargs["conditionFunction"](sat.simulator) is False
+        sat.logger.warning.assert_not_called()
 
-        assert dyn_call.kwargs["conditionFunction"](sat.simulator) is False
-        sat.dynamics.fail_continuous = True
-        assert dyn_call.kwargs["conditionFunction"](sat.simulator) is True
-        dyn_call.kwargs["actionFunction"](sat.simulator)
+        model = getattr(sat, model_name)
+        event_call = dyn_call if model_name == "dynamics" else fsw_call
+        model.fail_continuous = True
+        assert event_call.kwargs["conditionFunction"](sat.simulator) is True
+        event_call.kwargs["actionFunction"](sat.simulator)
         assert sat._is_alive is False
         assert sat.time_of_death == 12.0
+        assert model.check_count == 2
+        sat.logger.warning.assert_called_once_with("failed continuous_valid check")
+
+        other_model = fsw if model_name == "dynamics" else dyn
+        other_model.fail_continuous = True
+        sat.simulator.sim_time = 15.0
+        for event_call in (dyn_call, fsw_call):
+            assert event_call.kwargs["conditionFunction"](sat.simulator) is False
+        assert model.check_count == 2
+        assert other_model.check_count == 1
+        assert not sat.is_alive()
+        assert sat.time_of_death == 12.0
+        sat.logger.warning.assert_called_once_with("failed continuous_valid check")
 
     def test_disable_timed_event(self):
         sat = sats.Satellite(name="TestSat", sat_args={})

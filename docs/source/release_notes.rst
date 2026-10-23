@@ -49,7 +49,9 @@ Development - |version|
 * Update files for compatibility with Ruff 0.16.0's new default lint rules, excluding C408.
 * Update ``np2EigenMatrix3d`` and ``np2EigenVectorXd`` import path to prevent deprecation warning while preserving compatibility with older versions of Basilisk.
 * Allow :func:`~bsk_rl.utils.functional.aliveness_checker` to run as a continuous Basilisk
-  event that interrupts the environment step on failure. See issue #337.
+  event that interrupts the environment step on failure. Battery charge and reaction
+  wheel speed checks use this behavior by default, at the simulator rate. See issues
+  #337 and #59.
 * Add support for configurable RSO attitude dynamics and new relative attitude observations, enabling inspection of spinning and tumbling targets. Update the `RSO Inspection <examples/rso_inspection.ipynb>`_ example to demonstrate non-nadir-pointing targets. See issue #355.
 
 Version 1.3.0

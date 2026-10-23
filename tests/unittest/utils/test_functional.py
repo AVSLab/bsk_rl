@@ -142,6 +142,27 @@ class TestAlivenessChecker:
         assert c.still_alive.check_rate == 0.5
         assert c.still_alive()
 
+    @pytest.mark.parametrize("alive", [True, False])
+    def test_empty_parentheses(self, alive):
+        class DefaultChecker:
+            satellite = MagicMock()
+
+            @functional.aliveness_checker()
+            def still_alive(self):
+                return alive
+
+        model = DefaultChecker()
+        assert model.still_alive.is_aliveness_checker is True
+        assert model.still_alive.continuous is False
+        assert model.still_alive.check_rate is None
+        assert functional.check_aliveness_checkers(model, log_failure=True) is alive
+        if alive:
+            model.satellite.logger.warning.assert_not_called()
+        else:
+            model.satellite.logger.warning.assert_called_once_with(
+                "failed still_alive check"
+            )
+
 
 @pytest.mark.parametrize("prop_name,expected", [("prop", True), ("not_a_prop", False)])
 def test_is_property(prop_name, expected):

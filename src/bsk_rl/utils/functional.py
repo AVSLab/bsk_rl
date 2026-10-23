@@ -115,6 +115,11 @@ def vectorize_nested_dict(dictionary: dict) -> tuple[list[str], np.ndarray]:
     return list(np.concatenate(keys)), np.concatenate(values)
 
 
+def _log_aliveness_failure(satellite: Any, checker_name: str) -> None:
+    """Log a failed aliveness check without evaluating it again."""
+    satellite.logger.warning(f"failed {checker_name} check")
+
+
 def aliveness_checker(
     func: Optional[Callable[..., bool]] = None,
     *,
@@ -125,8 +130,9 @@ def aliveness_checker(
 
     Checkers are evaluated at environment steps. Set ``continuous=True`` to also
     evaluate the checker during integration via a Basilisk event that terminates
-    the environment step on failure. ``check_rate`` (seconds) sets how often a
-    continuous checker is evaluated and defaults to the simulator rate.
+    the environment step on failure. ``check_rate`` (seconds) sets the minimum
+    interval between evaluations and defaults to the simulator rate. Checks run
+    at simulation timesteps, so the actual interval may be longer.
     """
 
     def decorator(func: Callable[..., bool]) -> Callable[..., bool]:
@@ -135,7 +141,7 @@ def aliveness_checker(
             self = args[0]
             alive = func(*args, **kwargs)
             if not alive and log_failure:
-                self.satellite.logger.warning(f"failed {func.__name__} check")
+                _log_aliveness_failure(self.satellite, func.__name__)
             return alive
 
         inner.__doc__ = (

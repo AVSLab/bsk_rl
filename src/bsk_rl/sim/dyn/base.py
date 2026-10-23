@@ -623,9 +623,9 @@ class BasicDynamicsModel(
             self.task_name, self.rwStateEffector, ModelPriority=priority
         )
 
-    @aliveness_checker
+    @aliveness_checker(continuous=True)
     def rw_speeds_valid(self) -> bool:
-        """Check if any wheel speed exceeds the ``maxWheelSpeed``."""
+        """Check wheel speeds against ``maxWheelSpeed`` during integration."""
         valid = all(
             abs(speed) < self.maxWheelSpeed * macros.rpm2radsec
             for speed in self.wheel_speeds
@@ -742,13 +742,12 @@ class BasicDynamicsModel(
             self.task_name, self.powerMonitor, ModelPriority=priority
         )
 
-    @aliveness_checker
+    @aliveness_checker(continuous=True)
     def battery_valid(self) -> bool:
         """Check if the battery has charge remaining.
 
-        Note that this check is instantaneous. If a satellite runs out of power during a
-        environment step but then recharges to have positive power at the end of the step,
-        the satellite will still be considered alive.
+        Evaluated during integration so battery depletion interrupts the environment
+        step, even if the satellite would recharge later in the step.
         """
         return self.battery_charge > 0
 

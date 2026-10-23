@@ -19,10 +19,12 @@ from bsk_rl.utils import vizard
 from bsk_rl.utils.functional import (
     AbstractClassProperty,
     Resetable,
+    _log_aliveness_failure,
     collect_default_args,
     compose_types,
     is_property,
     safe_dict_merge,
+    valid_func_name,
 )
 from bsk_rl.utils.orbital import TrajectorySimulator
 
@@ -296,10 +298,10 @@ class Satellite(ABC, Resetable):
                         check_rate = self.simulator.sim_rate
 
                     def condition(sim, checker=checker):
-                        return not checker()
+                        return self._is_alive and not checker()
 
-                    def side_effect(sim, name=name):
-                        self.logger.warning(f"failed {name} check")
+                    def side_effect(sim, checker_name=checker.__name__):
+                        _log_aliveness_failure(self, checker_name)
                         self._is_alive = False
                         self.record_death(sim.sim_time)
 
