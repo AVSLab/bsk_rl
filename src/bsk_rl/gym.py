@@ -41,14 +41,32 @@ def is_no_action(action):
     if isinstance(action, (float, np.floating)):
         # float32 cannot represent 2**31-1 exactly
         return bool(np.isclose(action, NO_ACTION, rtol=0.0, atol=1.0))
-    if isinstance(action, (np.ndarray, list, tuple)):
-        arr = np.asarray(action)
-        if arr.size == 0:
+    if isinstance(action, (list, tuple)):
+        # Quickly reject active actions, including ordinary hybrid tuples.
+        if not action or not is_no_action(action[0]):
             return False
-        if np.issubdtype(arr.dtype, np.integer):
-            return bool(np.all(arr == NO_ACTION))
-        return bool(np.all(np.isclose(arr, NO_ACTION, rtol=0.0, atol=1.0)))
-    return False
+
+        first_type = type(action[0])
+        numeric = isinstance(action[0], (int, float, np.integer, np.floating))
+        homogeneous = all(type(value) is first_type for value in action)
+        if not numeric or not homogeneous:
+            # The first element has already been checked. Preserve exact integer
+            # comparisons instead of promoting mixed integer/float inputs.
+            return all(is_no_action(value) for value in action[1:])
+
+        arr = np.asarray(action)
+    elif isinstance(action, np.ndarray):
+        arr = action
+    else:
+        return False
+
+    if arr.size == 0:
+        return False
+    if arr.dtype == object:
+        return all(is_no_action(value) for value in arr.flat)
+    if np.issubdtype(arr.dtype, np.integer):
+        return bool(np.all(arr == NO_ACTION))
+    return bool(np.all(np.isclose(arr, NO_ACTION, rtol=0.0, atol=1.0)))
 
 
 def no_action_like(action):
@@ -785,6 +803,10 @@ class ConstellationTasking(
                             else satellites[0].action_space.dtype
                         ),
                     )
+                elif isinstance(satellites[0].action_space, spaces.Tuple):
+                    act_spaces[agent] = spaces.Tuple(
+                        tuple(sat.action_space for sat in satellites)
+                    )
         return act_spaces
 
     @functools.lru_cache(maxsize=None)
@@ -911,29 +933,46 @@ class ConstellationTasking(
         self, agent: AgentID, action: SatAct
     ) -> dict[Satellite, SatAct]:
         """Decompose a meta agent action into satellite actions."""
-        sat_to_action_map = {}
-        i = 0
-        for satellite in self.meta_agent_groupings[agent]:
-            action_len = satellite.action_space.shape
-            if len(action_len) == 0:
-                action_len = 1
+        satellites = self.meta_agent_groupings[agent]
+        if isinstance(satellites[0].action_space, spaces.Tuple):
+            if is_no_action(action):
+                sat_to_action_map = dict.fromkeys(satellites)
+            elif len(satellites) == 1:
+                sat_to_action_map = {satellites[0]: action}
             else:
-                action_len = action_len[0]
-
-            if isinstance(action, (list, tuple, np.ndarray)):
                 if (
-                    not self.only_retask_idle_meta_agent_members
-                    or satellite.requires_retasking
+                    not isinstance(action, (list, tuple, np.ndarray))
+                    or (isinstance(action, np.ndarray) and action.ndim == 0)
+                    or len(action) != len(satellites)
                 ):
+                    raise ValueError(
+                        "Expected one hybrid action per satellite "
+                        f"in meta agent '{agent}' ({len(satellites)} actions)."
+                    )
+                sat_to_action_map = dict(zip(satellites, action))
+        else:
+            sat_to_action_map = {}
+            i = 0
+            for satellite in satellites:
+                action_len = satellite.action_space.shape
+                if len(action_len) == 0:
+                    action_len = 1
+                else:
+                    action_len = action_len[0]
+
+                if isinstance(action, (list, tuple, np.ndarray)):
                     if action_len == 1:
                         sat_to_action_map[satellite] = action[i]
                     else:
                         sat_to_action_map[satellite] = action[i : i + action_len]
+                    i += action_len
                 else:
+                    sat_to_action_map[satellite] = action
+
+        if self.only_retask_idle_meta_agent_members:
+            for satellite in satellites:
+                if not satellite.requires_retasking:
                     sat_to_action_map[satellite] = None
-                i += action_len
-            else:
-                sat_to_action_map[satellite] = action
 
         return sat_to_action_map
 

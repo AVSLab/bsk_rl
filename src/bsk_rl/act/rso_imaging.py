@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 from Basilisk.utilities import macros
 
-from bsk_rl.act.discrete_actions import DiscreteAction
+from bsk_rl.act.discrete_actions import DiscreteAction, clean_action
 from bsk_rl.utils.rso_imaging import candidate_snapshot
 
 
@@ -95,6 +95,7 @@ class ImageRSO(DiscreteAction):
 
     def set_action(self, action: int, prev_action_key=None) -> str:
         """Decode the same ordered snapshot used to construct observations."""
+        action, _ = clean_action(action)
         if not 0 <= action < self.n_actions:
             raise ValueError("RSO imaging action index out of range.")
         snapshot = getattr(self.satellite, "_rso_candidate_snapshot", None)
@@ -126,6 +127,7 @@ class ImageRSO(DiscreteAction):
 
     def set_action_override(self, action, prev_action_key=None) -> str:
         """Task an explicitly identified target without parsing spacecraft names."""
+        action, _ = clean_action(action)
         target_id = action if isinstance(action, str) else getattr(action, "id", None)
         if target_id is None:
             raise TypeError("Expected an RSO target ID or RSOTarget definition.")

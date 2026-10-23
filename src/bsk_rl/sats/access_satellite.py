@@ -623,10 +623,10 @@ class ImagingSatellite(AccessSatellite):
                 self._image_event_name,
                 macros.sec2nano(self.fsw.fsw_rate),
                 True,
-                conditionFunction=lambda sim: self.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData[
-                    0
-                ]
-                > current_data_level,
+                conditionFunction=lambda sim: (
+                    self.dynamics.storageUnit.storageUnitDataOutMsg.read().storedData[0]
+                    > current_data_level
+                ),
                 actionFunction=side_effect,
                 terminal=self.variable_interval,
             )
@@ -700,7 +700,10 @@ class ImagingSatellite(AccessSatellite):
         )
 
     def task_target_for_imaging(
-        self, target: "Target", max_duration: Optional[float] = None
+        self,
+        target: "Target",
+        max_duration: Optional[float] = None,
+        imaging_time: float | None = None,
     ):
         """Task the satellite to image a target.
 
@@ -708,13 +711,36 @@ class ImagingSatellite(AccessSatellite):
             target: Selected target
             max_duration: [s] Maximum duration to wait for imaging. If None, wait until
                 the end of the target's access window.
+            imaging_time: [s] Desired capture offset from the current simulation
+                time, not an exposure duration. If None, retain the controller's
+                existing imaging time and tolerances.
         """
         msg = f"{target} tasked for imaging"
         self.logger.info(msg)
-        self.fsw.action_image(target.r_LP_P, self.buffer_name)
+        kwargs = {}
+        if imaging_time is not None:
+            kwargs["imaging_time"] = imaging_time
+        self.fsw.action_image(target.r_LP_P, self.buffer_name, **kwargs)
         self.enable_target_window(target, max_duration=max_duration)
         self.draw_imaging_line(target)
         self.latest_target = target
+
+    def update_imaging_time(self, imaging_time: float) -> None:
+        """Update the imaging time for the current target.
+
+        Args:
+            imaging_time: [s] Desired capture offset from the current simulation
+                time. This is converted to an absolute controller time.
+        """
+        try:
+            self.fsw.insControl.imagingTime = macros.sec2nano(
+                imaging_time + self.simulator.sim_time
+            )
+        except Exception as e:
+            logger.debug(
+                "insControl.imagingTime not available; skipping update (reason: %s)",
+                e,
+            )
 
     @vizard.visualize
     def draw_imaging_line(
