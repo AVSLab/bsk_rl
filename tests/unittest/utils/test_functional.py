@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+from weakref import proxy
 
 import numpy as np
 import pytest
@@ -125,6 +126,43 @@ class TestAlivenessChecker:
         assert functional.check_aliveness_checkers(d, log_failure=True) is False
         d.satellite.logger.warning.assert_called_with("failed is_living check")
 
+    def test_continuous_defaults(self):
+        a = self.Alive()
+        assert a.is_alive.continuous is False
+        assert a.is_alive.check_rate is None
+
+    def test_continuous_kwargs(self):
+        class Continuous:
+            @functional.aliveness_checker(continuous=True, check_rate=0.5)
+            def still_alive(self):
+                return True
+
+        c = Continuous()
+        assert c.still_alive.continuous is True
+        assert c.still_alive.check_rate == 0.5
+        assert c.still_alive()
+
+    @pytest.mark.parametrize("alive", [True, False])
+    def test_empty_parentheses(self, alive):
+        class DefaultChecker:
+            satellite = MagicMock()
+
+            @functional.aliveness_checker()
+            def still_alive(self):
+                return alive
+
+        model = DefaultChecker()
+        assert model.still_alive.is_aliveness_checker is True
+        assert model.still_alive.continuous is False
+        assert model.still_alive.check_rate is None
+        assert functional.check_aliveness_checkers(model, log_failure=True) is alive
+        if alive:
+            model.satellite.logger.warning.assert_not_called()
+        else:
+            model.satellite.logger.warning.assert_called_once_with(
+                "failed still_alive check"
+            )
+
 
 @pytest.mark.parametrize("prop_name,expected", [("prop", True), ("not_a_prop", False)])
 def test_is_property(prop_name, expected):
@@ -139,3 +177,4 @@ def test_is_property(prop_name, expected):
 
     c = Class()
     assert functional.is_property(c, prop_name) == expected
+    assert functional.is_property(proxy(c), prop_name) == expected
