@@ -36,6 +36,9 @@ is still operational, returning true if the satellite is still alive. Passing
 ``continuous=True`` to the decorator also evaluates the checker during integration and
 stops the environment step if it fails.
 
+Battery charge and reaction wheel speed checks use continuous checking by default,
+at the simulator rate.
+
 """
 
 from deprecated import deprecated
