@@ -2,6 +2,7 @@ from typing import ClassVar
 
 import gymnasium as gym
 import pytest
+from Basilisk.utilities import macros
 
 from bsk_rl import act, data, obs, sats, scene
 from bsk_rl.sim import dyn, fsw
@@ -244,16 +245,34 @@ class TestMaxRangeDynModel:
 
 
 class TestContinuousAlivenessChecker:
-    @pytest.mark.parametrize("continuous,expected_time", [(False, 100.0), (True, 5.0)])
-    def test_step_vs_continuous(self, continuous, expected_time):
+    @pytest.mark.parametrize("model_name", ["dynamics", "fsw"])
+    @pytest.mark.parametrize(
+        "continuous,check_rate,expected_time",
+        [
+            (False, None, 100.0),
+            (True, None, 5.0),
+            (True, 0.5, 5.0),
+            (True, 2.0, 6.0),
+            (True, 2.5, 6.0),
+            (True, 3.0, 6.0),
+        ],
+    )
+    def test_step_vs_continuous(
+        self, model_name, continuous, check_rate, expected_time, caplog
+    ):
         class BoomDyn(dyn.DynamicsModel):
-            @aliveness_checker(continuous=continuous)
+            @aliveness_checker(continuous=continuous, check_rate=check_rate)
+            def time_valid(self):
+                return self.simulator.sim_time < 5.0
+
+        class BoomFSW(fsw.FSWModel):
+            @aliveness_checker(continuous=continuous, check_rate=check_rate)
             def time_valid(self):
                 return self.simulator.sim_time < 5.0
 
         class BoomSat(sats.Satellite):
-            fsw_type = fsw.FSWModel
-            dyn_type = BoomDyn
+            fsw_type = BoomFSW if model_name == "fsw" else fsw.FSWModel
+            dyn_type = BoomDyn if model_name == "dynamics" else dyn.DynamicsModel
             observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
             action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
@@ -266,9 +285,72 @@ class TestContinuousAlivenessChecker:
             disable_env_checker=True,
         )
 
-        env.reset()
+        env.reset(seed=0)
         _, _, terminated, _, _ = env.step(0)
 
         assert env.unwrapped.simulator.sim_time == pytest.approx(expected_time)
         assert not env.unwrapped.satellite.is_alive()
+        assert env.unwrapped.satellite.time_of_death == pytest.approx(expected_time)
         assert terminated
+        assert caplog.messages.count("failed time_valid check") == 1
+        env.close()
+
+    @pytest.mark.parametrize("checker_name", ["battery_valid", "rw_speeds_valid"])
+    @pytest.mark.parametrize("continuous", [False, True])
+    def test_transient_failure(self, checker_name, continuous, caplog):
+        class TransientFailureDyn(dyn.BasicDynamicsModel):
+            @property
+            def battery_charge(self):
+                if (
+                    checker_name == "battery_valid"
+                    and 5.0 <= self.simulator.sim_time < 10.0
+                ):
+                    return 0.0
+                return super().battery_charge
+
+            @property
+            def wheel_speeds(self):
+                if (
+                    checker_name == "rw_speeds_valid"
+                    and 5.0 <= self.simulator.sim_time < 10.0
+                ):
+                    return [1.1 * self.maxWheelSpeed * macros.rpm2radsec] * 3
+                return super().wheel_speeds
+
+        if not continuous:
+            checker = getattr(TransientFailureDyn, checker_name)
+            setattr(
+                TransientFailureDyn,
+                checker_name,
+                aliveness_checker(checker.__wrapped__),
+            )
+
+        class FailureSat(sats.Satellite):
+            dyn_type = TransientFailureDyn
+            fsw_type = fsw.BasicFSWModel
+            observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+            action_spec: ClassVar[list[act.Action]] = [act.Drift()]
+
+        env = gym.make(
+            "SatelliteTasking-v1",
+            satellite=FailureSat("Failure", sat_args=dict(oe=random_orbit)),
+            sim_rate=1.0,
+            time_limit=100.0,
+            max_step_duration=100.0,
+            disable_env_checker=True,
+        )
+
+        env.reset(seed=0)
+        _, _, terminated, _, _ = env.step(0)
+
+        expected_time = 5.0 if continuous else 100.0
+        assert env.unwrapped.simulator.sim_time == pytest.approx(expected_time)
+        assert terminated is continuous
+        assert env.unwrapped.satellite.is_alive() is not continuous
+        if continuous:
+            assert env.unwrapped.satellite.time_of_death == pytest.approx(5.0)
+            assert caplog.messages.count(f"failed {checker_name} check") == 1
+        else:
+            assert env.unwrapped.satellite.time_of_death is None
+            assert f"failed {checker_name} check" not in caplog.messages
+        env.close()
