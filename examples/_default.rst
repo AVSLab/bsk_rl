@@ -21,6 +21,7 @@ Earth Observation
 
    cloud_environment
    cloud_environment_with_reimaging
+   hybrid_image_quality
    aeos
 
 RSO Missions
