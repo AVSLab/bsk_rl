@@ -66,7 +66,6 @@ class TestImagingAndDownlink:
         assert self.env.unwrapped.satellite.dynamics.storage_level < storage_init
 
     def test_image_by_name(self):
-        # Smoketest
         self.env.reset()
         target = self.env.unwrapped.satellite.find_next_opportunities(
             n=10, types="target"
@@ -76,7 +75,75 @@ class TestImagingAndDownlink:
             n=10, types="target"
         )[9]["object"]
         self.env.step(target.id)
-        assert True
+
+
+class TestHybridImagingAndDownlink:
+    class ImageSat(sats.ImagingSatellite):
+        dyn_type = dyn.GroundStationDynModel
+        fsw_type = fsw.ImagingFSWModel
+        observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+        action_spec: ClassVar[list[act.Action]] = [
+            act.Downlink(hybrid=True),
+            act.Image(n_ahead_image=10, hybrid=True),
+        ]
+
+    env = gym.make(
+        "SatelliteTasking-v1",
+        satellite=ImageSat(
+            "EO_1",
+            sat_args=ImageSat.default_sat_args(
+                oe=random_orbit,
+                imageAttErrorRequirement=0.05,
+                imageRateErrorRequirement=0.05,
+                instrumentBaudRate=1.0,
+                dataStorageCapacity=3.0,
+                transmitterBaudRate=-1.0,
+            ),
+        ),
+        scenario=UniformTargets(n_targets=1000),
+        rewarder=data.UniqueImageReward(),
+        sim_rate=1.0,
+        time_limit=10000.0,
+        max_step_duration=1e9,
+        disable_env_checker=True,
+    )
+
+    def test_image(self):
+        self.env.reset()
+        storage_init = self.env.unwrapped.satellite.dynamics.storage_level
+        for i in range(10):
+            self.env.step((i + 1, 1000.0))
+        assert self.env.unwrapped.satellite.dynamics.storage_level > storage_init
+        assert self.env.unwrapped.satellite.dynamics.storage_level == approx(3.0)
+
+    @pytest.mark.flaky(retries=5, delay=1)
+    def test_downlink(self):
+        self.env.reset()
+        for i in range(1, 10):
+            self.env.step((0, 5.0 * i))
+        assert self.env.unwrapped.simulator.sim_time == approx(
+            np.sum([5 * i for i in range(1, 10)]), abs=1e-3
+        )
+
+    @pytest.mark.parametrize("duration", [0.0, 0.25])
+    def test_downlink_minimum_duration(self, duration):
+        self.env.reset(seed=0)
+        for step in range(1, 3):
+            self.env.step((0, duration))
+            assert self.env.unwrapped.simulator.sim_time == approx(
+                step * self.env.unwrapped.simulator.sim_rate
+            )
+
+    def test_image_by_name(self):
+        self.env.reset()
+        target = self.env.unwrapped.satellite.find_next_opportunities(
+            n=10, types="target"
+        )[9]["object"]
+        self.env.step(target)
+        target = self.env.unwrapped.satellite.find_next_opportunities(
+            n=10, types="target"
+        )[9]["object"]
+        self.env.step(target.id)
 
 
 ###########################

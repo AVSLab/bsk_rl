@@ -3,6 +3,7 @@
 from types import SimpleNamespace as NS
 from unittest.mock import Mock
 
+import numpy as np
 import pytest
 
 from bsk_rl.act import ImageRSO
@@ -110,3 +111,35 @@ def test_pending_target_tasking_respects_scenario_setting(
         action.satellite.update_timed_terminal_event.assert_called_once()
         assert action.chosen_target_ids == [definition.id]
     assert mission.pending[definition.id] == {"camera:1"}
+@pytest.mark.parametrize("parameter", [None, 0.0, np.array([2.5], dtype=np.float32)])
+def test_nonhybrid_rso_accepts_tuple_without_forwarding_parameter(parameter):
+    action = ImageRSO(1)
+    target = NS(id="observed")
+    action.satellite = NS(
+        rso_scenario=NS(revision=0, targets_by_id={target.id: target}),
+        _rso_candidate_snapshot=CandidateSnapshot(10, 0, (target,)),
+    )
+    action.simulator = NS(sim_time=10)
+    action._task = Mock(return_value=target.id)
+
+    assert action.set_action((0, parameter)) == target.id
+
+    action._task.assert_called_once_with(target)
+    assert action.hybrid is False
+
+
+@pytest.mark.parametrize("as_object", [False, True])
+def test_nonhybrid_rso_normalizes_explicit_target_tuple(as_object):
+    action = ImageRSO(1)
+    target = NS(id="observed")
+    action.satellite = NS(rso_scenario=NS(targets_by_id={target.id: target}))
+    action._task = Mock(return_value=target.id)
+
+    assert (
+        action.set_action_override(
+            (target if as_object else target.id, np.array([2.5]))
+        )
+        == target.id
+    )
+
+    action._task.assert_called_once_with(target)
