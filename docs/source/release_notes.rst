@@ -5,6 +5,20 @@ Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
 
+* Add optional hybrid action spaces with ``hybrid=True`` on supported discrete
+  actions. Mode, broadcast, and ground-imaging actions accept a requested duration.
+  Ground imaging instead uses a desired capture-time offset from the current
+  simulation time when either ``timeToleranceLower`` or ``timeToleranceUpper`` is
+  enabled. Configure these bounds in seconds; each defaults to zero, disabling
+  that bound. The imaging mode is selected on each reset, with a warning when
+  capture-time offsets are used. Action spaces remain purely discrete by default.
+  Mixed discrete/hybrid actions and grouped constellation actions are supported.
+  Actions with a requested duration run for at least one simulator time step,
+  even when a shorter duration is requested or configured.
+  See issue #363.
+* Add :doc:`the hybrid imaging and image quality example <examples/hybrid_image_quality>`,
+  demonstrating timing wrappers, time-varying acquisition quality and rewards,
+  RLlib policy setup, and multi-satellite coordination.
 * Add ``block_pending_targets=False`` to :class:`~bsk_rl.scene.RSOTargets`
   to allow reimaging before downlink, preserving cooldowns and image/reward
   bookkeeping. Pending targets remain blocked by default. See issue #364.
