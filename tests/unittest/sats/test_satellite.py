@@ -178,7 +178,8 @@ class TestSatellite:
         pass  # Probably better with integration testing
 
     @pytest.mark.parametrize("model_name", ["dynamics", "fsw"])
-    def test_setup_aliveness_events(self, model_name):
+    @pytest.mark.parametrize("log_failure", [True, False])
+    def test_setup_aliveness_events(self, model_name, log_failure):
         sat = sats.Satellite(name="TestSat", sat_args={})
         sat._is_alive = True
         sat.time_of_death = None
@@ -214,7 +215,7 @@ class TestSatellite:
         fsw = Fsw(sat)
         sat.dynamics = proxy(dyn)
         sat.fsw = proxy(fsw)
-        sat.setup_aliveness_events()
+        sat.setup_aliveness_events(log_failure=log_failure)
 
         assert sat.simulator.createNewEvent.call_count == 2
         event_names = [
@@ -243,7 +244,10 @@ class TestSatellite:
         assert sat._is_alive is False
         assert sat.time_of_death == 12.0
         assert model.check_count == 2
-        sat.logger.warning.assert_called_once_with("failed continuous_valid check")
+        if log_failure:
+            sat.logger.warning.assert_called_once_with("failed continuous_valid check")
+        else:
+            sat.logger.warning.assert_not_called()
 
         other_model = fsw if model_name == "dynamics" else dyn
         other_model.fail_continuous = True
@@ -254,7 +258,10 @@ class TestSatellite:
         assert other_model.check_count == 1
         assert not sat.is_alive()
         assert sat.time_of_death == 12.0
-        sat.logger.warning.assert_called_once_with("failed continuous_valid check")
+        if log_failure:
+            sat.logger.warning.assert_called_once_with("failed continuous_valid check")
+        else:
+            sat.logger.warning.assert_not_called()
 
     def test_disable_timed_event(self):
         sat = sats.Satellite(name="TestSat", sat_args={})

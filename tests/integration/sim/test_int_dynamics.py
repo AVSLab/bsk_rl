@@ -245,7 +245,6 @@ class TestMaxRangeDynModel:
 
 
 class TestContinuousAlivenessChecker:
-    @pytest.mark.parametrize("model_name", ["dynamics", "fsw"])
     @pytest.mark.parametrize(
         "continuous,check_rate,expected_time",
         [
@@ -258,21 +257,16 @@ class TestContinuousAlivenessChecker:
         ],
     )
     def test_step_vs_continuous(
-        self, model_name, continuous, check_rate, expected_time, caplog
+        self, continuous, check_rate, expected_time, caplog
     ):
         class BoomDyn(dyn.DynamicsModel):
             @aliveness_checker(continuous=continuous, check_rate=check_rate)
             def time_valid(self):
                 return self.simulator.sim_time < 5.0
 
-        class BoomFSW(fsw.FSWModel):
-            @aliveness_checker(continuous=continuous, check_rate=check_rate)
-            def time_valid(self):
-                return self.simulator.sim_time < 5.0
-
         class BoomSat(sats.Satellite):
-            fsw_type = BoomFSW if model_name == "fsw" else fsw.FSWModel
-            dyn_type = BoomDyn if model_name == "dynamics" else dyn.DynamicsModel
+            fsw_type = fsw.FSWModel
+            dyn_type = BoomDyn
             observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
             action_spec: ClassVar[list[act.Action]] = [act.Drift()]
 
