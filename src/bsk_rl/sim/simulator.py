@@ -62,7 +62,6 @@ class Simulator(SimulationBaseClass.SimBaseClass):
             satellite.set_simulator(self)
             self.dynamics_list[satellite.name] = satellite.set_dynamics(self.sim_rate)
             self.fsw_list[satellite.name] = satellite.set_fsw(self.sim_rate)
-            satellite.setup_aliveness_events()
 
     def finish_init(self) -> None:
         """Finish simulator initialization."""

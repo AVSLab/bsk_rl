@@ -278,7 +278,7 @@ class Satellite(ABC, Resetable):
         self.fsw = proxy(fsw)
         return fsw
 
-    def setup_aliveness_events(self) -> None:
+    def setup_aliveness_events(self, log_failure: bool = True) -> None:
         """Create simulator events for continuous aliveness checkers.
 
         :meta private:
@@ -301,7 +301,8 @@ class Satellite(ABC, Resetable):
                         return self._is_alive and not checker()
 
                     def side_effect(sim, checker_name=checker.__name__):
-                        _log_aliveness_failure(self, checker_name)
+                        if log_failure:
+                            _log_aliveness_failure(self, checker_name)
                         self._is_alive = False
                         self.record_death(sim.sim_time)
 
@@ -327,6 +328,7 @@ class Satellite(ABC, Resetable):
         """Called during environment reset, after Basilisk simulation initialization."""
         self.observation_builder.reset_post_sim_init()
         self.action_builder.reset_post_sim_init()
+        self.setup_aliveness_events()
 
     @property
     def observation_space(self) -> spaces.Space:
