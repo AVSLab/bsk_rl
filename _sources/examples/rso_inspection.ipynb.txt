@@ -1,0 +1,598 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "5479d126",
+   "metadata": {},
+   "source": [
+    "# RSO Inspection\n",
+    "\n",
+    "This example demonstrates the configuration of a resident space object (RSO) inspection\n",
+    "environment, in which a servicer spacecraft circumnavigates a RSO to image the illuminated\n",
+    "facets."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "4209273f",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:58:45.610095Z",
+     "start_time": "2026-10-07T18:58:45.595259Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "/Users/afgh1891/Repositories/Pull_request/.venv_new/bin/python\n"
+     ]
+    }
+   ],
+   "source": [
+    "from functools import partial\n",
+    "from importlib.metadata import version\n",
+    "from typing import ClassVar\n",
+    "\n",
+    "import numpy as np\n",
+    "from Basilisk.architecture import bskLogging\n",
+    "from Basilisk.utilities.orbitalMotion import elem2rv\n",
+    "\n",
+    "from bsk_rl import ConstellationTasking, act, data, obs, sats, scene\n",
+    "from bsk_rl.obs.relative_observations import rso_imaged_regions\n",
+    "from bsk_rl.sim import dyn, fsw\n",
+    "from bsk_rl.utils.attitude import hill_frame_attitude\n",
+    "from bsk_rl.utils.orbital import (\n",
+    "    fibonacci_sphere,\n",
+    "    random_orbit,\n",
+    "    random_unit_vector,\n",
+    "    relative_to_chief,\n",
+    ")\n",
+    "\n",
+    "bskLogging.setDefaultLogLevel(bskLogging.BSK_WARNING)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "22082c62",
+   "metadata": {},
+   "source": [
+    "RLlib is actively developed and can change significantly from version to version. For this\n",
+    "script, the following version is used:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "fde78b08",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:59:00.150824Z",
+     "start_time": "2026-10-07T18:59:00.138053Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'2.35.0'"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "version(\"ray\")  # Parent package of RLlib"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e5875010",
+   "metadata": {},
+   "source": [
+    "## Defining the Satellites\n",
+    "\n",
+    "First, the RSO satellite is configured. A simple model is used that has no actuators modelled and just deterministically points nadir."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "48b72ea2",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:59:02.401144Z",
+     "start_time": "2026-10-07T18:59:02.398418Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "class RSOSat(sats.Satellite):\n",
+    "    observation_spec: ClassVar[list[obs.Observation]] = [\n",
+    "        obs.SatProperties(dict(prop=\"one\", fn=lambda _: 1.0)),\n",
+    "    ]\n",
+    "    action_spec: ClassVar[list[act.Action]] = [act.NadirPoint(duration=1e9)]\n",
+    "    dyn_type = (dyn.ConjunctionDynModel, dyn.RSODynModel)\n",
+    "    fsw_type = fsw.FSWModel"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ac0f8d33",
+   "metadata": {},
+   "source": [
+    "Arguments for the satellite are configured for smooth pointing behavior."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "8459a5d1",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:59:04.318429Z",
+     "start_time": "2026-10-07T18:59:04.316216Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "rso_sat_args = dict(conjunction_radius=2.0)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fcbb42c7",
+   "metadata": {},
+   "source": [
+    "The inspector satellite has a more complex configuration. First, an observation function\n",
+    "for the sun vector is defined."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "e01b5686",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:59:05.901309Z",
+     "start_time": "2026-10-07T18:59:05.899355Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def sun_hat_chief(self, other):\n",
+    "    r_SN_N = (\n",
+    "        self.simulator.world.gravFactory.spiceObject.planetStateOutMsgs[\n",
+    "            self.simulator.world.sun_index\n",
+    "        ]\n",
+    "        .read()\n",
+    "        .PositionVector\n",
+    "    )\n",
+    "    r_BN_N = self.dynamics.r_BN_N\n",
+    "    r_SN_N = np.array(r_SN_N)\n",
+    "    r_SB_N = r_SN_N - r_BN_N\n",
+    "    r_SB_N_hat = r_SB_N / np.linalg.norm(r_SB_N)\n",
+    "    HN = other.dynamics.HN\n",
+    "    return HN @ r_SB_N_hat"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a4ea64ca",
+   "metadata": {},
+   "source": [
+    "The inspector satellite is configured with observations relating to the relative state and the mission\n",
+    "objectives. The satellite is given an action for impulsively thrusting and drifting. The \n",
+    "dynamics and flight software models introduce a maximum range check, collision checking\n",
+    "orbital maneuvers, and RSO inspection."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "f3cb39ce",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:59:16.127999Z",
+     "start_time": "2026-10-07T18:59:16.115250Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "class InspectorSat(sats.Satellite):\n",
+    "    observation_spec: ClassVar[list[obs.Observation]] = [\n",
+    "        obs.SatProperties(\n",
+    "            dict(prop=\"dv_available\", norm=10),\n",
+    "            dict(prop=\"inclination\", norm=np.pi),\n",
+    "            dict(prop=\"eccentricity\", norm=0.1),\n",
+    "            dict(prop=\"semi_major_axis\", norm=7000),\n",
+    "            dict(prop=\"ascending_node\", norm=2 * np.pi),\n",
+    "            dict(prop=\"argument_of_periapsis\", norm=2 * np.pi),\n",
+    "            dict(prop=\"true_anomaly\", norm=2 * np.pi),\n",
+    "            dict(prop=\"beta_angle\", norm=np.pi),\n",
+    "        ),\n",
+    "        obs.ResourceRewardWeight(),\n",
+    "        obs.RelativeProperties(\n",
+    "            dict(prop=\"r_DC_Hc\", norm=500),\n",
+    "            dict(prop=\"v_DC_Hc\", norm=5),\n",
+    "            dict(prop=\"rso_sigma_BH\", norm=1.0),\n",
+    "            dict(prop=\"rso_omega_BH\", norm=0.01),\n",
+    "            dict(\n",
+    "                prop=\"rso_imaged_regions\",\n",
+    "                fn=partial(\n",
+    "                    rso_imaged_regions,\n",
+    "                    region_centers=fibonacci_sphere(15),\n",
+    "                    frame=\"chief_hill\",\n",
+    "                ),\n",
+    "            ),\n",
+    "            dict(prop=\"sun_hat_Hc\", fn=sun_hat_chief),\n",
+    "            chief_name=\"RSO\",\n",
+    "        ),\n",
+    "        obs.Eclipse(norm=5700),\n",
+    "        obs.Time(),\n",
+    "    ]\n",
+    "    action_spec: ClassVar[list[act.Action]] = [\n",
+    "        act.ImpulsiveThrustHill(\n",
+    "            chief_name=\"RSO\",\n",
+    "            max_dv=1.0,\n",
+    "            max_drift_duration=5700.0 * 2,\n",
+    "            fsw_action=\"action_inspect_rso\",\n",
+    "        )\n",
+    "    ]\n",
+    "    dyn_type = (dyn.MaxRangeDynModel, dyn.ConjunctionDynModel, dyn.RSOInspectorDynModel)\n",
+    "    fsw_type = (\n",
+    "        fsw.SteeringFSWModel,\n",
+    "        fsw.MagicOrbitalManeuverFSWModel,\n",
+    "        fsw.RSOInspectorFSWModel,\n",
+    "    )"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "82feb2bc",
+   "metadata": {},
+   "source": [
+    "Generous configurations are used for the inspector, allowing for \"sloppy\" attitude control\n",
+    "with a low simulation step rate."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "4e999a09",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:59:20.973320Z",
+     "start_time": "2026-10-07T18:59:20.966452Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "inspector_sat_args = dict(\n",
+    "    imageAttErrorRequirement=1.0,\n",
+    "    imageRateErrorRequirement=None,\n",
+    "    instrumentBaudRate=1,\n",
+    "    dataStorageCapacity=1e6,\n",
+    "    batteryStorageCapacity=1e9,\n",
+    "    storedCharge_Init=1e9,\n",
+    "    conjunction_radius=2.0,\n",
+    "    dv_available_init=10.0,\n",
+    "    max_range_radius=1000,\n",
+    "    chief_name=\"RSO\",\n",
+    "    u_max=1.0,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "832adeb8",
+   "metadata": {},
+   "source": [
+    "## Environment Generation\n",
+    "\n",
+    "A satellite argument randomizer is defined to configure the initial state of the satellites.\n",
+    "The RSO is put into a random orbit with an apogee and perigee between 500 km and 1100 km.\n",
+    "The inspector is placed in the region 250 to 750 meters from the RSO, with up to 1 m/s of\n",
+    "relative velocity. Finally, the RSO's attitude and body rate are set up to be in the nadir-pointing initial configuration."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "f6e96922",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:59:27.598797Z",
+     "start_time": "2026-10-07T18:59:27.584625Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def sat_arg_randomizer(satellites, spin_config=None):\n",
+    "    # Generate the RSO orbit\n",
+    "    R_E = 6371.0  # km\n",
+    "    a = R_E + np.random.uniform(500, 1100)\n",
+    "    e = np.random.uniform(0.0, min(1 - (R_E + 500) / a, (R_E + 1100) / a - 1))\n",
+    "    chief_orbit = random_orbit(a=a, e=e)\n",
+    "\n",
+    "    inspectors = [sat for sat in satellites if \"Inspector\" in sat.name]\n",
+    "    rso = next(satellite for satellite in satellites if satellite.name == \"RSO\")\n",
+    "\n",
+    "    # Generate the inspector initial states.\n",
+    "    args = {}\n",
+    "    for inspector in inspectors:\n",
+    "        relative_randomizer = relative_to_chief(\n",
+    "            chief_name=\"RSO\",\n",
+    "            chief_orbit=chief_orbit,\n",
+    "            deputy_relative_state={\n",
+    "                inspector.name: lambda: np.concatenate(\n",
+    "                    (\n",
+    "                        random_unit_vector() * np.random.uniform(250, 750),\n",
+    "                        random_unit_vector() * np.random.uniform(0, 1.0),\n",
+    "                    )\n",
+    "                ),\n",
+    "            },\n",
+    "        )\n",
+    "        args.update(relative_randomizer([rso, inspector]))\n",
+    "\n",
+    "    # Configure the RSO attitude. Zero relative spin preserves nadir pointing.\n",
+    "    mu = rso.sat_args_generator[\"mu\"]\n",
+    "    r_N, v_N = elem2rv(mu, args[rso][\"oe\"])\n",
+    "\n",
+    "    sigma_init, omega_init = hill_frame_attitude(r_N, v_N, spin_config=spin_config)\n",
+    "    args[rso][\"sigma_init\"] = sigma_init\n",
+    "    args[rso][\"omega_init\"] = omega_init\n",
+    "\n",
+    "    return args"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "57fa33ef",
+   "metadata": {},
+   "source": [
+    "The scenario is configured to set the RSO geometry as a sphere with 100 points at a radius\n",
+    "of 1 meter. Points must be imaged within 30 degrees of their normal, with illumination coming\n",
+    "from no more than 60 degrees from normal. The inspector must be within 250 meters to inspect\n",
+    "the RSO."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "aa79834c",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:59:30.039680Z",
+     "start_time": "2026-10-07T18:59:30.027169Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "scenario = scene.SphericalRSO(\n",
+    "    n_points=100,\n",
+    "    radius=1.0,\n",
+    "    theta_max=np.radians(30),\n",
+    "    range_max=250,\n",
+    "    theta_solar_max=np.radians(60),\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9ae0983f",
+   "metadata": {},
+   "source": [
+    "This scenario uses two rewarders. For the RSO inspection component of the task, a bonus\n",
+    "of 1.0 is yielded once at least 90% of the illuminated points have been inspected. The\n",
+    "ResourceReward is used to penalize fuel use, with some basic logic add to only apply the\n",
+    "reward to the Inspector."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "02c7d5d1",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:59:34.184265Z",
+     "start_time": "2026-10-07T18:59:34.174431Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "rewarders = (\n",
+    "    data.RSOInspectionReward(\n",
+    "        completion_bonus=1.0,\n",
+    "        completion_threshold=0.90,\n",
+    "    ),\n",
+    "    data.ResourceReward(\n",
+    "        resource_fn=lambda sat: (\n",
+    "            sat.fsw.dv_available\n",
+    "            if isinstance(sat.fsw, fsw.MagicOrbitalManeuverFSWModel)\n",
+    "            else 0.0\n",
+    "        ),\n",
+    "        reward_weight=np.random.uniform(0.0, 0.5),\n",
+    "    ),\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "025e1466",
+   "metadata": {},
+   "source": "By default, the RSO is initialized in a nadir-pointing attitude. Alternatively, `spin_config` can be used to specify a fixed or uniformly sampled body rate about a radial, tangential, normal, velocity-aligned, random, or user-defined Hill-frame axis. All body rates are specified in deg/s. Leaving ``rso_spin_config`` as ``None`` retains nadir pointing for this example."
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3c64b98a530c0ca",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# For example, use {\"type\": \"fixed\", \"rate\": 1.0, \"axis\": \"normal\"} to add a 1 deg/s spin about the orbit-normal axis,\n",
+    "# or {\"type\": \"uniform\", \"low\": 0.0, \"high\": 1.0, \"axis\": \"normal\"} to set a random spin rate within a specific bound\n",
+    "rso_spin_config = None\n",
+    "configured_sat_arg_randomizer = partial(sat_arg_randomizer, spin_config=rso_spin_config)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2783a78f35ca0fa8",
+   "metadata": {},
+   "source": "With all the components defined, the environment can be instantiated."
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "f19447ce",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:59:40.469489Z",
+     "start_time": "2026-10-07T18:59:40.457921Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "env = ConstellationTasking(\n",
+    "    satellites=[\n",
+    "        RSOSat(\"RSO\", sat_args=rso_sat_args),\n",
+    "        InspectorSat(\"Inspector\", sat_args=inspector_sat_args, obs_type=dict),\n",
+    "    ],\n",
+    "    sat_arg_randomizer=configured_sat_arg_randomizer,\n",
+    "    scenario=scenario,\n",
+    "    rewarder=rewarders,\n",
+    "    time_limit=60000,\n",
+    "    sim_rate=5.0,\n",
+    "    log_level=\"INFO\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "804a563b",
+   "metadata": {},
+   "source": [
+    "## Environment Interaction\n",
+    "\n",
+    "The environment is reset and randomly stepped through.\n",
+    "\n",
+    "<div class=\"alert alert-info\">\n",
+    "\n",
+    "**Future Work:** This example will be updated with an actual trained policy in the future.\n",
+    "\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "0fcfc081",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2026-10-07T18:59:47.406059Z",
+     "start_time": "2026-10-07T18:59:42.718129Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\u001b[90;3m2026-10-07 12:59:42,721 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[mResetting environment with seed=3806700768\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,190 \u001b[0m\u001b[mutils.orbital                  \u001b[0m\u001b[93mWARNING    \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[93mCould not find eclipse transitions in next 12000.0 seconds\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,195 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[mEnvironment reset\u001b[0m\n",
+      "/Users/afgh1891/Repositories/Pull_request/.venv_new/lib/python3.12/site-packages/gymnasium/spaces/box.py:231: UserWarning: \u001b[33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64\u001b[0m\n",
+      "  gym.logger.warn(\n",
+      "/Users/afgh1891/Repositories/Pull_request/.venv_new/lib/python3.12/site-packages/gymnasium/spaces/box.py:297: UserWarning: \u001b[33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64\u001b[0m\n",
+      "  gym.logger.warn(\n",
+      "\u001b[90;3m2026-10-07 12:59:46,495 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,496 \u001b[0m\u001b[36msats.satellite.RSO             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mRSO: \u001b[0m\u001b[maction_nadir_point tasked for 1000000000.0 seconds\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,496 \u001b[0m\u001b[36msats.satellite.RSO             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[36mRSO: \u001b[0m\u001b[msetting timed terminal event at 1000000000.0\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,497 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mThrust clamped from 1.1321751672541251 m/s to 1.0 m/s.\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,498 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mThrusting with inertial dV [ 0.33530239 -0.94189951  0.01994027] with 1783.0487060546875 second drift.\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,500 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[msetting timed terminal event at 1783.0\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,500 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<0.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mFSW action action_inspect_rso activated.\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,552 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mExceeded maximum range of 1000 m from RSO\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,557 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mInspected 8 points this step\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,558 \u001b[0m\u001b[mdata.rso_inspection            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[mInspector inspected 8 new points.\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,558 \u001b[0m\u001b[mdata.rso_inspection            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[mInspected/Illuminated/Total: 8/35/100\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,558 \u001b[0m\u001b[mdata.composition               \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[mRSOInspectionReward reward: {'Inspector': 0.08}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,559 \u001b[0m\u001b[mdata.composition               \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[mResourceReward reward: {'Inspector': np.float64(-0.3615391244763904)}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,559 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[mTotal reward: {'Inspector': np.float64(-0.2815391244763904)}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,561 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[93mWARNING    \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[93mfailed range_valid check\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,570 \u001b[0m\u001b[mutils.orbital                  \u001b[0m\u001b[93mWARNING    \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[93mCould not find eclipse transitions in next 12000.0 seconds\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,571 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[mStep reward: {'Inspector': np.float64(-1.2815391244763905)}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,571 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[mEpisode terminated: ['Inspector']\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,572 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,573 \u001b[0m\u001b[36msats.satellite.RSO             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[36mRSO: \u001b[0m\u001b[maction_nadir_point tasked for 1000000000.0 seconds\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,574 \u001b[0m\u001b[36msats.satellite.RSO             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[36mRSO: \u001b[0m\u001b[msetting timed terminal event at 1000001575.0\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,575 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mThrusting with inertial dV [-0.10399702 -0.16877615  0.55939106] with 10681.8955078125 second drift.\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,576 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[msetting timed terminal event at 12256.9\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,576 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<1575.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mFSW action action_inspect_rso activated.\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,927 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mtimed termination at 12256.9 \u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,942 \u001b[0m\u001b[mdata.rso_inspection            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[mInspected/Illuminated/Total: 8/46/100\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,943 \u001b[0m\u001b[mdata.composition               \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[mResourceReward reward: {'Inspector': np.float64(-0.21456642807097814)}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,944 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[mTotal reward: {'Inspector': np.float64(-0.21456642807097814)}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,944 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mSatellite Inspector requires retasking\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,946 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[mStep reward: {}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,947 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,948 \u001b[0m\u001b[36msats.satellite.RSO             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[36mRSO: \u001b[0m\u001b[maction_nadir_point tasked for 1000000000.0 seconds\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,948 \u001b[0m\u001b[36msats.satellite.RSO             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[36mRSO: \u001b[0m\u001b[msetting timed terminal event at 1000012260.0\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,949 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mThrusting with inertial dV [-0.05931276 -0.43832896 -0.21176288] with 6205.38525390625 second drift.\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,950 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[msetting timed terminal event at 18465.4\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:46,951 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<12260.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mFSW action action_inspect_rso activated.\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,244 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mtimed termination at 18465.4 \u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,258 \u001b[0m\u001b[mdata.rso_inspection            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[mInspected/Illuminated/Total: 8/46/100\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,259 \u001b[0m\u001b[mdata.composition               \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[mResourceReward reward: {'Inspector': np.float64(-0.17729938984206417)}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,260 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[mTotal reward: {'Inspector': np.float64(-0.17729938984206417)}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,261 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mSatellite Inspector requires retasking\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,262 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[mStep reward: {}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,263 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[93;1m=== STARTING STEP ===\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,265 \u001b[0m\u001b[36msats.satellite.RSO             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[36mRSO: \u001b[0m\u001b[maction_nadir_point tasked for 1000000000.0 seconds\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,265 \u001b[0m\u001b[36msats.satellite.RSO             \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[36mRSO: \u001b[0m\u001b[msetting timed terminal event at 1000018470.0\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,267 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mThrusting with inertial dV [-0.84690159 -0.02538404 -0.33268091] with 3320.605224609375 second drift.\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,268 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[msetting timed terminal event at 21790.6\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,269 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<18470.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mFSW action action_inspect_rso activated.\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,392 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<21795.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mtimed termination at 21790.6 \u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,401 \u001b[0m\u001b[mdata.rso_inspection            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<21795.00> \u001b[0m\u001b[mInspected/Illuminated/Total: 8/46/100\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,401 \u001b[0m\u001b[mdata.composition               \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<21795.00> \u001b[0m\u001b[mResourceReward reward: {'Inspector': np.float64(-0.32909261306083193)}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,402 \u001b[0m\u001b[mdata.base                      \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<21795.00> \u001b[0m\u001b[mTotal reward: {'Inspector': np.float64(-0.32909261306083193)}\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,402 \u001b[0m\u001b[92msats.satellite.Inspector       \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<21795.00> \u001b[0m\u001b[92mInspector: \u001b[0m\u001b[mSatellite Inspector requires retasking\u001b[0m\n",
+      "\u001b[90;3m2026-10-07 12:59:47,403 \u001b[0m\u001b[mgym                            \u001b[0m\u001b[mINFO       \u001b[0m\u001b[33m<21795.00> \u001b[0m\u001b[mStep reward: {}\u001b[0m\n"
+     ]
+    }
+   ],
+   "source": [
+    "env.reset()\n",
+    "for i in range(4):\n",
+    "    env.step(dict(RSO=0, Inspector=env.action_space(\"Inspector\").sample()))"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

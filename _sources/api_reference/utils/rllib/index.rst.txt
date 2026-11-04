@@ -1,0 +1,25 @@
+.. _bsk_rl.utils.rllib:
+.. currentmodule:: bsk_rl.utils.rllib
+
+RLlib Utilities
+===============
+
+
+
+.. automodule:: bsk_rl.utils.rllib
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   callbacks
+   discounting
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+

@@ -1,0 +1,13 @@
+.. _bsk_rl.act.actions:
+.. currentmodule:: bsk_rl.act.actions
+
+Backend
+=======
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.act.actions
+   :members:
+   :show-inheritance:
+

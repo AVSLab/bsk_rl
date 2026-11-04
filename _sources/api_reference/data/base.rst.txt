@@ -1,0 +1,13 @@
+.. _bsk_rl.data.base:
+.. currentmodule:: bsk_rl.data.base
+
+Base Data
+=========
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.data.base
+   :members:
+   :show-inheritance:
+
