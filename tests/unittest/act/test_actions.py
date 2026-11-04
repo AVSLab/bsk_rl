@@ -133,6 +133,66 @@ class TestDiscreteFSWAction:
         fswact.satellite.fsw.action_fsw.assert_called_once()
 
 
+class TestVariableDurationDownlink:
+    @staticmethod
+    def make_downlink(storage_level, *, minimum_duration=10.0):
+        downlink = act.Downlink(
+            variable_duration_downlink=True,
+            minimum_duration=minimum_duration,
+            empty_storage_threshold_bits=1.0,
+        )
+        downlink.satellite = MagicMock()
+        downlink.satellite.name = "sat"
+        downlink.satellite.dynamics.storage_level = storage_level
+        downlink.satellite.fsw.fsw_rate = 2.0
+        downlink.satellite.variable_interval = True
+        downlink.simulator = SimpleNamespace(
+            sim_rate=1.0,
+            sim_time=20.0,
+            eventMap={},
+            createNewEvent=MagicMock(),
+            delete_event=MagicMock(),
+        )
+        return downlink
+
+    def test_empty_at_start_waits_for_minimum_duration(self):
+        downlink = self.make_downlink(storage_level=0.0)
+
+        downlink._enable_downlink_empty_event()
+
+        assert downlink._downlink_earliest_stop_time == 30.0
+        assert not downlink._downlink_empty_event_ready()
+        downlink.simulator.sim_time = 30.0
+        assert downlink._downlink_empty_event_ready()
+
+    def test_nonempty_buffer_stops_as_soon_as_it_drains(self):
+        downlink = self.make_downlink(storage_level=5.0)
+
+        downlink._enable_downlink_empty_event()
+
+        assert downlink._downlink_earliest_stop_time == 20.0
+        assert not downlink._downlink_empty_event_ready()
+        downlink.satellite.dynamics.storage_level = 0.5
+        assert downlink._downlink_empty_event_ready()
+
+    def test_finishing_and_disabling_event_cleans_up_state(self):
+        downlink = self.make_downlink(storage_level=0.0)
+        downlink._enable_downlink_empty_event()
+        event_name = downlink._downlink_empty_event_name
+        downlink.simulator.eventMap[event_name] = object()
+
+        downlink._finish_downlink_early()
+        assert downlink.satellite.requires_retasking
+        assert not downlink._downlink_empty_event_ready()
+        downlink._clear_action_events()
+
+        downlink.simulator.delete_event.assert_called_once_with(event_name)
+        assert downlink._downlink_empty_event_name is None
+
+    def test_behavior_remains_opt_in(self):
+        assert act.Downlink().variable_duration_downlink is False
+
+
 @pytest.mark.parametrize("kind", ["fsw", "broadcast"])
 @pytest.mark.parametrize(
     "requested,cap,sim_rate,expected_duration",

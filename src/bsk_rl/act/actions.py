@@ -116,6 +116,10 @@ class Action(ABC, Resetable):
         """
         self.simulator = simulator  # already a proxy
 
+    def _clear_action_events(self) -> None:
+        """Remove simulator events that should expire on the next action selection."""
+        pass
+
     @abstractmethod
     def set_action(self, action: Any) -> None:  # pragma: no cover
         """Execute code to perform an action."""

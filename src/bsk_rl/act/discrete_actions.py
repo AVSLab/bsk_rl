@@ -101,6 +101,8 @@ class DiscreteActionBuilder(ActionBuilder):
         only their local index, even when the overall action space is hybrid.
         """
         action_index, parameter = clean_action(action, hybrid=self.hybrid)
+        for act in self.action_spec:
+            act._clear_action_events()
         self.satellite.disable_timed_terminal_event()
         if not np.issubdtype(type(action_index), np.integer):
             logger.warning(
@@ -326,6 +328,9 @@ class Downlink(DiscreteFSWAction):
         name: Optional[str] = None,
         duration: Optional[float] = None,
         hybrid: bool = False,
+        variable_duration_downlink: bool = False,
+        empty_storage_threshold_bits: float = 1.0,
+        minimum_duration: float = 10.0,
     ):
         """Action to transmit data from the data buffer (:class:`~bsk_rl.sim.fsw.ImagingFSWModel.action_downlink`).
 
@@ -335,12 +340,100 @@ class Downlink(DiscreteFSWAction):
 
         Args:
             name: Action name.
-            duration: Time to task action, in seconds.
+            duration: Maximum time to task action, in seconds.
             hybrid: Whether to use a hybrid action space.
+            variable_duration_downlink: If true, stop early once storage is empty.
+            empty_storage_threshold_bits: Storage level considered empty, in bits.
+            minimum_duration: Minimum downlink time in seconds, including when
+                the buffer is empty at action start. The configured action
+                duration remains a hard maximum if it is shorter.
         """
         super().__init__(
             fsw_action="action_downlink", name=name, duration=duration, hybrid=hybrid
         )
+        if (
+            not np.isfinite(empty_storage_threshold_bits)
+            or empty_storage_threshold_bits < 0
+        ):
+            raise ValueError(
+                "empty_storage_threshold_bits must be finite and non-negative."
+            )
+        if not np.isfinite(minimum_duration) or minimum_duration < 0:
+            raise ValueError("minimum_duration must be finite and non-negative.")
+        self.variable_duration_downlink = bool(variable_duration_downlink)
+        self.empty_storage_threshold_bits = float(empty_storage_threshold_bits)
+        self.minimum_duration = float(minimum_duration)
+        self._downlink_empty_event_name = None
+        self._downlink_earliest_stop_time = None
+
+    def _storage_is_empty(self) -> bool:
+        """Return whether the satellite data buffer is effectively empty."""
+        return (
+            float(self.satellite.dynamics.storage_level)
+            <= self.empty_storage_threshold_bits
+        )
+
+    def reset_overwrite_previous(self) -> None:
+        """Forget event state from the previous episode."""
+        self._downlink_empty_event_name = None
+        self._downlink_earliest_stop_time = None
+
+    def _clear_action_events(self) -> None:
+        """Delete the active empty-buffer event, if one exists."""
+        if (
+            self._downlink_empty_event_name is not None
+            and self._downlink_empty_event_name in self.simulator.eventMap
+        ):
+            self.simulator.delete_event(self._downlink_empty_event_name)
+        self._downlink_empty_event_name = None
+        self._downlink_earliest_stop_time = None
+
+    def _downlink_empty_event_ready(self) -> bool:
+        """Wait for the configured minimum duration and an empty buffer."""
+        earliest_stop = self._downlink_earliest_stop_time
+        return (
+            earliest_stop is not None
+            and float(self.simulator.sim_time) >= earliest_stop
+            and self._storage_is_empty()
+        )
+
+    def _finish_downlink_early(self) -> None:
+        """Request a new action and keep event state available for cleanup."""
+        self.satellite.logger.info("Downlink storage empty")
+        self.satellite.requires_retasking = True
+        self._downlink_earliest_stop_time = None
+
+    def _enable_downlink_empty_event(self) -> None:
+        """Stop the action when its storage buffer is empty."""
+        self._clear_action_events()
+        # Only require the guard when there is no data to transmit at action start.
+        # If a nonempty buffer drains, end as soon as the next FSW event observes it.
+        minimum_step = (
+            max(self.minimum_duration, float(self.simulator.sim_rate))
+            if self._storage_is_empty()
+            else 0.0
+        )
+        self._downlink_earliest_stop_time = (
+            float(self.simulator.sim_time) + minimum_step
+        )
+        self._downlink_empty_event_name = f"downlink_empty_{self.satellite.name}"
+        self.simulator.createNewEvent(
+            self._downlink_empty_event_name,
+            mc.sec2nano(self.satellite.fsw.fsw_rate),
+            True,
+            conditionFunction=lambda sim: self._downlink_empty_event_ready(),
+            actionFunction=lambda sim: self._finish_downlink_early(),
+            terminal=self.satellite.variable_interval,
+        )
+
+    def set_action(
+        self, action: Union[int, tuple[int, float]], prev_action_key=None
+    ) -> str:
+        """Activate downlink and optionally stop when storage is empty."""
+        action_key = super().set_action(action, prev_action_key=prev_action_key)
+        if self.variable_duration_downlink:
+            self._enable_downlink_empty_event()
+        return action_key
 
 
 class Scan(DiscreteFSWAction):
