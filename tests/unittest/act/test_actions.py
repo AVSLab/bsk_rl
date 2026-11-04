@@ -146,8 +146,6 @@ class TestVariableDurationDownlink:
         downlink.satellite.dynamics.storage_level = storage_level
         downlink.satellite.fsw.fsw_rate = 2.0
         downlink.satellite.variable_interval = True
-        downlink.satellite._satellite_command = "satellite"
-        downlink.satellite._info_command.return_value = "log_empty_buffer"
         downlink.simulator = SimpleNamespace(
             sim_rate=1.0,
             sim_time=20.0,
@@ -186,10 +184,10 @@ class TestVariableDurationDownlink:
         downlink._finish_downlink_early()
         assert downlink.satellite.requires_retasking
         assert not downlink._downlink_empty_event_ready()
-        downlink._disable_downlink_empty_event()
+        downlink._clear_action_events()
 
         downlink.simulator.delete_event.assert_called_once_with(event_name)
-        assert downlink.satellite._active_downlink_action is None
+        assert downlink._downlink_empty_event_name is None
 
     def test_behavior_remains_opt_in(self):
         assert act.Downlink().variable_duration_downlink is False
