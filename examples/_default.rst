@@ -23,6 +23,7 @@ Earth Observation
    cloud_environment_with_reimaging
    hybrid_image_quality
    aeos
+   target_location_uncertainty
 
 RSO Missions
 ~~~~~~~~~~~~
