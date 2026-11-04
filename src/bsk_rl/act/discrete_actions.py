@@ -68,10 +68,10 @@ class DiscreteActionBuilder(ActionBuilder):
 
     def reset_post_sim_init(self) -> None:
         """Clear the previous action key after simulator initialization."""
+        super().reset_post_sim_init()
         active_downlink_action = getattr(self.satellite, "_active_downlink_action", None)
         if active_downlink_action is not None:
             active_downlink_action._disable_downlink_empty_event()
-        super().reset_post_sim_init()
         self.prev_action_key = None
 
     @property
@@ -355,8 +355,13 @@ class Downlink(DiscreteFSWAction):
         super().__init__(
             fsw_action="action_downlink", name=name, duration=duration, hybrid=hybrid
         )
-        if not np.isfinite(empty_storage_threshold_bits) or empty_storage_threshold_bits < 0:
-            raise ValueError("empty_storage_threshold_bits must be finite and non-negative.")
+        if (
+            not np.isfinite(empty_storage_threshold_bits)
+            or empty_storage_threshold_bits < 0
+        ):
+            raise ValueError(
+                "empty_storage_threshold_bits must be finite and non-negative."
+            )
         if not np.isfinite(minimum_duration) or minimum_duration < 0:
             raise ValueError("minimum_duration must be finite and non-negative.")
         self.variable_duration_downlink = bool(variable_duration_downlink)
@@ -367,7 +372,10 @@ class Downlink(DiscreteFSWAction):
 
     def _storage_is_empty(self) -> bool:
         """Return whether the satellite data buffer is effectively empty."""
-        return float(self.satellite.dynamics.storage_level) <= self.empty_storage_threshold_bits
+        return (
+            float(self.satellite.dynamics.storage_level)
+            <= self.empty_storage_threshold_bits
+        )
 
     def _disable_downlink_empty_event(self) -> None:
         """Delete the active empty-buffer event, if one exists."""
@@ -406,7 +414,9 @@ class Downlink(DiscreteFSWAction):
             if self._storage_is_empty()
             else 0.0
         )
-        self._downlink_earliest_stop_time = float(self.simulator.sim_time) + minimum_step
+        self._downlink_earliest_stop_time = (
+            float(self.simulator.sim_time) + minimum_step
+        )
         self._downlink_empty_event_name = valid_func_name(
             f"downlink_empty_{self.satellite.name}"
         )
