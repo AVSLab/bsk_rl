@@ -7,8 +7,9 @@ Development - |version|
 
 * Add opt-in buffer-conditioned termination to :class:`~bsk_rl.act.Downlink` with
   ``variable_duration_downlink=True``. Downlink actions stop once storage is empty,
-  subject to a configurable minimum duration that defaults to 10 seconds. Existing
-  fixed-duration behavior remains the default. See issue #370.
+  subject to a configurable 10-second minimum when the buffer is empty at action
+  start. A shorter configured action duration remains the cap. Existing fixed-duration
+  behavior remains the default. See issue #370.
 * Add optional hybrid action spaces with ``hybrid=True`` on supported discrete
   actions. Mode, broadcast, and ground-imaging actions accept a requested duration.
   Ground imaging instead uses a desired capture-time offset from the current

@@ -350,7 +350,8 @@ class Downlink(DiscreteFSWAction):
             variable_duration_downlink: If true, stop early once storage is empty.
             empty_storage_threshold_bits: Storage level considered empty, in bits.
             minimum_duration: Minimum downlink time in seconds, including when
-                the buffer is empty at action start.
+                the buffer is empty at action start. The configured action
+                duration remains a hard maximum if it is shorter.
         """
         super().__init__(
             fsw_action="action_downlink", name=name, duration=duration, hybrid=hybrid
