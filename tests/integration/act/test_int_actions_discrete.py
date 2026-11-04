@@ -146,6 +146,45 @@ class TestHybridImagingAndDownlink:
         self.env.step(target.id)
 
 
+class TestVariableDurationDownlink:
+    class ImageSat(sats.ImagingSatellite):
+        dyn_type = dyn.GroundStationDynModel
+        fsw_type = fsw.ImagingFSWModel
+        observation_spec: ClassVar[list[obs.Observation]] = [obs.Time()]
+        action_spec: ClassVar[list[act.Action]] = [
+            act.Downlink(variable_duration_downlink=True)
+        ]
+
+    env = gym.make(
+        "SatelliteTasking-v1",
+        satellite=ImageSat(
+            "EO_empty_buffer",
+            sat_args=ImageSat.default_sat_args(
+                oe=random_orbit,
+                instrumentBaudRate=1.0,
+                dataStorageCapacity=3.0,
+                transmitterBaudRate=-1.0,
+            ),
+        ),
+        scenario=UniformTargets(n_targets=0),
+        rewarder=data.UniqueImageReward(),
+        sim_rate=1.0,
+        time_limit=100.0,
+        max_step_duration=100.0,
+        disable_env_checker=True,
+    )
+
+    def test_empty_buffer_action_waits_for_minimum_then_retasks(self):
+        self.env.reset(seed=0)
+        start_time = self.env.unwrapped.simulator.sim_time
+
+        self.env.step(0)
+
+        elapsed = self.env.unwrapped.simulator.sim_time - start_time
+        assert elapsed >= 10.0
+        assert elapsed < 100.0
+
+
 ###########################
 # Individual Action Tests #
 ###########################
