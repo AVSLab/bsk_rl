@@ -9,7 +9,6 @@ from Basilisk.utilities import macros as mc
 from gymnasium import spaces
 
 from bsk_rl.act.actions import Action, ActionBuilder
-from bsk_rl.utils.functional import valid_func_name
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -69,9 +68,6 @@ class DiscreteActionBuilder(ActionBuilder):
     def reset_post_sim_init(self) -> None:
         """Clear the previous action key after simulator initialization."""
         super().reset_post_sim_init()
-        active_downlink_action = getattr(self.satellite, "_active_downlink_action", None)
-        if active_downlink_action is not None:
-            active_downlink_action._disable_downlink_empty_event()
         self.prev_action_key = None
 
     @property
@@ -104,10 +100,9 @@ class DiscreteActionBuilder(ActionBuilder):
         Hybrid actions receive ``(local_index, parameter)``. Other actions receive
         only their local index, even when the overall action space is hybrid.
         """
-        active_downlink_action = getattr(self.satellite, "_active_downlink_action", None)
-        if active_downlink_action is not None:
-            active_downlink_action._disable_downlink_empty_event()
         action_index, parameter = clean_action(action, hybrid=self.hybrid)
+        for act in self.action_spec:
+            act._clear_action_events()
         self.satellite.disable_timed_terminal_event()
         if not np.issubdtype(type(action_index), np.integer):
             logger.warning(
@@ -378,7 +373,12 @@ class Downlink(DiscreteFSWAction):
             <= self.empty_storage_threshold_bits
         )
 
-    def _disable_downlink_empty_event(self) -> None:
+    def reset_overwrite_previous(self) -> None:
+        """Forget event state from the previous episode."""
+        self._downlink_empty_event_name = None
+        self._downlink_earliest_stop_time = None
+
+    def _clear_action_events(self) -> None:
         """Delete the active empty-buffer event, if one exists."""
         if (
             self._downlink_empty_event_name is not None
@@ -387,8 +387,6 @@ class Downlink(DiscreteFSWAction):
             self.simulator.delete_event(self._downlink_empty_event_name)
         self._downlink_empty_event_name = None
         self._downlink_earliest_stop_time = None
-        if getattr(self.satellite, "_active_downlink_action", None) is self:
-            self.satellite._active_downlink_action = None
 
     def _downlink_empty_event_ready(self) -> bool:
         """Wait for the configured minimum duration and an empty buffer."""
@@ -401,13 +399,13 @@ class Downlink(DiscreteFSWAction):
 
     def _finish_downlink_early(self) -> None:
         """Request a new action and keep event state available for cleanup."""
+        self.satellite.logger.info("Downlink storage empty")
         self.satellite.requires_retasking = True
         self._downlink_earliest_stop_time = None
 
     def _enable_downlink_empty_event(self) -> None:
         """Stop the action when its storage buffer is empty."""
-        self._disable_downlink_empty_event()
-        self.satellite._active_downlink_action = self
+        self._clear_action_events()
         # Only require the guard when there is no data to transmit at action start.
         # If a nonempty buffer drains, end as soon as the next FSW event observes it.
         minimum_step = (
@@ -418,22 +416,13 @@ class Downlink(DiscreteFSWAction):
         self._downlink_earliest_stop_time = (
             float(self.simulator.sim_time) + minimum_step
         )
-        self._downlink_empty_event_name = valid_func_name(
-            f"downlink_empty_{self.satellite.name}"
-        )
-        satellite_command = self.satellite._satellite_command
+        self._downlink_empty_event_name = f"downlink_empty_{self.satellite.name}"
         self.simulator.createNewEvent(
             self._downlink_empty_event_name,
             mc.sec2nano(self.satellite.fsw.fsw_rate),
             True,
-            [
-                f"{satellite_command}._active_downlink_action is not None and "
-                f"{satellite_command}._active_downlink_action._downlink_empty_event_ready()"
-            ],
-            [
-                self.satellite._info_command("downlink storage empty"),
-                f"{satellite_command}._active_downlink_action._finish_downlink_early()",
-            ],
+            conditionFunction=lambda sim: self._downlink_empty_event_ready(),
+            actionFunction=lambda sim: self._finish_downlink_early(),
             terminal=self.satellite.variable_interval,
         )
 
