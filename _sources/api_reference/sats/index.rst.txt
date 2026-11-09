@@ -1,0 +1,23 @@
+.. _bsk_rl.sats:
+.. currentmodule:: bsk_rl.sats
+
+Satellites
+==========
+
+
+
+.. automodule:: bsk_rl.sats
+   :members:
+   :show-inheritance:
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+

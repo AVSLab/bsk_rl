@@ -1,0 +1,13 @@
+.. _bsk_rl.obs.relative_observations:
+.. currentmodule:: bsk_rl.obs.relative_observations
+
+Relative Properties
+===================
+
+.. toctree::
+   :maxdepth: 1
+
+.. automodule:: bsk_rl.obs.relative_observations
+   :members:
+   :show-inheritance:
+
