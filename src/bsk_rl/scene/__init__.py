@@ -13,13 +13,14 @@ from bsk_rl.scene.risk_field import SweepRiskField
 from bsk_rl.scene.categorized_risk_field import CategorizedSweepRiskField
 from bsk_rl.scene.cloud_risk_field import CloudSweepRiskField
 from bsk_rl.scene.quota_risk_field import QuotaSweepRiskField
-from bsk_rl.scene.targets import CityTargets, UniformTargets, UniformStripTargets
+from bsk_rl.scene.targets import CityTargets, UniformTargets, UniformStripTargets, MixedStripTargets
 
 __doc_title__ = "Scenario"
 __all__ = [
     "Scenario",
     "UniformTargets",
     "UniformStripTargets",
+    "MixedStripTargets",
     "ClusterStripTargets",
     "CityTargets",
     "UniformNadirScanning",
