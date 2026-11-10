@@ -494,7 +494,7 @@ class MixedStripTargets(UniformStripTargets):
         earth_map: Optional[str] = None,
         mode_probs: Iterable[float] = (1 / 3, 1 / 3, 1 / 3),
         uniform_prob: float = 0.5,
-        land_fraction=("beta", 0.5, 0.5),
+        land_fraction=(0.0, 1.0),
         mixed_cluster_fraction=0.5,
         chain_fraction=0.5,
         area_strips=(3, 10),
@@ -522,11 +522,13 @@ class MixedStripTargets(UniformStripTargets):
                 anchors uniformly over the globe, ignoring the land mask (the
                 paper's scenario); otherwise it draws ``land_fraction``.
             land_fraction: Probability that a midpoint or anchor is on land,
-                drawn once per episode. The default Beta(0.5, 0.5) is
+                drawn once per episode: a scalar, a ``(low, high)`` uniform
+                range or ``("beta", a, b)``. The default U(0, 1) is the law
+                of the first revision runs. ``("beta", 0.5, 0.5)`` is
                 U-shaped: it puts 41 % of the episodes below 0.1 or above
-                0.9, against 20 % for U(0, 1), because the uniform episodes
-                already cover a middle split (about 26 % land) and the
-                extremes are the scenes that differ most from them.
+                0.9, against 20 % for U(0, 1), for runs that test the
+                extremes (the uniform episodes already cover a middle
+                split, about 26 % land).
             mixed_cluster_fraction: Share of clustered strips in ``mixed``.
             chain_fraction: Probability that a cluster is a chain.
             area_strips: Number of strips of an area cluster.
