@@ -5,6 +5,11 @@ Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
 
+* Add :doc:`ground_catalog`: a reusable received-estimate catalog with immutable
+  packets, explicit information/propagation/receipt times, source provenance,
+  revision deltas, prediction callbacks, and committed-state serialization.
+  Transport, orbit estimation, and telescope physics remain separate.
+
 * Add opt-in buffer-conditioned termination to :class:`~bsk_rl.act.Downlink` with
   ``variable_duration_downlink=True``. Downlink actions stop once storage is empty,
   subject to a configurable 10-second minimum when the buffer is empty at action

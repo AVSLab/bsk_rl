@@ -6,6 +6,7 @@ BSK-RL: Environments for Spacecraft Planning and Scheduling
 
     install
     examples/index
+    ground_catalog
     api_reference/index
     release_notes
     publications
