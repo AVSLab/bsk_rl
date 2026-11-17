@@ -195,13 +195,12 @@ class DynamicsModel(DynamicsModelABC):
         return HN @ omega_BH_N
 
     def _compute_oes(self):
-        if not hasattr(self, "_oe_cache_time") or (
-            self._oe_cache_time != getattr(self.simulator, "time", None)
-        ):
+        cache_time = self.simulator.sim_time_ns
+        if not hasattr(self, "_oe_cache_time") or (self._oe_cache_time != cache_time):
             self._oe_cache = orbitalMotion.rv2elem(
                 mu=self.mu, rVec=np.array(self.r_BN_N), vVec=np.array(self.v_BN_N)
             )
-            self._oe_cache_time = getattr(self.simulator, "time", None)
+            self._oe_cache_time = cache_time
         return self._oe_cache
 
     @property

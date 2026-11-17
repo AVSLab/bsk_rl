@@ -64,7 +64,8 @@ Development - |version|
   :class:`~bsk_rl.data.RSOInspectionReward` uses one orbital period when
   ``min_time_for_completion`` is not set. Example and benchmark orbit metrics
   use the satellite's calculated period; fixed-orbit example durations use
-  the period of their configured orbit. See issue #225.
+  the period of their configured orbit. Cached orbital elements refresh with
+  simulation time so normalization follows changes to the orbit. See issue #225.
 * Fix a bug where extending an access opportunity window across a generation seam
   could leave the satellite's ``opportunities`` list out of close-time order, which
   corrupted ``bisect``-based opportunity lookups. See issue #205.

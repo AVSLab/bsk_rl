@@ -89,7 +89,11 @@ class TestSatProperties:
         assert np.linalg.norm(observation[3:6]) == approx(1.0)
         assert observation[6] == approx(45)
         observation, _reward, _terminated, _truncated, _info = self.env.step(0)
-        assert observation[6] == approx(45)
+        # Perturbed dynamics can change the osculating inclination during a step.
+        dynamics = self.env.unwrapped.satellite.dynamics
+        h_N = np.cross(dynamics.r_BN_N, dynamics.v_BN_N)
+        inclination = np.degrees(np.arctan2(np.linalg.norm(h_N[:2]), h_N[2]))
+        assert observation[6] == approx(inclination)
 
 
 class TestOrbitalPeriodNormalization:
@@ -127,12 +131,13 @@ class TestOrbitalPeriodNormalization:
                 observation, _, _, _, _ = env.step(0)
                 sat = env.unwrapped.satellite
                 period = sat.dynamics.orbital_period
-                expected_period = (
-                    2
-                    * np.pi
-                    * np.sqrt(sat.dynamics.semi_major_axis**3 / sat.dynamics.mu)
+                # Compute a directly from the state, independently of the cache.
+                a = 1 / (
+                    2 / np.linalg.norm(sat.dynamics.r_BN_N)
+                    - np.linalg.norm(sat.dynamics.v_BN_N) ** 2 / sat.dynamics.mu
                 )
-                assert period == approx(expected_period)
+                expected_period = 2 * np.pi * np.sqrt(a**3 / sat.dynamics.mu)
+                assert period == approx(expected_period, rel=1e-10)
                 assert observation["sat_props"]["elapsed_normd"] == approx(
                     env.unwrapped.simulator.sim_time / period
                 )
