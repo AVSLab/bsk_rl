@@ -89,8 +89,13 @@ def test_amos_profile_configuration_is_explicit():
     )
     assert imager.sat_args_generator["instrumentBaudRate"] == 4e6
     try:
-        env.reset(seed=0)
+        observation, _ = env.reset(seed=0)
         assert imager.observation_space.shape == (124,)
+        eclipse = np.asarray(imager.trajectory.next_eclipse(env.simulator.sim_time))
+        np.testing.assert_allclose(
+            observation["imager"][8:10],
+            (eclipse - env.simulator.sim_time) / imager.dynamics.orbital_period,
+        )
     finally:
         env.close()
 
