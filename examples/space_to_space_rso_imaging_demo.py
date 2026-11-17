@@ -75,7 +75,11 @@ def make_catalog(seed=0, n_targets=3):
 
 
 def amos_observation_spec(n_candidates=10):
-    """AMOS v9 full-action layout: 14 global + 11*K target features."""
+    """AMOS v9 layout with time features normalized by the current orbital period.
+
+    The layout has 14 global + 11*K target features. Historical policies that
+    used fixed time scaling need the corresponding explicit normalization.
+    """
     return [
         obs.SatProperties(
             dict(prop="storage_level_fraction"),
@@ -83,10 +87,10 @@ def amos_observation_spec(n_candidates=10):
             dict(prop="wheel_speeds_fraction"),
             dict(prop="s_hat_H", fn=sun_in_hill),
         ),
-        obs.Eclipse(norm=5700),
+        obs.Eclipse(norm=None),
         obs.OpportunityProperties(
-            dict(prop="opportunity_open", norm=5700),
-            dict(prop="opportunity_close", norm=5700),
+            dict(prop="opportunity_open", norm=None),
+            dict(prop="opportunity_close", norm=None),
             type="ground_station",
             n_ahead_observe=2,
         ),

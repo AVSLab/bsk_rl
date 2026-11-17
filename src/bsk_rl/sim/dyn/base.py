@@ -34,7 +34,7 @@ from bsk_rl.utils.functional import (
     check_aliveness_checkers,
     default_args,
 )
-from bsk_rl.utils.orbital import random_orbit, rv2HN, rv2omega
+from bsk_rl.utils.orbital import orbital_period, random_orbit, rv2HN, rv2omega
 
 if TYPE_CHECKING:  # pragma: no cover
     from bsk_rl.sats import Satellite
@@ -195,19 +195,23 @@ class DynamicsModel(DynamicsModelABC):
         return HN @ omega_BH_N
 
     def _compute_oes(self):
-        if not hasattr(self, "_oe_cache_time") or (
-            self._oe_cache_time != getattr(self.simulator, "time", None)
-        ):
+        cache_time = self.simulator.sim_time_ns
+        if not hasattr(self, "_oe_cache_time") or (self._oe_cache_time != cache_time):
             self._oe_cache = orbitalMotion.rv2elem(
                 mu=self.mu, rVec=np.array(self.r_BN_N), vVec=np.array(self.v_BN_N)
             )
-            self._oe_cache_time = getattr(self.simulator, "time", None)
+            self._oe_cache_time = cache_time
         return self._oe_cache
 
     @property
     def semi_major_axis(self):
-        """Semimajor axis of the satellite's orbit [km]."""
+        """Semimajor axis of the satellite's orbit [m]."""
         return self._compute_oes().a
+
+    @property
+    def orbital_period(self):
+        """Keplerian orbital period [s]."""
+        return orbital_period(self._compute_oes().a, self.mu)
 
     @property
     def eccentricity(self):

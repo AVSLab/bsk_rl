@@ -14,6 +14,7 @@ from bsk_rl.sim.dyn import (
     LOSCommDynModel,
 )
 from bsk_rl.sim.dyn import base as dyn_module
+from bsk_rl.sim.simulator import Simulator
 
 module = "bsk_rl.sim.dyn."
 
@@ -89,11 +90,12 @@ class TestBasicDynamicsModel:
             dyn.scObject.scStateOutMsg.read.return_value = MagicMock(
                 r_BN_N=[1, 2, 3], v_BN_N=[4, 5, 6]
             )
-            dyn.simulator.time = 0.0
+            dyn.simulator.sim_time_ns = 0
 
             # Check that call to rv2elem happens only once
             assert dyn.semi_major_axis == 1.0
             mocked.rv2elem.assert_called_once()
+            assert dyn.orbital_period == 2 * np.pi
             assert dyn.eccentricity == 2.0
             assert dyn.inclination == 3.0
             assert dyn.ascending_node == 4.0
@@ -108,7 +110,7 @@ class TestBasicDynamicsModel:
             dyn.mu = 1
             dyn.scObject = MagicMock()
             dyn.scObject.scStateOutMsg.read.return_value = MagicMock()
-            dyn.simulator.time = 0.0
+            dyn.simulator.sim_time_ns = 0
 
             assert dyn.semi_major_axis == 1.0
             mocked.rv2elem = MagicMock(return_value=MagicMock(a=2.0))
@@ -117,16 +119,17 @@ class TestBasicDynamicsModel:
     def test_orbit_properties_cache_update(self):
         with patch.object(dyn_module, "orbitalMotion") as mocked:
             mocked.rv2elem = MagicMock(return_value=MagicMock(a=1.0))
-            dyn = BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
+            simulator = MagicMock(spec=Simulator, sim_time_ns=0)
+            dyn = BasicDynamicsModel(MagicMock(simulator=simulator), 1.0)
             dyn.mu = 1
             dyn.scObject = MagicMock()
             dyn.scObject.scStateOutMsg.read.return_value = MagicMock()
-            dyn.simulator.time = 0.0
-
             assert dyn.semi_major_axis == 1.0
-            dyn.simulator.time = 1.0
+            assert dyn.orbital_period == pytest.approx(2 * np.pi)
+            dyn.simulator.sim_time_ns = mc.sec2nano(1.0)
             mocked.rv2elem = MagicMock(return_value=MagicMock(a=2.0))
             assert dyn.semi_major_axis == 2.0
+            assert dyn.orbital_period == pytest.approx(2 * np.pi * np.sqrt(8))
 
     def test_battery_properties(self):
         dyn = BasicDynamicsModel(MagicMock(simulator=MagicMock()), 1.0)
