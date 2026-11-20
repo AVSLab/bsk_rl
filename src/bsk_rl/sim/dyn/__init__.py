@@ -56,6 +56,10 @@ from bsk_rl.sim.dyn.ground_imaging import (
     GroundStationDynModel,
     ImagingDynModel,
 )
+from bsk_rl.sim.dyn.passive_targets import (
+    LightweightRSOTargetDynModel,
+    rso_target_backend,
+)
 from bsk_rl.sim.dyn.relative_motion import (
     ConjunctionDynModel,
     LOSCommDynModel,
@@ -94,5 +98,7 @@ __all__ = [
     "RSODynModel",
     "RSOInspectorDynModel",
     "RSOTargetDynModel",
+    "LightweightRSOTargetDynModel",
+    "rso_target_backend",
     "SpaceToSpaceImagingDynModel",
 ]
