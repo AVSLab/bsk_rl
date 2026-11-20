@@ -45,7 +45,10 @@ from bsk_rl.sim.fsw.ground_imaging import (
     SteeringImagerFSWModel,
 )
 from bsk_rl.sim.fsw.orbital import MagicOrbitalManeuverFSWModel
-from bsk_rl.sim.fsw.rso_imaging import SpaceToSpaceImagingFSWModel
+from bsk_rl.sim.fsw.rso_imaging import (
+    PassiveRSOTargetFSWModel,
+    SpaceToSpaceImagingFSWModel,
+)
 from bsk_rl.sim.fsw.rso_inspection import RSOInspectorFSWModel
 
 __doc_title__ = "FSW Sims"
@@ -61,4 +64,5 @@ __all__ = [
     "MagicOrbitalManeuverFSWModel",
     "RSOInspectorFSWModel",
     "SpaceToSpaceImagingFSWModel",
+    "PassiveRSOTargetFSWModel",
 ]

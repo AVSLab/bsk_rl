@@ -7,7 +7,7 @@ from Basilisk.architecture import messaging, sysModel
 from Basilisk.utilities import macros
 
 from bsk_rl.sim.dyn.rso_imaging import SpaceToSpaceImagingDynModel
-from bsk_rl.sim.fsw.base import Task, action
+from bsk_rl.sim.fsw.base import FSWModel, Task, action
 from bsk_rl.sim.fsw.ground_imaging import ImagingFSWModel
 from bsk_rl.utils.functional import default_args
 from bsk_rl.utils.rso_imaging import RSOImageRecord, illumination_factor
@@ -311,5 +311,32 @@ class SpaceToSpaceImagingFSWModel(ImagingFSWModel):
         raise NotImplementedError("Use ImageRSO with SpaceToSpaceImagingFSWModel.")
 
 
+class PassiveRSOTargetFSWModel(FSWModel):
+    """Drift-only flight software for :class:`~bsk_rl.sim.dyn.LightweightRSOTargetDynModel`.
+
+    Keeps the satellite interface without scheduling FSW tasks or controllers.
+    """
+
+    def __init__(self, satellite, fsw_rate, **kwargs) -> None:
+        """Retain the satellite interface without allocating native services."""
+        if not getattr(satellite.dynamics, "passive_state_provider", False):
+            raise TypeError(
+                "PassiveRSOTargetFSWModel requires lightweight target dynamics."
+            )
+        self.satellite = satellite
+        self.logger = satellite.logger.getChild(type(self).__name__)
+        self.fsw_rate = fsw_rate
+        self.tasks = []
+
+    def action_drift(self) -> None:
+        """The shared publisher propagates targets without commands."""
+        pass
+
+    def _drift_only(self, *args, **kwargs):
+        raise ValueError("Lightweight passive targets support only Drift.")
+
+    action_charge = action_desat = action_nadir_point = _drift_only
+
+
 __doc_title__ = "Space-to-Space RSO Imaging"
-__all__ = ["SpaceToSpaceImagingFSWModel"]
+__all__ = ["SpaceToSpaceImagingFSWModel", "PassiveRSOTargetFSWModel"]

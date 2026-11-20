@@ -226,12 +226,16 @@ class Satellite(ABC, Resetable):
 
     def reset_pre_sim_init(self) -> None:
         """Called during environment reset, before Basilisk simulation initialization."""
-        self.trajectory = TrajectorySimulator(
-            utc_init=self.sat_args["utc_init"],
-            rN=self.sat_args["rN"],
-            vN=self.sat_args["vN"],
-            oe=self.sat_args["oe"],
-            mu=self.sat_args["mu"],
+        self.trajectory = (
+            None
+            if getattr(self.dyn_type, "passive_state_provider", False)
+            else TrajectorySimulator(
+                utc_init=self.sat_args["utc_init"],
+                rN=self.sat_args["rN"],
+                vN=self.sat_args["vN"],
+                oe=self.sat_args["oe"],
+                mu=self.sat_args["mu"],
+            )
         )
         self.observation_builder.reset_pre_sim_init()
         self.action_builder.reset_pre_sim_init()

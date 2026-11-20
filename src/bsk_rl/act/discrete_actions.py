@@ -221,6 +221,15 @@ class DiscreteFSWAction(DiscreteAction):
         """
         action_index, requested_duration = clean_action(action, hybrid=self.hybrid)
         assert action_index == 0
+        dynamics = getattr(self.satellite, "dynamics", None)
+        if getattr(dynamics, "passive_state_provider", False) is True:
+            # Passive targets evolve until the environment time limit. A per-target
+            # drift deadline would add one Python event check per target each tick
+            # without changing target physics or imager decisions.
+            if self.fsw_action != "action_drift":
+                raise ValueError("Lightweight passive targets support only Drift.")
+            self.satellite.fsw.action_drift()
+            return self.fsw_action
         action_duration = (
             np.min([self.duration, requested_duration])
             if requested_duration is not None

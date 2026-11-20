@@ -5,6 +5,13 @@ Development - |version|
 -----------------------
 .. *Release Date: MMM. DD, YYYY*
 
+* Add opt-in lightweight passive RSO targets with
+  :class:`~bsk_rl.sim.dyn.LightweightRSOTargetDynModel` and
+  :class:`~bsk_rl.sim.fsw.PassiveRSOTargetFSWModel`. Targets propagate with
+  analytic Earth central gravity plus J2 (default) or pure two-body, keep the
+  :class:`~bsk_rl.sim.dyn.RSOTargetDynModel` message interface, and support only
+  ``Drift``. ``rso_target_backend("full" | "two_body" | "j2")`` selects a target
+  model. Full Basilisk targets remain the default.
 * Add opt-in buffer-conditioned termination to :class:`~bsk_rl.act.Downlink` with
   ``variable_duration_downlink=True``. Downlink actions stop once storage is empty,
   subject to a configurable 10-second minimum when the buffer is empty at action

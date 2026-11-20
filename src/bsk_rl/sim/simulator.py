@@ -119,10 +119,23 @@ class Simulator(SimulationBaseClass.SimBaseClass):
         self.vizInstance = vizSupport.enableUnityVisualization(
             self,
             viz_task_name,
-            scList=[sat.dynamics.scObject for sat in self.satellites],
+            scList=[
+                (
+                    (sat.name, sat.dynamics.scObject.scStateOutMsg)
+                    if getattr(sat.dynamics, "passive_state_provider", False)
+                    else sat.dynamics.scObject
+                )
+                for sat in self.satellites
+            ],
             **list_data,
             saveFile=str(saveFile),
         )
+
+        # vizSupport otherwise treats message tuples as body effectors attached to
+        # another spacecraft. Passive target messages are independent spacecraft.
+        for index, sat in enumerate(self.satellites):
+            if getattr(sat.dynamics, "passive_state_provider", False):
+                self.vizMessenger.scData[index].parentSpacecraftName = ""
 
         self.use_simple_earth = use_simple_earth
         if self.use_simple_earth:
